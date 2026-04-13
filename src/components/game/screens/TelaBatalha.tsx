@@ -163,7 +163,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   const buildJog = (raw: any, fallbackId: string, fallbackNome: string, humano: boolean): Jogador => {
     if (!raw) return criarJ(fallbackId, fallbackNome, monstroP1, humano);
-    const md = MONSTROS[raw.monstro?.id] || {};
+    const md = MONSTROS[raw.monstro?.id] || { bg1: "#000", bg2: "#000", glow: "#000", habD: "" } as any;
     return {
       id: raw.id || fallbackId,
       nome: raw.nome || fallbackNome,
