@@ -107,13 +107,15 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function escolherPoder(pid: string) {
     if (!sid) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setMostraPoder(false);
     setLoading(true);
     try {
       const result = await choosePower(sid, slotLocal, pid);
       setServerState(result.state);
       const p = PODERES[pid];
-      falar(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`, true);
+      speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
     } catch (err) {
       console.error("Power error:", err);
     }
