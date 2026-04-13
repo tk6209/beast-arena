@@ -124,34 +124,62 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   function selCarta(carta: any) {
     if (serverState?.fase !== "acao" || loading) return;
-    setCartaSel((prev: any) => prev?.id === carta.id ? null : carta);
+    const isDeselecting = cartaSel?.id === carta.id;
+    setCartaSel(isDeselecting ? null : carta);
+    if (!isDeselecting) {
+      falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
+    }
   }
 
   async function jogarCarta() {
     if (!cartaSel || !sid || loading) return;
     markGesture();
     const speak = criarFalaGesture();
+    const cartaNome = cartaSel.nome || cartaSel.id;
     setLoading(true);
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
       setCartaSel(null);
+
+      // Narrate card played + results
+      const logs = result.state.log || [];
+      const recentLogs = logs.slice(-3);
+      let narration = `Você jogou ${cartaNome}. `;
+      for (const entry of recentLogs) {
+        if (entry.t === "dano") {
+          narration += `${entry.dmg || ""} de dano! `;
+          setShakeid("hit");
+          setTimeout(() => setShakeid(null), 400);
+        } else if (entry.t === "def") {
+          narration += `Defesa ativada! `;
+        } else if (entry.t === "evolucao") {
+          narration += `Evolução para nível ${entry.nivel || ""}! `;
+        } else if (entry.t === "swarm") {
+          narration += `Swarm capturado! `;
+        } else if (entry.t === "cura") {
+          narration += `Curou ${entry.hp || ""} pontos de vida! `;
+        }
+      }
+
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
+        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
+        narration += `O inimigo jogou ${eName}. `;
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
       }
+
+      let gameEnded = false;
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
+          narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
+          gameEnded = true;
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
-      const lastLog = result.state.log?.[result.state.log.length - 1];
-      if (lastLog?.t === "dano") {
-        setShakeid("hit");
-        setTimeout(() => setShakeid(null), 400);
-      }
+
+      speak(narration.trim());
     } catch (err) {
       console.error("Play error:", err);
     }
@@ -167,18 +195,38 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await passTurn(sid, slotLocal);
       setServerState(result.state);
       setCartaSel(null);
-      speak(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
+
+      let narration = `Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas. `;
+
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
+        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
+        narration += `O inimigo jogou ${eName}. `;
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
       }
+
+      // Narrate recent log entries from enemy turn
+      const logs = result.state.log || [];
+      const recentLogs = logs.slice(-3);
+      for (const entry of recentLogs) {
+        if (entry.t === "dano") {
+          narration += `${entry.dmg || ""} de dano! `;
+          setShakeid("hit");
+          setTimeout(() => setShakeid(null), 400);
+        } else if (entry.t === "evolucao") {
+          narration += `Evolução para nível ${entry.nivel || ""}! `;
+        }
+      }
+
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
+          narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
+
+      speak(narration.trim());
     } catch (err) {
       console.error("Pass error:", err);
     }
