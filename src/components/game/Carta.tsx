@@ -1,6 +1,7 @@
 import React from "react";
 import { cartaPaleta } from "@/game/styles";
 import type { CartaData } from "@/game/data";
+import { getCardImage } from "@/game/cardImages";
 
 interface CartaProps {
   carta: CartaData;
