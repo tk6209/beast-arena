@@ -1,8 +1,12 @@
-import React, { useEffect } from "react";
-import { lerSala, salvarSala } from "@/game/engine";
+import React, { useEffect, useState } from "react";
+import { MONSTROS } from "@/game/data";
 import { falar } from "@/game/voice";
 import { pageBg } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
+import {
+  buscarSessao,
+  entrarComoJogador,
+} from "@/game/multiplayer";
 
 interface TelaEntrarProps {
   salaId: string;
@@ -11,21 +15,46 @@ interface TelaEntrarProps {
 }
 
 export default function TelaEntrar({ salaId, monstroConv, onEntrar }: TelaEntrarProps) {
+  const [erro, setErro] = useState<string | null>(null);
+
   useEffect(() => {
-    const sala = lerSala(salaId);
-    if (!sala) {
-      alert("Sala não encontrada. Verifique o código.");
-      return;
+    let cancelled = false;
+
+    async function entrar() {
+      try {
+        // salaId here is actually the join_code from the URL
+        const sessao = await buscarSessao(salaId);
+        if (!sessao) {
+          setErro("Sala não encontrada. Verifique o código.");
+          return;
+        }
+        if (cancelled) return;
+
+        const m = MONSTROS[monstroConv];
+        await entrarComoJogador(
+          sessao.id,
+          1,
+          monstroConv,
+          "Convidado",
+          m?.hp || 100,
+          m?.hp || 100
+        );
+        if (cancelled) return;
+
+        falar(`Você entrou na sala ${salaId.split("").join(" ")}. Prepare-se para a batalha.`, true);
+
+        // Small delay then proceed to battle using the actual session UUID
+        setTimeout(() => {
+          if (!cancelled) onEntrar(sessao.id, 1);
+        }, 1200);
+      } catch (err: any) {
+        console.error("Erro ao entrar:", err);
+        setErro(err.message || "Erro ao entrar na sala.");
+      }
     }
-    const atualizado = {
-      ...sala,
-      slots: [...(sala.slots || []), { slot: 1, monstro: monstroConv, nome: "Convidado" }],
-      status: "pronto",
-    };
-    salvarSala(salaId, atualizado);
-    falar(`Você entrou na sala ${salaId.split("").join(" ")}. Prepare-se para a batalha.`, true);
-    const t = setTimeout(() => onEntrar(salaId, 1), 1200);
-    return () => clearTimeout(t);
+
+    entrar();
+    return () => { cancelled = true; };
   }, [salaId, monstroConv, onEntrar]);
 
   return (
@@ -45,12 +74,13 @@ export default function TelaEntrar({ salaId, monstroConv, onEntrar }: TelaEntrar
           style={{
             fontFamily: "Bangers, cursive",
             fontSize: 24,
-            color: "#00e5ff",
+            color: erro ? "#ff5252" : "#00e5ff",
             textAlign: "center",
             letterSpacing: 2,
+            padding: 20,
           }}
         >
-          ⚡ Conectando à sala {salaId}...
+          {erro ? `❌ ${erro}` : `⚡ Conectando à sala ${salaId}...`}
         </div>
       </div>
     </div>

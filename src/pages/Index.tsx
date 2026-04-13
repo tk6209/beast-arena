@@ -17,12 +17,14 @@ export default function Index() {
   const [slotLocal, setSlotLocal] = useState<number>(0);
   const [vencedor, setVencedor] = useState<Jogador | null>(null);
 
-  // Check URL for room join
+  // Check URL for room join (join_code from QR/link)
+  const [joinCode, setJoinCode] = useState<string | null>(null);
+
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sala = params.get("sala");
     if (sala) {
-      setSalaId(sala);
+      setJoinCode(sala);
       setModo("multi");
       setTela("monstro");
     }
@@ -35,10 +37,9 @@ export default function Index() {
 
   const handleMonstroConfirm = (mId: string) => {
     setMonstroP1(mId);
-    const params = new URLSearchParams(window.location.search);
-    const sala = params.get("sala");
-    if (sala) {
-      setSalaId(sala);
+    if (joinCode) {
+      // Guest joining via URL — pass join_code to TelaEntrar
+      setSalaId(joinCode);
       setSlotLocal(1);
       setTela("entrar");
     } else if (modo === "multi") {
@@ -66,9 +67,9 @@ export default function Index() {
   };
 
   const handleRejogo = () => {
-    // Clear URL params
     window.history.replaceState({}, "", window.location.pathname);
     setSalaId(null);
+    setJoinCode(null);
     setSlotLocal(0);
     setVencedor(null);
     setMonstroP1("");

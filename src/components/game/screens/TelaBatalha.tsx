@@ -3,9 +3,13 @@ import { MONSTROS, PODERES, SWARMS, IA_PRESETS, novaMao, RND, FRASES_ATK, FRASES
 import {
   criarJ, evoluir, equiparSwarm, aplicarBonusSwarms,
   aplicarEfeitosInicioTurno, aplicarPoisonNoAlvo, iaJogar,
-  alog, salvarSala, lerSala,
+  alog,
   type Jogador, type LogEntry,
 } from "@/game/engine";
+import {
+  emitirEvento, ouvirEventos, buscarJogadores, fecharCanal,
+  type GameEvent,
+} from "@/game/multiplayer";
 import { falar } from "@/game/voice";
 import { pageBg, glassPanel } from "@/game/styles";
 import Carta from "@/components/game/Carta";
@@ -42,11 +46,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     let inimigos: Jogador[];
 
     if (modo === "multi" && salaId) {
-      const sala = lerSala(salaId);
-      const outro = sala?.slots?.find((j: any) => j.slot !== (slotLocal || 0));
-      const mOut = outro?.monstro || "morcego";
+      // For multiplayer, opponent data will arrive via Realtime events
+      // Use a placeholder enemy that will be updated when game starts
+      const mOut = "morcego";
       const pOut = Object.keys(PODERES)[Math.floor(Math.random() * Object.keys(PODERES).length)];
-      let e = criarJ("p2", outro?.nome || "Adversário", mOut, false);
+      let e = criarJ("p2", "Adversário", mOut, false);
       e.monstro = evoluir(e.monstro, pOut);
       e.hp = e.monstro.maxHp;
       e.maxHp = e.monstro.maxHp;
@@ -80,16 +84,14 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   // Multiplayer sync via BroadcastChannel
   useEffect(() => {
-    if (!salaId) return;
-    const bc = new BroadcastChannel(`bac_${salaId}`);
-    bc.onmessage = () => {
-      const sala = lerSala(salaId);
-      if (sala?.ultimaAcao && sala.ultimaAcao.slot !== slotLocal) {
-        setGs((prev) => procRemoto(prev, sala.ultimaAcao));
+    if (!salaId || modo !== "multi") return;
+    const channel = ouvirEventos(salaId, (evento: GameEvent) => {
+      if (evento.player_slot !== slotLocal) {
+        setGs((prev) => procRemoto(prev, evento.payload_json));
       }
-    };
-    return () => bc.close();
-  }, [salaId, slotLocal]);
+    });
+    return () => fecharCanal(channel);
+  }, [salaId, slotLocal, modo]);
 
   function procRemoto(prev: GameState, acao: any): GameState {
     let log = alog(prev.log, `👤 Adversário jogou ${acao.carta?.nome || "uma carta"}!`, "sistema");
@@ -300,9 +302,8 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
     p1.mao = p1.mao.filter((c) => c.id !== carta.id);
 
-    if (salaId) {
-      const sala = lerSala(salaId);
-      if (sala) salvarSala(salaId, { ...sala, ultimaAcao: { slot: slotLocal, carta, ts: Date.now() } });
+    if (salaId && modo === "multi") {
+      emitirEvento(salaId, slotLocal || 0, "play_card", { carta });
     }
 
     const gs2: GameState = { ...gs, p1, inimigos, cartaSel: null, log, fase: "inimigo", shakeid: null, vencedor: null };

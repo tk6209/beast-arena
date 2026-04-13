@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { MONSTROS } from "@/game/data";
-import { salvarSala, lerSala } from "@/game/engine";
 import { falar } from "@/game/voice";
 import { pageBg, glassPanel } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import QRCode from "@/components/game/QRCode";
+import {
+  criarSessao,
+  entrarComoJogador,
+  atualizarSessao,
+  ouvirJogadores,
+  fecharCanal,
+  type GameSession,
+  type GamePlayer,
+} from "@/game/multiplayer";
 
 interface TelaLobbyProps {
   monstroHost: string;
@@ -13,40 +21,75 @@ interface TelaLobbyProps {
 }
 
 export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
-  const [salaId] = useState(() => Math.random().toString(36).slice(2, 7).toUpperCase());
+  const [sessao, setSessao] = useState<GameSession | null>(null);
+  const [jogadores, setJogadores] = useState<GamePlayer[]>([]);
   const [pronto, setPronto] = useState(false);
-  const [sala, setSala] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const base = window.location.href.split("?")[0];
-  const urlConvidado = `${base}?sala=${salaId}&slot=1`;
+  const urlConvidado = sessao ? `${base}?sala=${sessao.join_code}&slot=1` : "";
 
   useEffect(() => {
-    const s = {
-      id: salaId,
-      status: "aguardando",
-      slots: [{ slot: 0, monstro: monstroHost, nome: "Anfitrião" }],
-      ts: Date.now(),
-    };
-    salvarSala(salaId, s);
-    setSala(s);
+    let cancelled = false;
 
-    falar(
-      `Sala criada. Código ${salaId.split("").join(" ")}. Mostre o QR Code para o adversário.`,
-      true
-    );
+    async function init() {
+      try {
+        // Create session in Supabase
+        const s = await criarSessao();
+        if (cancelled) return;
+        setSessao(s);
 
-    const bc = new BroadcastChannel(`bac_${salaId}`);
-    bc.onmessage = () => {
-      const at = lerSala(salaId);
-      setSala(at);
-      if (at?.status === "pronto") {
-        setPronto(true);
-        falar("Adversário conectado. Pronto para batalhar.", true);
+        // Join as host (slot 0)
+        const player = await entrarComoJogador(s.id, 0, monstroHost, "Anfitrião", MONSTROS[monstroHost].hp, MONSTROS[monstroHost].hp);
+        if (cancelled) return;
+        setJogadores([player]);
+        setLoading(false);
+
+        falar(
+          `Sala criada. Código ${s.join_code.split("").join(" ")}. Mostre o QR Code para o adversário.`,
+          true
+        );
+
+        // Listen for players joining via Realtime
+        const channel = ouvirJogadores(
+          s.id,
+          async (newPlayer: GamePlayer) => {
+            setJogadores((prev) => [...prev, newPlayer]);
+            setPronto(true);
+            falar("Adversário conectado. Pronto para batalhar.", true);
+            // Update session status
+            await atualizarSessao(s.id, { status: "active" as any });
+          }
+        );
+
+        return () => {
+          fecharCanal(channel);
+        };
+      } catch (err) {
+        console.error("Erro ao criar sala:", err);
+        setLoading(false);
       }
-    };
+    }
 
-    return () => bc.close();
-  }, [salaId, monstroHost]);
+    const cleanupPromise = init();
+    return () => {
+      cancelled = true;
+      cleanupPromise.then((cleanup) => cleanup?.());
+    };
+  }, [monstroHost]);
+
+  if (loading) {
+    return (
+      <div style={pageBg()}>
+        <ChromeNoise />
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ fontFamily: "Bangers, cursive", fontSize: 24, color: "#00e5ff", letterSpacing: 2 }}>
+            ⏳ Criando sala...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={pageBg()}>
@@ -99,7 +142,7 @@ export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
               letterSpacing: 5,
             }}
           >
-            {salaId}
+            {sessao?.join_code}
           </div>
           <div
             style={{
@@ -147,19 +190,19 @@ export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
             </div>
           )}
 
-          {sala?.slots?.map((j: any) => (
-            <div key={j.slot} style={{ fontSize: 11, color: "#8190a9", marginTop: 5 }}>
+          {jogadores.map((j) => (
+            <div key={j.id} style={{ fontSize: 11, color: "#8190a9", marginTop: 5 }}>
               Slot {j.slot + 1}:{" "}
-              {j.monstro
-                ? `${MONSTROS[j.monstro]?.nome} ${MONSTROS[j.monstro]?.emoji}`
+              {j.monster_id && MONSTROS[j.monster_id]
+                ? `${MONSTROS[j.monster_id].nome} ${MONSTROS[j.monster_id].emoji}`
                 : "aguardando"}
             </div>
           ))}
         </div>
 
         <div style={{ width: "100%", maxWidth: 280, display: "flex", flexDirection: "column", gap: 10 }}>
-          {pronto && (
-            <BtnMain variant="blue" onClick={() => onBatalha(salaId, 0)}>
+          {pronto && sessao && (
+            <BtnMain variant="blue" onClick={() => onBatalha(sessao.id, 0)}>
               ⚔️ INICIAR BATALHA
             </BtnMain>
           )}
