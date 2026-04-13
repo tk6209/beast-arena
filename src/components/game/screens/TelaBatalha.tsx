@@ -204,6 +204,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await passTurn(sid, slotLocal);
       setServerState(result.state);
       setCartaSel(null);
+      sfxPassar();
 
       let narration = `Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas. `;
 
@@ -214,16 +215,17 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         setTimeout(() => setEnemyCard(null), 2500);
       }
 
-      // Narrate recent log entries from enemy turn
       const logs = result.state.log || [];
       const recentLogs = logs.slice(-3);
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
+          sfxAtaque();
           setShakeid("hit");
           setTimeout(() => setShakeid(null), 400);
         } else if (entry.t === "evolucao") {
           narration += `Evolução para nível ${entry.nivel || ""}! `;
+          sfxEvolucao();
         }
       }
 
@@ -231,6 +233,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
+          if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
