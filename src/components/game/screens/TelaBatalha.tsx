@@ -129,12 +129,13 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function jogarCarta() {
     if (!cartaSel || !sid || loading) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setLoading(true);
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
       setCartaSel(null);
-      // Show enemy card from response
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
@@ -142,7 +143,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          falar(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.", true);
+          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
