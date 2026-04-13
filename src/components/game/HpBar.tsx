@@ -40,16 +40,21 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
   return (
     <div
       style={{
+        position: "relative",
         display: "flex",
         alignItems: "center",
         gap: 8,
         height: 40,
         background: "linear-gradient(180deg, rgba(10,17,34,.92), rgba(4,7,18,.95))",
-        border: `1px solid ${mc.g}44`,
+        border: `1px solid ${showFlash ? "#ff1744" : mc.g + "44"}`,
         borderRadius: 12,
         padding: "0 10px",
         backdropFilter: "blur(8px)",
-        boxShadow: `0 4px 16px rgba(0,0,0,.3), 0 0 12px ${mc.g}22`,
+        boxShadow: showFlash
+          ? `0 0 20px rgba(255,23,68,.6), 0 0 40px rgba(255,23,68,.3)`
+          : `0 4px 16px rgba(0,0,0,.3), 0 0 12px ${mc.g}22`,
+        transition: "border .2s, box-shadow .2s",
+        overflow: "hidden",
       }}
     >
       {/* Monster avatar */}
