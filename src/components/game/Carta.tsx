@@ -103,6 +103,7 @@ export default function Carta({ carta, sel, onClick, disabled, angulo = 0, mini 
   if (mini) return <CartaMini carta={carta} sel={sel} onClick={onClick} disabled={disabled} />;
 
   const p = cartaPaleta(carta);
+  const imgSrc = getCardImage(carta.nome, carta.tipo);
   const W = 260;
   const H = 380;
 
@@ -215,16 +216,34 @@ export default function Carta({ carta, sel, onClick, disabled, angulo = 0, mini 
             background: "linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 60%)",
           }}
         />
-        <span
-          style={{
-            fontSize: 56,
-            filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          {carta.emoji}
-        </span>
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={carta.nome}
+            loading="lazy"
+            width={110}
+            height={110}
+            style={{
+              width: 110,
+              height: 110,
+              objectFit: "contain",
+              filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
+              position: "relative",
+              zIndex: 1,
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: 56,
+              filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {carta.emoji}
+          </span>
+        )}
       </div>
 
       {/* Description */}
