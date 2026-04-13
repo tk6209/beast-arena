@@ -10,6 +10,7 @@ import {
 } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
 import { falar, markGesture, criarFalaGesture } from "@/game/voice";
+import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
