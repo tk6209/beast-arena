@@ -9,7 +9,7 @@ import {
   type GameSession,
 } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
-import { falar } from "@/game/voice";
+import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { pageBg } from "@/game/styles";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
@@ -107,13 +107,15 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function escolherPoder(pid: string) {
     if (!sid) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setMostraPoder(false);
     setLoading(true);
     try {
       const result = await choosePower(sid, slotLocal, pid);
       setServerState(result.state);
       const p = PODERES[pid];
-      falar(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`, true);
+      speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
     } catch (err) {
       console.error("Power error:", err);
     }
@@ -127,12 +129,13 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function jogarCarta() {
     if (!cartaSel || !sid || loading) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setLoading(true);
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
       setCartaSel(null);
-      // Show enemy card from response
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
@@ -140,7 +143,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          falar(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.", true);
+          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
@@ -157,12 +160,14 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function handlePassar() {
     if (!sid || loading) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setLoading(true);
     try {
       const result = await passTurn(sid, slotLocal);
       setServerState(result.state);
       setCartaSel(null);
-      falar(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
+      speak(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
@@ -170,7 +175,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          falar(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.", true);
+          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
