@@ -1,20 +1,18 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { MONSTROS, PODERES, SWARMS, IA_PRESETS, novaMao, RND, FRASES_ATK, FRASES_DEF, FRASES_EVO, FRASES_DANO, type CartaData } from "@/game/data";
+import React, { useState, useEffect, useRef } from "react";
+import { MONSTROS, PODERES, type CartaData } from "@/game/data";
 import {
-  criarJ, evoluir, equiparSwarm, aplicarBonusSwarms,
-  aplicarEfeitosInicioTurno, aplicarPoisonNoAlvo, iaJogar,
-  alog,
+  criarJ,
   type Jogador, type LogEntry,
 } from "@/game/engine";
 import {
-  criarSessao, emitirEvento, ouvirEventos, ouvirSessao, buscarJogadores, fecharCanal, atualizarSessao,
-  type GameEvent, type GameSession,
+  criarSessao, ouvirSessao, fecharCanal,
+  type GameSession,
 } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
 import { falar } from "@/game/voice";
-import { pageBg, glassPanel } from "@/game/styles";
+import { pageBg } from "@/game/styles";
 import Carta from "@/components/game/Carta";
-import MonstroDisplay from "@/components/game/MonstroDisplay";
+import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
 import BtnMain from "@/components/game/BtnMain";
 import ModalPoder from "@/components/game/ModalPoder";
@@ -46,24 +44,20 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const [loading, setLoading] = useState(false);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
-  // Initialize game on mount
   useEffect(() => {
     async function init() {
       try {
         let sid = salaId;
         if (!sid) {
-          // Create a session for AI mode
           const sess = await criarSessao();
           sid = sess.id;
           sessionIdRef.current = sid;
         } else {
           sessionIdRef.current = sid;
         }
-
         const result = await initGame(sid!, modo === "multi" ? "multi" : "ai", [
           { slot: slotLocal, nome: "Você", monstroId: monstroP1 },
         ]);
-
         setServerState(result.state);
       } catch (err) {
         console.error("Init error:", err);
@@ -72,17 +66,14 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     init();
   }, []);
 
-  // Listen for realtime updates on session state
   useEffect(() => {
     const sid = sessionIdRef.current;
     if (!sid) return;
-
     const channel = ouvirSessao(sid, (session: GameSession) => {
       if (session.state_json && typeof session.state_json === "object") {
         setServerState(session.state_json as unknown as ServerState);
       }
     });
-
     return () => fecharCanal(channel);
   }, [sessionIdRef.current]);
 
@@ -115,8 +106,6 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
       setCartaSel(null);
-
-      // Narrate key events
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
@@ -124,8 +113,6 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
-
-      // Trigger shake on damage events
       const lastLog = result.state.log?.[result.state.log.length - 1];
       if (lastLog?.t === "dano") {
         setShakeid("hit");
@@ -145,7 +132,6 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       setServerState(result.state);
       setCartaSel(null);
       falar(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
-
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
@@ -159,7 +145,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     setLoading(false);
   }
 
-  // Derive display state from server state
+  // Loading state
   if (!serverState) {
     return (
       <div style={pageBg()}>
@@ -175,57 +161,40 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const opSlot = slotLocal === 0 ? 1 : 0;
   const opponent = serverState.players?.[opSlot];
 
-  // Build Jogador-like objects for display components
-  const p1Display: Jogador = myPlayer ? {
-    id: myPlayer.id || "p1",
-    nome: myPlayer.nome || "Você",
-    humano: true,
-    monstro: myPlayer.monstro || { id: "", nome: "", hp: 0, atk: 0, def: 0, emoji: "", bg1: "#000", bg2: "#000", glow: "#000", hab: "", habD: "", nivel: 0, poder: null, maxHp: 0 },
-    hp: myPlayer.hp || 0,
-    maxHp: myPlayer.maxHp || 100,
-    mao: myPlayer.mao || [],
-    defAtiva: myPlayer.defAtiva || 0,
-    imune: myPlayer.imune || false,
-    dobra: myPlayer.dobra || false,
-    dodgeOnce: myPlayer.dodgeOnce || false,
-    swarms: myPlayer.swarms || [null, null],
-  } : criarJ("p1", "Você", monstroP1, true);
+  const buildJog = (raw: any, fallbackId: string, fallbackNome: string, humano: boolean): Jogador => {
+    if (!raw) return criarJ(fallbackId, fallbackNome, monstroP1, humano);
+    const md = MONSTROS[raw.monstro?.id] || { bg1: "#000", bg2: "#000", glow: "#000", habD: "" } as any;
+    return {
+      id: raw.id || fallbackId,
+      nome: raw.nome || fallbackNome,
+      humano,
+      monstro: {
+        ...raw.monstro,
+        bg1: raw.monstro?.bg1 || md.bg1 || "#000",
+        bg2: raw.monstro?.bg2 || md.bg2 || "#000",
+        glow: raw.monstro?.glow || md.glow || "#000",
+        habD: raw.monstro?.habD || md.habD || "",
+      },
+      hp: raw.hp || 0,
+      maxHp: raw.maxHp || 100,
+      mao: raw.mao || [],
+      defAtiva: raw.defAtiva || 0,
+      imune: raw.imune || false,
+      dobra: raw.dobra || false,
+      dodgeOnce: raw.dodgeOnce || false,
+      swarms: raw.swarms || [null, null],
+    };
+  };
 
-  // Fill in monster visual data from MONSTROS
-  if (p1Display.monstro.id && MONSTROS[p1Display.monstro.id]) {
-    const md = MONSTROS[p1Display.monstro.id];
-    p1Display.monstro.bg1 = p1Display.monstro.bg1 || md.bg1;
-    p1Display.monstro.bg2 = p1Display.monstro.bg2 || md.bg2;
-    p1Display.monstro.glow = p1Display.monstro.glow || md.glow;
-    p1Display.monstro.habD = p1Display.monstro.habD || md.habD;
-  }
+  const p1Display = buildJog(myPlayer, "p1", "Você", true);
+  const enemyDisplay = buildJog(opponent, "p2", "Adversário", false);
 
-  const enemyDisplay: Jogador | null = opponent ? {
-    id: opponent.id || "p2",
-    nome: opponent.nome || "Adversário",
-    humano: false,
-    monstro: {
-      ...opponent.monstro,
-      bg1: MONSTROS[opponent.monstro?.id]?.bg1 || "#222",
-      bg2: MONSTROS[opponent.monstro?.id]?.bg2 || "#444",
-      glow: MONSTROS[opponent.monstro?.id]?.glow || "#666",
-      habD: MONSTROS[opponent.monstro?.id]?.habD || "",
-    },
-    hp: opponent.hp || 0,
-    maxHp: opponent.maxHp || 100,
-    mao: [],
-    defAtiva: opponent.defAtiva || 0,
-    imune: opponent.imune || false,
-    dobra: opponent.dobra || false,
-    dodgeOnce: opponent.dodgeOnce || false,
-    swarms: opponent.swarms || [null, null],
-  } : null;
-
-  const handCards = myPlayer?.mao || [];
-  const totalCards = handCards.length;
-  const arcSpread = Math.min(totalCards * 8, 40);
+  const handCards: CartaData[] = myPlayer?.mao || [];
   const isMyTurn = serverState.fase === "acao";
   const gameOver = serverState.fase === "resultado";
+
+  // Find the full card data for the selected card
+  const selectedFull = cartaSel ? handCards.find((c: any) => c.id === cartaSel.id) || cartaSel : null;
 
   return (
     <div style={pageBg()}>
@@ -241,86 +210,85 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         }
       `}</style>
       <ChromeNoise />
+      <GameLog ents={serverState.log || []} />
 
       <div
         style={{
           position: "relative",
           zIndex: 1,
-          minHeight: "100vh",
+          height: "100vh",
           display: "flex",
           flexDirection: "column",
-          padding: "12px 10px 8px",
+          padding: "8px 10px",
           fontFamily: "Nunito, sans-serif",
-          gap: 8,
+          overflow: "hidden",
         }}
       >
-        {/* Turn indicator */}
-        <div style={{ textAlign: "center" }}>
-          <span style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#00e5ff", letterSpacing: 2 }}>
-            ⚔️ TURNO {(serverState.turno || 0) + 1}
-          </span>
-          <span
-            style={{
-              marginLeft: 12, fontSize: 10,
-              color: isMyTurn ? "#69f0ae" : "#ffd54f",
-              animation: !isMyTurn && !gameOver ? "pulseOpacity 1s infinite" : undefined,
-            }}
-          >
-            {gameOver ? "FIM DE JOGO" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
-          </span>
-          {loading && <span style={{ marginLeft: 8, fontSize: 10, color: "#ff9800" }}>⏳</span>}
-        </div>
+        {/* Top: Turn + Enemy HP */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+          {/* Turn indicator */}
+          <div style={{ textAlign: "center", height: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <span style={{ fontFamily: "Bangers, cursive", fontSize: 13, color: "#00e5ff", letterSpacing: 2 }}>
+              ⚔️ TURNO {(serverState.turno || 0) + 1}
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                color: isMyTurn ? "#69f0ae" : "#ffd54f",
+                animation: !isMyTurn && !gameOver ? "pulseOpacity 1s infinite" : undefined,
+              }}
+            >
+              {gameOver ? "FIM" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
+            </span>
+            {loading && <span style={{ fontSize: 10, color: "#ff9800" }}>⏳</span>}
+          </div>
 
-        {/* Enemy monster */}
-        {enemyDisplay && enemyDisplay.hp > 0 && (
+          {/* Enemy HP bar */}
           <div style={shakeid ? { animation: "shakeHit .3s ease" } : {}}>
-            <MonstroDisplay jog={enemyDisplay} inimigo />
+            <HpBar jog={enemyDisplay} inimigo />
           </div>
-        )}
-
-        {/* VS divider */}
-        <div style={{ textAlign: "center", fontFamily: "Bangers, cursive", fontSize: 18, color: "#ffd54f", letterSpacing: 4, textShadow: "0 0 16px #ffd54f" }}>
-          ⚡ VS ⚡
         </div>
 
-        {/* Player monster */}
-        <div style={shakeid ? { animation: "shakeHit .3s ease" } : {}}>
-          <MonstroDisplay jog={p1Display} />
+        {/* Center: Selected Card (hero area) */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 0,
+            padding: "8px 0",
+          }}
+        >
+          {selectedFull ? (
+            <div style={{ transform: "scale(0.92)", transformOrigin: "center" }}>
+              <Carta carta={selectedFull} sel={true} disabled />
+            </div>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                color: "#4a5568",
+                fontFamily: "Bangers, cursive",
+                fontSize: 18,
+                letterSpacing: 2,
+              }}
+            >
+              {gameOver ? "" : "👆 TOQUE UMA CARTA"}
+            </div>
+          )}
         </div>
-
-        {/* Log */}
-        <GameLog ents={serverState.log || []} />
-
-        {/* Hand of cards */}
-        {!gameOver && (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 0, minHeight: 180, padding: "8px 0", position: "relative" }}>
-            {handCards.map((c: any, i: number) => {
-              const mid = (totalCards - 1) / 2;
-              const angle = (i - mid) * (arcSpread / Math.max(totalCards - 1, 1));
-              return (
-                <Carta
-                  key={c.id}
-                  carta={c}
-                  sel={cartaSel?.id === c.id}
-                  onClick={() => selCarta(c)}
-                  disabled={!isMyTurn || loading}
-                  angulo={angle}
-                />
-              );
-            })}
-          </div>
-        )}
 
         {/* Action buttons */}
         {!gameOver && (
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0, marginBottom: 6 }}>
             <BtnMain
               variant={cartaSel ? "gold" : "dark"}
               disabled={!cartaSel || !isMyTurn || loading}
               onClick={jogarCarta}
               style={{ flex: 2 }}
             >
-              {cartaSel ? `⚡ JOGAR: ${cartaSel.nome}` : "Selecione uma carta"}
+              {cartaSel ? `⚡ JOGAR` : "Selecione"}
             </BtnMain>
             <BtnMain
               variant="dark"
@@ -335,18 +303,50 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
         {/* Game over */}
         {gameOver && (
-          <div style={{ textAlign: "center", padding: 20 }}>
+          <div style={{ textAlign: "center", padding: 12, flexShrink: 0 }}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 28, color: serverState.vencedor === slotLocal ? "#69f0ae" : "#ef5350", textShadow: "0 0 20px currentColor" }}>
               {serverState.vencedor === slotLocal ? "🏆 VITÓRIA!" : "💀 DERROTA!"}
             </div>
-            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null)} style={{ marginTop: 16 }}>
+            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null)} style={{ marginTop: 12 }}>
               CONTINUAR
             </BtnMain>
           </div>
         )}
+
+        {/* Card thumbnails — scrollable row */}
+        {!gameOver && (
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              overflowY: "hidden",
+              padding: "6px 0",
+              flexShrink: 0,
+              justifyContent: handCards.length <= 4 ? "center" : "flex-start",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+            }}
+          >
+            {handCards.map((c: any) => (
+              <Carta
+                key={c.id}
+                carta={c}
+                sel={cartaSel?.id === c.id}
+                onClick={() => selCarta(c)}
+                disabled={!isMyTurn || loading}
+                mini
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Player HP bar */}
+        <div style={{ flexShrink: 0, paddingTop: 4 }}>
+          <HpBar jog={p1Display} />
+        </div>
       </div>
 
-      {/* Power selection modal */}
       {mostraPoder && <ModalPoder onEscolha={escolherPoder} />}
     </div>
   );

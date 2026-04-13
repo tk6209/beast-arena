@@ -1,10 +1,5 @@
-import React, { useRef, useEffect } from "react";
-import { glassPanel } from "@/game/styles";
+import React, { useState, useEffect, useRef } from "react";
 import type { LogEntry } from "@/game/engine";
-
-interface LogProps {
-  ents: LogEntry[];
-}
 
 const LOG_COLORS: Record<string, string> = {
   dano: "#ff8a80",
@@ -15,41 +10,85 @@ const LOG_COLORS: Record<string, string> = {
   grande: "#ffab40",
 };
 
-export default function Log({ ents }: LogProps) {
-  const r = useRef<HTMLDivElement>(null);
+interface FloatingEntry {
+  key: number;
+  entry: LogEntry;
+  opacity: number;
+}
+
+interface LogProps {
+  ents: LogEntry[];
+}
+
+let _keyCounter = 0;
+
+export default function GameLog({ ents }: LogProps) {
+  const [visible, setVisible] = useState<FloatingEntry[]>([]);
+  const prevLen = useRef(0);
 
   useEffect(() => {
-    if (r.current) r.current.scrollTop = r.current.scrollHeight;
+    if (ents.length > prevLen.current) {
+      const newEntries = ents.slice(prevLen.current);
+      const floats: FloatingEntry[] = newEntries.map((e) => ({
+        key: ++_keyCounter,
+        entry: e,
+        opacity: 1,
+      }));
+      setVisible((prev) => [...prev, ...floats].slice(-3));
+
+      // Auto dismiss after 3s
+      const keys = floats.map((f) => f.key);
+      setTimeout(() => {
+        setVisible((prev) => prev.filter((f) => !keys.includes(f.key)));
+      }, 3000);
+    }
+    prevLen.current = ents.length;
   }, [ents]);
+
+  if (visible.length === 0) return null;
 
   return (
     <div
-      ref={r}
       style={{
-        height: 92,
-        overflowY: "auto",
-        ...glassPanel("#1e2b46", {
-          borderRadius: 14,
-          padding: "8px 10px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
-        }),
+        position: "fixed",
+        top: 8,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        pointerEvents: "none",
+        width: "90%",
+        maxWidth: 360,
       }}
     >
-      {ents.slice(-14).map((e, i) => (
+      {visible.map((f) => (
         <div
-          key={i}
+          key={f.key}
           style={{
             fontFamily: "Nunito, sans-serif",
-            fontSize: 10.6,
-            color: LOG_COLORS[e.t] || "#e2e8f0",
-            lineHeight: 1.32,
+            fontSize: 11,
+            color: LOG_COLORS[f.entry.t] || "#e2e8f0",
+            background: "rgba(10,17,34,.88)",
+            border: "1px solid rgba(255,255,255,.08)",
+            borderRadius: 10,
+            padding: "6px 12px",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 4px 16px rgba(0,0,0,.4)",
+            textAlign: "center",
+            animation: "floatIn .3s ease",
           }}
         >
-          {e.msg}
+          {f.entry.msg}
         </div>
       ))}
+      <style>{`
+        @keyframes floatIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
