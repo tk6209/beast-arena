@@ -46,11 +46,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     let inimigos: Jogador[];
 
     if (modo === "multi" && salaId) {
-      const sala = lerSala(salaId);
-      const outro = sala?.slots?.find((j: any) => j.slot !== (slotLocal || 0));
-      const mOut = outro?.monstro || "morcego";
+      // For multiplayer, opponent data will arrive via Realtime events
+      // Use a placeholder enemy that will be updated when game starts
+      const mOut = "morcego";
       const pOut = Object.keys(PODERES)[Math.floor(Math.random() * Object.keys(PODERES).length)];
-      let e = criarJ("p2", outro?.nome || "Adversário", mOut, false);
+      let e = criarJ("p2", "Adversário", mOut, false);
       e.monstro = evoluir(e.monstro, pOut);
       e.hp = e.monstro.maxHp;
       e.maxHp = e.monstro.maxHp;
