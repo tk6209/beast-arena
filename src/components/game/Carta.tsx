@@ -1,6 +1,7 @@
 import React from "react";
 import { cartaPaleta } from "@/game/styles";
 import type { CartaData } from "@/game/data";
+import { getCardImage } from "@/game/cardImages";
 
 interface CartaProps {
   carta: CartaData;
@@ -14,6 +15,7 @@ interface CartaProps {
 /* ─── MINI THUMBNAIL (64×90) ─── */
 function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
   const p = cartaPaleta(carta);
+  const imgSrc = getCardImage(carta.nome, carta.tipo);
 
   return (
     <div
@@ -60,7 +62,7 @@ function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
         </span>
       </div>
 
-      {/* Emoji */}
+      {/* Art */}
       <div
         style={{
           flex: 1,
@@ -68,11 +70,16 @@ function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
           alignItems: "center",
           justifyContent: "center",
           background: `radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 36%), linear-gradient(160deg, ${p.m}dd, ${p.t})`,
+          overflow: "hidden",
         }}
       >
-        <span style={{ fontSize: 22, filter: `drop-shadow(0 0 4px ${p.bc}88)` }}>
-          {carta.emoji}
-        </span>
+        {imgSrc ? (
+          <img src={imgSrc} alt={carta.nome} loading="lazy" width={48} height={48} style={{ width: 48, height: 48, objectFit: "contain", filter: `drop-shadow(0 0 4px ${p.bc}88)` }} />
+        ) : (
+          <span style={{ fontSize: 22, filter: `drop-shadow(0 0 4px ${p.bc}88)` }}>
+            {carta.emoji}
+          </span>
+        )}
       </div>
 
       {/* Value */}
@@ -96,6 +103,7 @@ export default function Carta({ carta, sel, onClick, disabled, angulo = 0, mini 
   if (mini) return <CartaMini carta={carta} sel={sel} onClick={onClick} disabled={disabled} />;
 
   const p = cartaPaleta(carta);
+  const imgSrc = getCardImage(carta.nome, carta.tipo);
   const W = 260;
   const H = 380;
 
@@ -208,16 +216,34 @@ export default function Carta({ carta, sel, onClick, disabled, angulo = 0, mini 
             background: "linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 60%)",
           }}
         />
-        <span
-          style={{
-            fontSize: 56,
-            filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          {carta.emoji}
-        </span>
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={carta.nome}
+            loading="lazy"
+            width={110}
+            height={110}
+            style={{
+              width: 110,
+              height: 110,
+              objectFit: "contain",
+              filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
+              position: "relative",
+              zIndex: 1,
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: 56,
+              filter: `drop-shadow(0 0 14px ${p.bc}aa)`,
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {carta.emoji}
+          </span>
+        )}
       </div>
 
       {/* Description */}
