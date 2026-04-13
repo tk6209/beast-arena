@@ -14,7 +14,118 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload_json: Json | null
+          player_slot: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload_json?: Json | null
+          player_slot: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload_json?: Json | null
+          player_slot?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_players: {
+        Row: {
+          created_at: string
+          hp: number
+          id: string
+          max_hp: number
+          monster_id: string
+          nickname: string
+          session_id: string
+          slot: number
+          state_json: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hp?: number
+          id?: string
+          max_hp?: number
+          monster_id: string
+          nickname?: string
+          session_id: string
+          slot: number
+          state_json?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hp?: number
+          id?: string
+          max_hp?: number
+          monster_id?: string
+          nickname?: string
+          session_id?: string
+          slot?: number
+          state_json?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_sessions: {
+        Row: {
+          created_at: string
+          current_turn: number | null
+          id: string
+          join_code: string
+          state_json: Json | null
+          status: Database["public"]["Enums"]["game_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_turn?: number | null
+          id?: string
+          join_code: string
+          state_json?: Json | null
+          status?: Database["public"]["Enums"]["game_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_turn?: number | null
+          id?: string
+          join_code?: string
+          state_json?: Json | null
+          status?: Database["public"]["Enums"]["game_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +134,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      game_status: "waiting" | "active" | "finished"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +261,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      game_status: ["waiting", "active", "finished"],
+    },
   },
 } as const
