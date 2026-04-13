@@ -115,6 +115,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     try {
       const result = await choosePower(sid, slotLocal, pid);
       setServerState(result.state);
+      sfxPoder();
       const p = PODERES[pid];
       speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
     } catch (err) {
@@ -128,6 +129,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     const isDeselecting = cartaSel?.id === carta.id;
     setCartaSel(isDeselecting ? null : carta);
     if (!isDeselecting) {
+      sfxTap();
       falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
     }
   }
@@ -150,16 +152,21 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
+          if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
           setShakeid("hit");
           setTimeout(() => setShakeid(null), 400);
         } else if (entry.t === "def") {
           narration += `Defesa ativada! `;
+          sfxDefesa();
         } else if (entry.t === "evolucao") {
           narration += `Evolução para nível ${entry.nivel || ""}! `;
+          sfxEvolucao();
         } else if (entry.t === "swarm") {
           narration += `Swarm capturado! `;
+          sfxSwarm();
         } else if (entry.t === "cura") {
           narration += `Curou ${entry.hp || ""} pontos de vida! `;
+          sfxCura();
         }
       }
 
@@ -175,6 +182,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
+          if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           gameEnded = true;
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
