@@ -175,7 +175,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
-          falar(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.", true);
+          speak(winner === slotLocal ? "Você venceu!" : "Você foi derrotado.");
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
