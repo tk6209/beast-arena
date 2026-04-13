@@ -3,9 +3,13 @@ import { MONSTROS, PODERES, SWARMS, IA_PRESETS, novaMao, RND, FRASES_ATK, FRASES
 import {
   criarJ, evoluir, equiparSwarm, aplicarBonusSwarms,
   aplicarEfeitosInicioTurno, aplicarPoisonNoAlvo, iaJogar,
-  alog, salvarSala, lerSala,
+  alog,
   type Jogador, type LogEntry,
 } from "@/game/engine";
+import {
+  emitirEvento, ouvirEventos, buscarJogadores, fecharCanal,
+  type GameEvent,
+} from "@/game/multiplayer";
 import { falar } from "@/game/voice";
 import { pageBg, glassPanel } from "@/game/styles";
 import Carta from "@/components/game/Carta";
