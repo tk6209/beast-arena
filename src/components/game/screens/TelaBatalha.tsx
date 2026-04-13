@@ -351,7 +351,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
           {/* Enemy HP bar */}
           <div style={shakeid ? { animation: "shakeHit .3s ease" } : {}}>
-            <HpBar jog={enemyDisplay} inimigo />
+            <HpBar jog={enemyDisplay} inimigo hit={!!shakeid} />
           </div>
         </div>
 
