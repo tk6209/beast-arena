@@ -158,6 +158,39 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
           />
         ))}
       </div>
+
+      {/* Hit flash overlay */}
+      {showFlash && (
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: 12, pointerEvents: "none",
+          background: "rgba(255,23,68,.25)",
+          animation: "hitFlash .4s ease-out forwards",
+        }} />
+      )}
+
+      {/* Hit particles */}
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position: "absolute",
+          left: `${p.x}%`, top: `${p.y}%`,
+          width: 4, height: 4, borderRadius: 999,
+          background: "#ff1744",
+          boxShadow: "0 0 6px #ff1744",
+          pointerEvents: "none",
+          animation: "hitParticle .6s ease-out forwards",
+        }} />
+      ))}
+
+      <style>{`
+        @keyframes hitFlash {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes hitParticle {
+          0% { opacity: 1; transform: scale(1) translate(0,0); }
+          100% { opacity: 0; transform: scale(0.3) translate(${Math.random()>0.5?'':'-'}20px, ${Math.random()>0.5?'':'-'}15px); }
+        }
+      `}</style>
     </div>
   );
 }
