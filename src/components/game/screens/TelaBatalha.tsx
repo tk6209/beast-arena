@@ -124,7 +124,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   function selCarta(carta: any) {
     if (serverState?.fase !== "acao" || loading) return;
-    setCartaSel((prev: any) => prev?.id === carta.id ? null : carta);
+    const isDeselecting = cartaSel?.id === carta.id;
+    setCartaSel(isDeselecting ? null : carta);
+    if (!isDeselecting) {
+      falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
+    }
   }
 
   async function jogarCarta() {
