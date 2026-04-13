@@ -84,16 +84,14 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   // Multiplayer sync via BroadcastChannel
   useEffect(() => {
-    if (!salaId) return;
-    const bc = new BroadcastChannel(`bac_${salaId}`);
-    bc.onmessage = () => {
-      const sala = lerSala(salaId);
-      if (sala?.ultimaAcao && sala.ultimaAcao.slot !== slotLocal) {
-        setGs((prev) => procRemoto(prev, sala.ultimaAcao));
+    if (!salaId || modo !== "multi") return;
+    const channel = ouvirEventos(salaId, (evento: GameEvent) => {
+      if (evento.player_slot !== slotLocal) {
+        setGs((prev) => procRemoto(prev, evento.payload_json));
       }
-    };
-    return () => bc.close();
-  }, [salaId, slotLocal]);
+    });
+    return () => fecharCanal(channel);
+  }, [salaId, slotLocal, modo]);
 
   function procRemoto(prev: GameState, acao: any): GameState {
     let log = alog(prev.log, `👤 Adversário jogou ${acao.carta?.nome || "uma carta"}!`, "sistema");
@@ -304,9 +302,8 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
     p1.mao = p1.mao.filter((c) => c.id !== carta.id);
 
-    if (salaId) {
-      const sala = lerSala(salaId);
-      if (sala) salvarSala(salaId, { ...sala, ultimaAcao: { slot: slotLocal, carta, ts: Date.now() } });
+    if (salaId && modo === "multi") {
+      emitirEvento(salaId, slotLocal || 0, "play_card", { carta });
     }
 
     const gs2: GameState = { ...gs, p1, inimigos, cartaSel: null, log, fase: "inimigo", shakeid: null, vencedor: null };
