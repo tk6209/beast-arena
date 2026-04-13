@@ -67,9 +67,9 @@ export default function Index() {
   };
 
   const handleRejogo = () => {
-    // Clear URL params
     window.history.replaceState({}, "", window.location.pathname);
     setSalaId(null);
+    setJoinCode(null);
     setSlotLocal(0);
     setVencedor(null);
     setMonstroP1("");
