@@ -3,6 +3,7 @@ import { MONSTROS } from "@/game/data";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
+import MonsterAvatar from "@/components/game/MonsterAvatar";
 
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
@@ -94,15 +95,14 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
                 <div
                   style={{
                     background: `radial-gradient(circle at 30% 20%, rgba(255,255,255,.12), transparent 32%), linear-gradient(160deg, ${m.bg2}66, rgba(2,6,15,.85))`,
-                    height: 72,
+                    height: 100,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 40,
                     position: "relative",
                   }}
                 >
-                  <span style={{ filter: `drop-shadow(0 0 10px ${m.glow})` }}>{m.emoji}</span>
+                  <MonsterAvatar monstroId={m.id} size={80} glow={m.glow} />
                 </div>
 
                 <div style={{ padding: "8px 9px 10px" }}>

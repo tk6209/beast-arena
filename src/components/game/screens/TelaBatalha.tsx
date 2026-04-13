@@ -26,6 +26,8 @@ interface ServerState {
   currentTurn: number;
   vencedor: number | null;
   modo: string;
+  lastPlayedCard?: CartaData | null;
+  lastPlayedBy?: number | null;
 }
 
 interface TelaBatalhaProps {
@@ -42,6 +44,9 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const [cartaSel, setCartaSel] = useState<any | null>(null);
   const [shakeid, setShakeid] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [enemyCard, setEnemyCard] = useState<CartaData | null>(null);
+  const [cardAnimState, setCardAnimState] = useState<"idle" | "entering" | "exiting">("idle");
+  const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
@@ -71,11 +76,32 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     if (!sid) return;
     const channel = ouvirSessao(sid, (session: GameSession) => {
       if (session.state_json && typeof session.state_json === "object") {
-        setServerState(session.state_json as unknown as ServerState);
+        const newState = session.state_json as unknown as ServerState;
+        setServerState(newState);
+        // Show enemy's last played card
+        if (newState.lastPlayedCard && newState.lastPlayedBy !== slotLocal) {
+          setEnemyCard(newState.lastPlayedCard);
+          setTimeout(() => setEnemyCard(null), 2500);
+        }
       }
     });
     return () => fecharCanal(channel);
   }, [sessionIdRef.current]);
+
+  // Card selection animation logic
+  useEffect(() => {
+    if (cartaSel) {
+      const card = handCards.find((c: any) => c.id === cartaSel.id) || cartaSel;
+      setDisplayCard(card);
+      setCardAnimState("entering");
+    } else if (displayCard) {
+      setCardAnimState("exiting");
+      setTimeout(() => {
+        setDisplayCard(null);
+        setCardAnimState("idle");
+      }, 200);
+    }
+  }, [cartaSel]);
 
   const sid = sessionIdRef.current;
 
@@ -106,6 +132,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
       setCartaSel(null);
+      // Show enemy card from response
+      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
+        setEnemyCard(result.state.lastPlayedCard);
+        setTimeout(() => setEnemyCard(null), 2500);
+      }
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
@@ -132,6 +163,10 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       setServerState(result.state);
       setCartaSel(null);
       falar(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
+      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
+        setEnemyCard(result.state.lastPlayedCard);
+        setTimeout(() => setEnemyCard(null), 2500);
+      }
       for (const evt of (result.events || [])) {
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
@@ -193,8 +228,12 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const isMyTurn = serverState.fase === "acao";
   const gameOver = serverState.fase === "resultado";
 
-  // Find the full card data for the selected card
-  const selectedFull = cartaSel ? handCards.find((c: any) => c.id === cartaSel.id) || cartaSel : null;
+  const cardAnimStyle: React.CSSProperties =
+    cardAnimState === "entering"
+      ? { animation: "cardEnter .3s cubic-bezier(.34,1.56,.64,1) forwards" }
+      : cardAnimState === "exiting"
+      ? { animation: "cardExit .2s ease forwards" }
+      : {};
 
   return (
     <div style={pageBg()}>
@@ -207,6 +246,20 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         @keyframes pulseOpacity {
           0%, 100% { opacity: 1; }
           50% { opacity: .5; }
+        }
+        @keyframes cardEnter {
+          from { opacity: 0; transform: scale(0.7) translateY(30px); }
+          to { opacity: 1; transform: scale(0.92) translateY(0); }
+        }
+        @keyframes cardExit {
+          from { opacity: 1; transform: scale(0.92) translateY(0); }
+          to { opacity: 0; transform: scale(0.6) translateY(20px); }
+        }
+        @keyframes enemyCardSlide {
+          0% { opacity: 0; transform: translateY(-40px) scale(0.6); }
+          20% { opacity: 1; transform: translateY(0) scale(0.75); }
+          80% { opacity: 1; transform: translateY(0) scale(0.75); }
+          100% { opacity: 0; transform: translateY(20px) scale(0.5); }
         }
       `}</style>
       <ChromeNoise />
@@ -249,7 +302,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           </div>
         </div>
 
-        {/* Center: Selected Card (hero area) */}
+        {/* Center: Selected Card or Enemy Card */}
         <div
           style={{
             flex: 1,
@@ -258,11 +311,44 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
             justifyContent: "center",
             minHeight: 0,
             padding: "8px 0",
+            position: "relative",
           }}
         >
-          {selectedFull ? (
-            <div style={{ transform: "scale(0.92)", transformOrigin: "center" }}>
-              <Carta carta={selectedFull} sel={true} disabled />
+          {/* Enemy played card overlay */}
+          {enemyCard && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+                animation: "enemyCardSlide 2.5s ease forwards",
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <div style={{
+                  position: "absolute",
+                  top: -20,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  fontFamily: "Bangers, cursive",
+                  fontSize: 12,
+                  color: "#ff8a80",
+                  whiteSpace: "nowrap",
+                  textShadow: "0 0 8px rgba(255,0,0,.5)",
+                }}>
+                  ⚔️ INIMIGO JOGOU
+                </div>
+                <Carta carta={enemyCard} sel={false} disabled />
+              </div>
+            </div>
+          )}
+
+          {displayCard ? (
+            <div style={{ transformOrigin: "center", ...cardAnimStyle }}>
+              <Carta carta={displayCard} sel={true} disabled />
             </div>
           ) : (
             <div

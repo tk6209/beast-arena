@@ -2,6 +2,7 @@ import React from "react";
 import { PODERES } from "@/game/data";
 import { aplicarBonusSwarms, type Jogador } from "@/game/engine";
 import { hpBarColor, MONSTER_GLOW } from "@/game/styles";
+import MonsterAvatar from "@/components/game/MonsterAvatar";
 
 interface HpBarProps {
   jog: Jogador;
@@ -26,7 +27,7 @@ export default function HpBar({ jog, inimigo }: HpBarProps) {
         display: "flex",
         alignItems: "center",
         gap: 8,
-        height: 36,
+        height: 40,
         background: "linear-gradient(180deg, rgba(10,17,34,.92), rgba(4,7,18,.95))",
         border: `1px solid ${mc.g}44`,
         borderRadius: 12,
@@ -35,10 +36,8 @@ export default function HpBar({ jog, inimigo }: HpBarProps) {
         boxShadow: `0 4px 16px rgba(0,0,0,.3), 0 0 12px ${mc.g}22`,
       }}
     >
-      {/* Emoji avatar */}
-      <span style={{ fontSize: 20, filter: `drop-shadow(0 0 4px ${mc.g})`, flexShrink: 0 }}>
-        {m.emoji}
-      </span>
+      {/* Monster avatar */}
+      <MonsterAvatar monstroId={m.id} size={32} glow={mc.g} />
 
       {/* Name + level */}
       <div style={{ flexShrink: 0, minWidth: 0 }}>
