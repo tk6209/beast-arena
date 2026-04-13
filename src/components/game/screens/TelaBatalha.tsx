@@ -160,12 +160,14 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   async function handlePassar() {
     if (!sid || loading) return;
+    markGesture();
+    const speak = criarFalaGesture();
     setLoading(true);
     try {
       const result = await passTurn(sid, slotLocal);
       setServerState(result.state);
       setCartaSel(null);
-      falar(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
+      speak(`Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas.`);
       if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
         setEnemyCard(result.state.lastPlayedCard);
         setTimeout(() => setEnemyCard(null), 2500);
