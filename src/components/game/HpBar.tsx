@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PODERES } from "@/game/data";
 import { aplicarBonusSwarms, type Jogador } from "@/game/engine";
 import { hpBarColor, MONSTER_GLOW } from "@/game/styles";
@@ -7,9 +7,10 @@ import MonsterAvatar from "@/components/game/MonsterAvatar";
 interface HpBarProps {
   jog: Jogador;
   inimigo?: boolean;
+  hit?: boolean;
 }
 
-export default function HpBar({ jog, inimigo }: HpBarProps) {
+export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
   const m = jog.monstro;
   const mc = MONSTER_GLOW[m.id] || MONSTER_GLOW.panther;
   const pw = m.poder ? PODERES[m.poder] : null;
@@ -18,6 +19,21 @@ export default function HpBar({ jog, inimigo }: HpBarProps) {
   const fx = aplicarBonusSwarms(jog);
   const atkFinal = m.atk + fx.atkBonus;
   const defFinal = m.def + jog.defAtiva + fx.defBonus;
+  const [showFlash, setShowFlash] = useState(false);
+  const [particles, setParticles] = useState<{x:number;y:number;id:number}[]>([]);
+  const pIdRef = useRef(0);
+
+  useEffect(() => {
+    if (hit) {
+      setShowFlash(true);
+      const newParticles = Array.from({ length: 8 }, (_, i) => ({
+        x: Math.random() * 100, y: Math.random() * 100, id: ++pIdRef.current,
+      }));
+      setParticles(newParticles);
+      setTimeout(() => setShowFlash(false), 400);
+      setTimeout(() => setParticles([]), 800);
+    }
+  }, [hit]);
 
   const SWARM_COLORS = ["#4caf50", "#2196f3", "#9c27b0", "#ffc107", "#00e5ff"];
 
