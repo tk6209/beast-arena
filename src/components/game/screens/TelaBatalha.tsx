@@ -9,7 +9,7 @@ import {
   type GameSession,
 } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
-import { falar } from "@/game/voice";
+import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { pageBg } from "@/game/styles";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
