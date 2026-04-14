@@ -85,6 +85,7 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
   function handleConfirm() {
     if (!isUnlocked) return;
     markGesture();
+    localStorage.setItem("beast_last_monster", m.id);
     falar(`${m.nome} selecionado! Prepare-se para a batalha.`, true);
     onConfirmar(m.id);
   }
