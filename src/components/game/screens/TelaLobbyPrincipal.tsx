@@ -180,10 +180,13 @@ export default function TelaLobbyPrincipal({
 
         {/* ═══ LEFT SIDE PANELS ═══ */}
         <div style={{
-          position: "absolute", left: 8, top: 60, zIndex: 10,
+          position: "absolute", left: 8, top: 60, zIndex: 5,
           display: "flex", flexDirection: "column", gap: 6,
+          justifyContent: "space-evenly",
           animation: "slideInLeft .6s ease forwards",
-        }}>
+          opacity: 0.7, filter: "blur(0.3px)",
+          transition: "opacity .3s, filter .3s",
+        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0.3px)"; }}>
           {/* League badge */}
           <div
             onClick={onRanking}
