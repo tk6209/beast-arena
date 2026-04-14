@@ -1,6 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MONSTROS } from "@/game/data";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
+
+const MONSTER_FX: Record<string, { emojis: string[]; colors: string[]; count: number }> = {
+  drako:   { emojis: ["🔥","💥","🌋"], colors: ["#ef4444","#ff9800","#ffd54f"], count: 14 },
+  crystal: { emojis: ["💎","✨","🔮"], colors: ["#e1bee7","#ce93d8","#ffffff"], count: 12 },
+  volt:    { emojis: ["⚡","💛","⚡"], colors: ["#ffd54f","#ffeb3b","#fff176"], count: 14 },
+  tsunami: { emojis: ["🌊","💧","🫧"], colors: ["#29b6f6","#4fc3f7","#81d4fa"], count: 12 },
+  panther: { emojis: ["🐾","💜","✦"],  colors: ["#a78bfa","#7c3aed","#c084fc"], count: 10 },
+  banana:  { emojis: ["🍌","⭐","💛"], colors: ["#ffd54f","#ffeb3b","#fff9c4"], count: 10 },
+};
+
+function getMonsterFx(id: string) {
+  return MONSTER_FX[id] || { emojis: ["⚡","✦","💫"], colors: ["#00e5ff","#7eb8ff","#69f0ae"], count: 8 };
+}
 
 interface Props {
   monstroP1: string;
@@ -159,6 +172,48 @@ export default function BattleIntro({ monstroP1, monstroP2, nomeP1, nomeP2, onDo
           } as React.CSSProperties} />
         );
       })}
+
+      {/* Monster-specific VFX — Player */}
+      {phase >= 1 && (() => {
+        const fx = getMonsterFx(monstroP1);
+        return Array.from({ length: fx.count }).map((_, i) => {
+          const angle = (i / fx.count) * Math.PI * 2;
+          const dist = 30 + Math.random() * 60;
+          return (
+            <div key={`fx1-${i}`} style={{
+              position: "absolute", left: "25%", top: "50%",
+              fontSize: 10 + Math.random() * 8,
+              "--sx": `${Math.cos(angle) * dist}px`,
+              "--sy": `${Math.sin(angle) * dist}px`,
+              animation: `introSpark ${1 + Math.random() * 0.8}s ${0.2 + Math.random() * 0.5}s ease-out forwards`,
+              opacity: 0, pointerEvents: "none",
+            } as React.CSSProperties}>
+              {fx.emojis[i % fx.emojis.length]}
+            </div>
+          );
+        });
+      })()}
+
+      {/* Monster-specific VFX — Enemy */}
+      {phase >= 2 && (() => {
+        const fx = getMonsterFx(monstroP2);
+        return Array.from({ length: fx.count }).map((_, i) => {
+          const angle = (i / fx.count) * Math.PI * 2;
+          const dist = 30 + Math.random() * 60;
+          return (
+            <div key={`fx2-${i}`} style={{
+              position: "absolute", right: "25%", top: "50%",
+              fontSize: 10 + Math.random() * 8,
+              "--sx": `${Math.cos(angle) * dist}px`,
+              "--sy": `${Math.sin(angle) * dist}px`,
+              animation: `introSpark ${1 + Math.random() * 0.8}s ${0.2 + Math.random() * 0.5}s ease-out forwards`,
+              opacity: 0, pointerEvents: "none",
+            } as React.CSSProperties}>
+              {fx.emojis[i % fx.emojis.length]}
+            </div>
+          );
+        });
+      })()}
 
       {/* Left monster (player) */}
       <div style={{
