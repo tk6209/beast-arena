@@ -18,7 +18,14 @@ const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
 export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(() => {
+    const last = localStorage.getItem("beast_last_monster");
+    if (last) {
+      const i = monsters.findIndex(m => m.id === last);
+      if (i >= 0) return i;
+    }
+    return 0;
+  });
   const [dir, setDir] = useState<"left" | "right" | null>(null);
   const [animating, setAnimating] = useState(false);
   const touchStart = useRef<number | null>(null);
