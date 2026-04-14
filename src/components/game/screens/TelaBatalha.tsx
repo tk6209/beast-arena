@@ -14,6 +14,7 @@ import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTa
 import { pageBg } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
 import { isMuted, toggleMuted } from "@/game/audioState";
+import { hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticError, hapticExplosion } from "@/game/haptic";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -21,6 +22,9 @@ import BtnMain from "@/components/game/BtnMain";
 import ModalPoder from "@/components/game/ModalPoder";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
+import CombatParticles from "@/components/game/CombatParticles";
+import BuffIndicators from "@/components/game/BuffIndicators";
+import TutorialOverlay from "@/components/game/TutorialOverlay";
 
 interface ServerState {
   players: any[];
