@@ -245,7 +245,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       hapticMedium();
 
       // Track battle stats
-      const cardType = cartaSel.tipo || "ataque";
       setBStats(s => ({
         ...s,
         cardsPlayed: s.cardsPlayed + 1,
