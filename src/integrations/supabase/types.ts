@@ -126,6 +126,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          coins: number
+          created_at: string
+          display_name: string
+          id: string
+          level: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          coins?: number
+          created_at?: string
+          display_name?: string
+          id?: string
+          level?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          coins?: number
+          created_at?: string
+          display_name?: string
+          id?: string
+          level?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       rankings: {
         Row: {
           created_at: string
@@ -133,6 +169,7 @@ export type Database = {
           losses: number
           player_name: string
           updated_at: string
+          user_id: string | null
           wins: number
         }
         Insert: {
@@ -141,6 +178,7 @@ export type Database = {
           losses?: number
           player_name?: string
           updated_at?: string
+          user_id?: string | null
           wins?: number
         }
         Update: {
@@ -149,7 +187,44 @@ export type Database = {
           losses?: number
           player_name?: string
           updated_at?: string
+          user_id?: string | null
           wins?: number
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          best_streak: number
+          created_at: string
+          favorite_monster: string | null
+          id: string
+          total_losses: number
+          total_wins: number
+          updated_at: string
+          user_id: string
+          win_streak: number
+        }
+        Insert: {
+          best_streak?: number
+          created_at?: string
+          favorite_monster?: string | null
+          id?: string
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id: string
+          win_streak?: number
+        }
+        Update: {
+          best_streak?: number
+          created_at?: string
+          favorite_monster?: string | null
+          id?: string
+          total_losses?: number
+          total_wins?: number
+          updated_at?: string
+          user_id?: string
+          win_streak?: number
         }
         Relationships: []
       }
