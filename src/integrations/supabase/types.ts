@@ -126,6 +126,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rankings: {
+        Row: {
+          created_at: string
+          id: string
+          losses: number
+          player_name: string
+          updated_at: string
+          wins: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          losses?: number
+          player_name?: string
+          updated_at?: string
+          wins?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          losses?: number
+          player_name?: string
+          updated_at?: string
+          wins?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
