@@ -18,6 +18,8 @@ export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
 
+// Track power across campaign continues
+
 export default function Index() {
   const [tela, setTela] = useState<Tela>("home");
   const [modo, setModo] = useState<string>("duel");

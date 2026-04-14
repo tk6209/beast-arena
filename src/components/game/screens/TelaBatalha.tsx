@@ -42,10 +42,14 @@ interface TelaBatalhaProps {
   onFim: (vencedor: Jogador | null) => void;
   dificuldade?: string;
   aiMonstroId?: string;
+  skipPowerSelect?: boolean;
+  lastPowerId?: string;
 }
 
-export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId }: TelaBatalhaProps) {
-  const [mostraPoder, setMostraPoder] = useState(true);
+const TURN_TIMER_SECONDS = 30;
+
+export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId }: TelaBatalhaProps) {
+  const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
   const [hitCount, setHitCount] = useState(0);
@@ -55,6 +59,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
   const [screenFx, setScreenFx] = useState<string | null>(null);
   const [muted, setMuted] = useState(isMuted());
+  const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
+  const [monsterAction, setMonsterAction] = useState<{ type: string; active: boolean }>({ type: "", active: false });
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
