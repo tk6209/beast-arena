@@ -2,6 +2,7 @@
  * SFX Engine — procedural sounds via Web Audio API
  * No external files needed; all sounds are synthesized.
  */
+import { isMuted } from "./audioState";
 
 let ctx: AudioContext | null = null;
 
