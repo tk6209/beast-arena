@@ -1,3 +1,5 @@
+import { isMuted } from "./audioState";
+
 let vozesCarregadas = false;
 let vozesReady: SpeechSynthesisVoice[] = [];
 
@@ -16,7 +18,7 @@ let pendingTexts: { texto: string; prio: boolean }[] = [];
 let gestureActive = false;
 
 export function falar(texto: string, prio = false) {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  if (typeof window === "undefined" || !window.speechSynthesis || isMuted()) return;
 
   if (gestureActive) {
     speakNow(texto, prio);

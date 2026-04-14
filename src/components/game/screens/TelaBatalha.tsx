@@ -13,6 +13,7 @@ import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
+import { isMuted, toggleMuted } from "@/game/audioState";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -53,6 +54,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [cardAnimState, setCardAnimState] = useState<"idle" | "entering" | "exiting">("idle");
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
   const [screenFx, setScreenFx] = useState<string | null>(null);
+  const [muted, setMuted] = useState(isMuted());
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
@@ -401,6 +403,33 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               {gameOver ? "FIM" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
             </span>
             {loading && <span style={{ fontSize: 10, color: "#ff9800" }}>⏳</span>}
+            <button
+              onClick={() => {
+                const nowMuted = toggleMuted();
+                setMuted(nowMuted);
+                if (nowMuted) stopBattleMusic();
+                else startBattleMusic();
+              }}
+              style={{
+                position: "absolute",
+                right: 12,
+                top: 8,
+                background: "rgba(255,255,255,.08)",
+                border: "1px solid rgba(255,255,255,.15)",
+                borderRadius: 6,
+                width: 28,
+                height: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: 14,
+                zIndex: 10,
+              }}
+              aria-label={muted ? "Ativar som" : "Mutar som"}
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
           </div>
 
           {/* Enemy HP bar */}

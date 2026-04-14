@@ -2,6 +2,7 @@
  * Procedural ambient battle music using Web Audio API.
  * Generates a dark, pulsing loop with bass, pads, and arpeggios.
  */
+import { isMuted } from "./audioState";
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
@@ -78,7 +79,7 @@ function playBeat(c: AudioContext, dest: AudioNode) {
 }
 
 export function startBattleMusic() {
-  if (isPlaying) return;
+  if (isPlaying || isMuted()) return;
   const c = getCtx();
   if (!c) return;
 
