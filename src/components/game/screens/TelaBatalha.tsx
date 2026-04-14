@@ -153,8 +153,8 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
           if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
-          setShakeid("hit");
-          setTimeout(() => setShakeid(null), 400);
+          setHitCount(c => c + 1);
+          
         } else if (entry.t === "def") {
           narration += `Defesa ativada! `;
           sfxDefesa();
@@ -221,8 +221,8 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
           sfxAtaque();
-          setShakeid("hit");
-          setTimeout(() => setShakeid(null), 400);
+          setHitCount(c => c + 1);
+          
         } else if (entry.t === "evolucao") {
           narration += `Evolução para nível ${entry.nivel || ""}! `;
           sfxEvolucao();
@@ -363,8 +363,8 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           </div>
 
           {/* Enemy HP bar */}
-          <div style={shakeid ? { animation: "shakeHit .3s ease" } : {}}>
-            <HpBar jog={enemyDisplay} inimigo hit={!!shakeid} />
+          <div style={hitCount ? { animation: "shakeHit .3s ease", animationIterationCount: 1 } : {}}>
+            <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
         </div>
 
