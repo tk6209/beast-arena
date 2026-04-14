@@ -359,7 +359,74 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     setLoading(false);
   }
 
-  async function handlePassar() {
+  async function jogarCombo() {
+    if (comboSel.length !== 2 || !sid || loading) return;
+    markGesture();
+    const bid = battleIdRef.current;
+    const speak = criarFalaGesture(bid);
+    setLoading(true);
+    try {
+      const result = await comboCards(sid, slotLocal, comboSel[0].id, comboSel[1].id);
+      setServerState(result.state);
+
+      const comboType = comboSel[0].tipo;
+      triggerMonsterAction(comboType);
+      hapticHeavy();
+      triggerFx(comboType);
+
+      setBStats(s => ({
+        ...s,
+        cardsPlayed: s.cardsPlayed + 2,
+        healsUsed: s.healsUsed + (comboType === "cura" ? 2 : 0),
+        defenseCards: s.defenseCards + (comboType === "defesa" ? 2 : 0),
+      }));
+
+      setComboSel([]);
+      setCartaSel(null);
+
+      const logs = result.state.log || [];
+      const recentLogs = logs.slice(-6);
+      let narration = `Combo! ${comboSel[0].nome} mais ${comboSel[1].nome}. `;
+
+      for (const entry of recentLogs) {
+        if (entry.t === "dano") {
+          narration += `${entry.dmg || ""} de dano! `;
+          sfxAtaque(); sfxAtaque();
+          setBStats(s => ({ ...s, damageDealt: s.damageDealt + (entry.dmg || 0) }));
+          setHitCount(c => c + 1);
+        } else if (entry.t === "cura") {
+          narration += `Curou ${entry.hp || ""} HP! `;
+          sfxCura();
+        }
+      }
+
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          narration += `O adversário jogou ${evt.carta.nome || evt.tipo}. `;
+          setEnemyCard(evt.carta);
+          battleTimeout(() => ifBattleActive(bid, () => setEnemyCard(null)), 2500, bid);
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerMonsterAction("cura", "enemy"); }
+        }
+        if (evt.type === "game_over") {
+          const winner = result.state.vencedor;
+          narration += winner === slotLocal ? "Você venceu!" : "Você foi derrotado.";
+          ifBattleActive(bid, () => {
+            if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          });
+          stopBattleMusic();
+          onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
+        }
+      }
+
+      speak(narration.trim());
+    } catch (err) {
+      console.error("Combo error:", err);
+    }
+    setLoading(false);
+  }
+
     if (!sid || loading) return;
     markGesture();
     const bid = battleIdRef.current;
