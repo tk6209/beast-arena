@@ -17,6 +17,8 @@ interface TelaResultadoProps {
   campaignWins?: number;
   campaignTotal?: number;
   campaignIndex?: number;
+  userId?: string;
+  dificuldade?: string;
 }
 
 export default function TelaResultado({

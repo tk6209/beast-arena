@@ -11,6 +11,9 @@ import type { Dificuldade } from "@/pages/Index";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
+  user?: any;
+  onLogin?: () => void;
+  onPerfil?: () => void;
 }
 
 const monsterKeys = Object.keys(MONSTROS);
@@ -324,7 +327,7 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 }
 
 /* ── Main Home Screen ── */
-export default function TelaHome({ onIniciar }: TelaHomeProps) {
+export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showDiffSelect, setShowDiffSelect] = useState(false);
