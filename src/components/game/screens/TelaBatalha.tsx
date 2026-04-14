@@ -291,7 +291,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       }));
 
       setCartaSel(null);
-
+      setComboSel([]);
       const logs = result.state.log || [];
       const recentLogs = logs.slice(-6);
       let narration = `Você jogou ${cartaNome}. `;
