@@ -4,6 +4,7 @@ import { MONSTER_IMAGES, getMonsterImageForAngle } from "@/game/monsterImages";
 import { pageBg } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
+import LobbyParticles from "@/components/game/LobbyParticles";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Dificuldade } from "@/pages/Index";
@@ -97,6 +98,7 @@ export default function TelaLobbyPrincipal({
       }}
     >
       <ChromeNoise />
+      <LobbyParticles />
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes monsterFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
