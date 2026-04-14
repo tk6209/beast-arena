@@ -157,10 +157,15 @@ function aplicarPoison(alvo: any, log: any[]): { alvo: any; log: any[] } {
 }
 
 /* ─── AI Logic ─── */
-function iaJogar(ai: any): { tipo: string; carta?: any } {
+function iaJogar(ai: any, dificuldade: string = "medio"): { tipo: string; carta?: any } {
   const h = ai.mao || [];
+
+  // Easy: 30% chance to just pass (play dumb)
+  if (dificuldade === "facil" && Math.random() < 0.3) return { tipo: "passar" };
+
   // Low HP: prioritize healing, then defense
-  if (ai.hp < 40) {
+  const hpThreshold = dificuldade === "avancado" ? 50 : 40;
+  if (ai.hp < hpThreshold) {
     const cura = h.find((c: any) => c.tipo === "cura");
     if (cura) return { tipo: "cura", carta: cura };
     const d = h.find((c: any) => c.tipo === "defesa");
@@ -170,6 +175,13 @@ function iaJogar(ai: any): { tipo: string; carta?: any } {
   if (sw && (ai.swarms || []).some((s: any) => s === null)) return { tipo: "swarm", carta: sw };
   const ev = h.find((c: any) => c.tipo === "evolucao" && (ai.monstro.nivel || 0) < 3 && ai.monstro.poder);
   if (ev && (ai.monstro.nivel || 0) < 2) return { tipo: "evolucao", carta: ev };
+
+  // Advanced: pick strongest attack
+  if (dificuldade === "avancado") {
+    const ataques = h.filter((c: any) => c.tipo === "ataque").sort((a: any, b: any) => (b.valor || 0) - (a.valor || 0));
+    if (ataques.length > 0) return { tipo: "ataque", carta: ataques[0] };
+  }
+
   const a = h.find((c: any) => c.tipo === "ataque"); if (a) return { tipo: "ataque", carta: a };
   const d = h.find((c: any) => c.tipo === "defesa"); if (d) return { tipo: "defesa", carta: d };
   const cura = h.find((c: any) => c.tipo === "cura"); if (cura) return { tipo: "cura", carta: cura };
@@ -456,21 +468,29 @@ function handlePassTurn(state: any, payload: any): any {
 }
 
 function handleInitGame(state: any, payload: any): any {
-  const { modo, players: playerConfigs } = payload;
-  // playerConfigs: [{ slot, nome, monstroId }, ...]
+  const { modo, players: playerConfigs, dificuldade = "medio", aiMonstroId } = payload;
 
   const players: any[] = [];
   for (const pc of playerConfigs) {
     players[pc.slot] = criarJogador(pc.slot.toString(), pc.nome, pc.monstroId);
   }
 
+  // Difficulty multipliers
+  const diffMult = dificuldade === "facil" ? { hp: 0.7, atk: 0.7, def: 0.7 }
+    : dificuldade === "avancado" ? { hp: 1.4, atk: 1.3, def: 1.3 }
+    : { hp: 1, atk: 1, def: 1 };
+
   // For AI mode, set up AI player
   if (modo === "ai" && players.length < 2) {
-    const aiMonsters = ["morcego", "banana", "macaco"];
-    const aiM = rndItem(aiMonsters);
+    const aiM = aiMonstroId && MONSTROS[aiMonstroId] ? aiMonstroId : rndItem(Object.keys(MONSTROS));
     const aiP = rndItem(Object.keys(PODERES));
     let ai = criarJogador("ai", "Rival Sombrio", aiM);
     ai.monstro = evoluir(ai.monstro, aiP);
+
+    // Apply difficulty scaling
+    ai.monstro.atk = Math.round(ai.monstro.atk * diffMult.atk);
+    ai.monstro.def = Math.round(ai.monstro.def * diffMult.def);
+    ai.monstro.maxHp = Math.round(ai.monstro.maxHp * diffMult.hp);
     ai.hp = ai.monstro.maxHp;
     ai.maxHp = ai.monstro.maxHp;
     ai.mao = novaMao(5, aiP);
@@ -480,6 +500,7 @@ function handleInitGame(state: any, payload: any): any {
   return {
     state: {
       modo,
+      dificuldade,
       players,
       turno: 0,
       fase: "poder",
