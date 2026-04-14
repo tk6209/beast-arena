@@ -595,38 +595,52 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const { action, sessionId: rawSessionId, payload } = await req.json();
+
+    // Auth: try to validate JWT, but allow anonymous for AI games
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    let isAuthenticated = false;
+    if (authHeader?.startsWith("Bearer ")) {
+      const authSupabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claims, error: authError } = await authSupabase.auth.getClaims(token);
+      if (!authError && claims?.claims?.sub) {
+        isAuthenticated = true;
+      }
+    }
+
+    // For multiplayer, require authentication
+    if (payload?.modo === "multi" && !isAuthenticated) {
+      return new Response(JSON.stringify({ error: "Autenticação necessária para multiplayer" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const authSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: authError } = await authSupabase.auth.getClaims(token);
-    if (authError || !claims?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { action, sessionId, payload } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Create session on the fly if none provided (AI duels)
+    let sessionId = rawSessionId;
+    if (!sessionId && action === "init_game") {
+      const joinCode = Math.random().toString(36).slice(2, 7).toUpperCase();
+      const { data: newSess, error: sessErr } = await supabase
+        .from("game_sessions")
+        .insert({ join_code: joinCode, status: "waiting", state_json: {}, current_turn: 0 })
+        .select("id")
+        .single();
+      if (sessErr) throw new Error(`Erro ao criar sessão: ${sessErr.message}`);
+      sessionId = newSess.id;
+    }
+
     let state: any = {};
-    if (sessionId) {
+    if (sessionId && action !== "init_game") {
       const { data: session } = await supabase
         .from("game_sessions")
         .select("state_json, current_turn, status")
