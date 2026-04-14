@@ -180,6 +180,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
   function triggerFx(type: string) {
     setScreenFx(type);
+    setParticleType(type);
+    setParticleTrigger(t => t + 1);
     setTimeout(() => setScreenFx(null), 600);
   }
 
@@ -210,6 +212,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     setCartaSel(isDeselecting ? null : carta);
     if (!isDeselecting) {
       sfxTap();
+      hapticLight();
       falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
     }
   }
