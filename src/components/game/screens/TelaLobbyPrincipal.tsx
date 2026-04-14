@@ -17,6 +17,8 @@ interface Props {
   onMatchmaking: () => void;
   onRanking: () => void;
   onSeasonPass: () => void;
+  onMissoes: () => void;
+  onConquistas: () => void;
   onLogout: () => void;
 }
 
@@ -31,7 +33,7 @@ const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string 
 const monsterKeys = Object.keys(MONSTROS);
 
 export default function TelaLobbyPrincipal({
-  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onLogout,
+  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onMissoes, onConquistas, onLogout,
 }: Props) {
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
