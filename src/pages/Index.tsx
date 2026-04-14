@@ -37,6 +37,8 @@ export default function Index() {
   const [campaignIndex, setCampaignIndex] = useState(0);
   const [campaignWins, setCampaignWins] = useState(0);
   const [campaignFinished, setCampaignFinished] = useState(false);
+  const [lastPowerId, setLastPowerId] = useState<string | null>(null);
+  const [isCampaignContinue, setIsCampaignContinue] = useState(false);
 
   const [joinCode, setJoinCode] = useState<string | null>(null);
 
