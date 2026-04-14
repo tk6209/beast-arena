@@ -44,11 +44,12 @@ interface TelaBatalhaProps {
   aiMonstroId?: string;
   skipPowerSelect?: boolean;
   lastPowerId?: string;
+  onPowerChosen?: (powerId: string) => void;
 }
 
 const TURN_TIMER_SECONDS = 30;
 
-export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId }: TelaBatalhaProps) {
+export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId, onPowerChosen }: TelaBatalhaProps) {
   const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
