@@ -172,6 +172,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       startBattleMusic();
       const p = PODERES[pid];
       speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
+      onPowerChosen?.(pid);
     } catch (err) {
       console.error("Power error:", err);
     }
