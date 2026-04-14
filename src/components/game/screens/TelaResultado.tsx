@@ -7,6 +7,14 @@ import { sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 
+interface BattleStats {
+  cardsPlayed?: number;
+  healsUsed?: number;
+  evolutions?: number;
+  damageDealt?: number;
+  defenseCards?: number;
+}
+
 interface TelaResultadoProps {
   vencedor: Jogador | null;
   nomeJogador?: string;
@@ -19,12 +27,13 @@ interface TelaResultadoProps {
   campaignIndex?: number;
   userId?: string;
   dificuldade?: string;
+  battleStats?: BattleStats;
 }
 
 export default function TelaResultado({
   vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0, campaignIndex = 0,
-  userId, dificuldade = "medio",
+  userId, dificuldade = "medio", battleStats,
 }: TelaResultadoProps) {
   const g = !!vencedor;
   const [show, setShow] = useState(false);
@@ -55,6 +64,8 @@ export default function TelaResultado({
       const coinReward = g ? (dificuldade === "facil" ? 10 : dificuldade === "avancado" ? 40 : 20) : 5;
       const xpReward = g ? 30 : 10;
       updateUserProgress(userId, g, coinReward, xpReward);
+      updateMissionProgress(userId, g, battleStats);
+      checkAchievements(userId);
     }
   }, [g]);
 
