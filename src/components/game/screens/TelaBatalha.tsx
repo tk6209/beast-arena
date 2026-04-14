@@ -933,6 +933,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           localStorage.setItem("beast_tutorial_done", "1");
         }} />
       )}
+      {modo === "multi" && sid && <BattleChat sessionId={sid} slotLocal={slotLocal} />}
     </div>
   );
 }
