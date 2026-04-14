@@ -20,6 +20,7 @@ import GameLog from "@/components/game/GameLog";
 import BtnMain from "@/components/game/BtnMain";
 import ModalPoder from "@/components/game/ModalPoder";
 import ChromeNoise from "@/components/game/ChromeNoise";
+import MonsterAvatar from "@/components/game/MonsterAvatar";
 
 interface ServerState {
   players: any[];
