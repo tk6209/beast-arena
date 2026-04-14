@@ -34,6 +34,8 @@ interface ServerState {
   lastPlayedBy?: number | null;
 }
 
+type MonsterActionState = { type: string; active: boolean; who: "player" | "enemy" | "both" };
+
 interface TelaBatalhaProps {
   modo: string;
   monstroP1: string;
