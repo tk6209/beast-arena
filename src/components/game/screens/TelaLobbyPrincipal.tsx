@@ -20,6 +20,7 @@ interface Props {
   onSeasonPass: () => void;
   onMissoes: () => void;
   onConquistas: () => void;
+  onAmigos: () => void;
   onLogout: () => void;
 }
 
@@ -34,7 +35,7 @@ const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string 
 const monsterKeys = Object.keys(MONSTROS);
 
 export default function TelaLobbyPrincipal({
-  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onMissoes, onConquistas, onLogout,
+  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onLogout,
 }: Props) {
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
@@ -231,6 +232,15 @@ export default function TelaLobbyPrincipal({
             </div>
             <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
               Badges
+            </div>
+          </SidePanel>
+
+          <SidePanel onClick={onAmigos} bg="rgba(0,229,255,.08)" border="rgba(0,229,255,.2)" delay={5}>
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#00e5ff", letterSpacing: 1 }}>
+              👥 AMIGOS
+            </div>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              Social
             </div>
           </SidePanel>
         </div>
