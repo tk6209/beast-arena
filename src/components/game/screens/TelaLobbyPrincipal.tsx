@@ -401,27 +401,46 @@ export default function TelaLobbyPrincipal({
 /* ── Sub-components ── */
 
 function SidePanel({ children, onClick, bg, border }: { children: React.ReactNode; onClick: () => void; bg: string; border: string }) {
+  const [pressed, setPressed] = React.useState(false);
   return (
-    <div onClick={onClick} style={{
-      background: bg, border: `1px solid ${border}`,
-      borderRadius: 10, padding: "10px 12px", cursor: "pointer",
-      width: 110, transition: "transform .2s, box-shadow .2s",
-    }}>
+    <div
+      onClick={onClick}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      style={{
+        background: bg, border: `1px solid ${border}`,
+        borderRadius: 10, padding: "10px 12px", cursor: "pointer",
+        width: 110,
+        transform: pressed ? "scale(0.93)" : "scale(1)",
+        boxShadow: pressed ? `0 0 16px ${border}, inset 0 0 8px ${border}` : "none",
+        transition: "transform .15s ease, box-shadow .15s ease",
+      }}
+    >
       {children}
     </div>
   );
 }
 
 function ModeButton({ label, color, desc, onClick }: { label: string; color: string; desc?: string; onClick: () => void }) {
+  const [pressed, setPressed] = React.useState(false);
   return (
-    <button onClick={onClick} style={{
-      background: `${color}12`, border: `1px solid ${color}33`,
-      borderRadius: 10, padding: "10px 14px", cursor: "pointer",
-      fontFamily: "Bangers, cursive", fontSize: 11, color,
-      letterSpacing: 2, textAlign: "right", minWidth: 110,
-      display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
-      transition: "all .2s ease",
-    }}>
+    <button
+      onClick={onClick}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      style={{
+        background: `${color}12`, border: `1px solid ${color}33`,
+        borderRadius: 10, padding: "10px 14px", cursor: "pointer",
+        fontFamily: "Bangers, cursive", fontSize: 11, color,
+        letterSpacing: 2, textAlign: "right", minWidth: 110,
+        display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
+        transform: pressed ? "scale(0.93)" : "scale(1)",
+        boxShadow: pressed ? `0 0 16px ${color}66, inset 0 0 8px ${color}33` : "none",
+        transition: "transform .15s ease, box-shadow .15s ease",
+      }}
+    >
       <span>{label}</span>
       {desc && <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", letterSpacing: 1 }}>{desc}</span>}
     </button>
