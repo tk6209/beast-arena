@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { MONSTROS, PODERES, type CartaData } from "@/game/data";
+import BattleIntro from "@/components/game/BattleIntro";
 import {
   criarJ,
   type Jogador, type LogEntry,
