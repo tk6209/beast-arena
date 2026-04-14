@@ -4,6 +4,7 @@ import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
+import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 
 interface TelaResultadoProps {
@@ -25,6 +26,33 @@ export default function TelaResultado({ vencedor, onRecomecar, onSair }: TelaRes
       true
     );
     setTimeout(() => setShow(true), 600);
+
+    // Save to ranking
+    const playerName = vencedor?.nome || "Jogador";
+    (async () => {
+      try {
+        // Try to find existing ranking for this player name
+        const { data } = await supabase
+          .from("rankings")
+          .select("id, wins, losses")
+          .eq("player_name", g ? playerName : "Jogador")
+          .limit(1);
+
+        if (data && data.length > 0) {
+          const row = data[0];
+          await supabase.from("rankings").update({
+            wins: g ? row.wins + 1 : row.wins,
+            losses: g ? row.losses : row.losses + 1,
+          }).eq("id", row.id);
+        } else {
+          await supabase.from("rankings").insert({
+            player_name: g ? playerName : "Jogador",
+            wins: g ? 1 : 0,
+            losses: g ? 0 : 1,
+          });
+        }
+      } catch (e) { console.error("Ranking save error:", e); }
+    })();
   }, [g]);
 
   return (
