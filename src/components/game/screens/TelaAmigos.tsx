@@ -236,13 +236,24 @@ export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
                       {f.friend_profile?.public_id} • LV {f.friend_profile?.level || 1}
                     </div>
                   </div>
-                  <button onClick={() => removeFriend(f.id)} style={{
-                    background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.2)",
-                    borderRadius: 6, padding: "4px 10px", cursor: "pointer",
-                    color: "#ef4444", fontSize: 10, fontFamily: "Nunito, sans-serif",
-                  }}>
-                    Remover
-                  </button>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {onConvidar && (
+                      <button onClick={() => onConvidar(f.friend_profile?.user_id || (f.user_a === user.id ? f.user_b : f.user_a))} style={{
+                        background: "rgba(0,229,255,.1)", border: "1px solid rgba(0,229,255,.25)",
+                        borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                        color: "#00e5ff", fontSize: 10, fontFamily: "Nunito, sans-serif",
+                      }}>
+                        ⚔️ Convidar
+                      </button>
+                    )}
+                    <button onClick={() => removeFriend(f.id)} style={{
+                      background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.2)",
+                      borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                      color: "#ef4444", fontSize: 10, fontFamily: "Nunito, sans-serif",
+                    }}>
+                      Remover
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
