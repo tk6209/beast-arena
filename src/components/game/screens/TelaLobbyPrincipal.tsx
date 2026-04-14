@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { MONSTROS } from "@/game/data";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { pageBg } from "@/game/styles";
@@ -42,6 +42,10 @@ export default function TelaLobbyPrincipal({
   const [selectedMonster, setSelectedMonster] = useState(0);
   const [showDiff, setShowDiff] = useState(false);
   const [fade, setFade] = useState(true);
+  const [rotation, setRotation] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const lastX = useRef(0);
+  const monsterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadData();
@@ -74,6 +78,15 @@ export default function TelaLobbyPrincipal({
       setFade(true);
     }, 200);
   };
+
+  const handleDragStart = (clientX: number) => { setDragging(true); lastX.current = clientX; };
+  const handleDragMove = (clientX: number) => {
+    if (!dragging) return;
+    const delta = clientX - lastX.current;
+    setRotation(r => r + delta * 0.8);
+    lastX.current = clientX;
+  };
+  const handleDragEnd = () => setDragging(false);
 
   return (
     <div
@@ -281,26 +294,41 @@ export default function TelaLobbyPrincipal({
         }}>
           {/* Glow orb */}
           <div style={{
-            position: "absolute", width: 220, height: 220, borderRadius: "50%",
-            background: `radial-gradient(circle, ${currentMonster.glow}20, transparent 70%)`,
+            position: "absolute", width: 260, height: 260, borderRadius: "50%",
+            background: `radial-gradient(circle, ${currentMonster.glow}25, transparent 70%)`,
             animation: "pulseGlow 3s ease-in-out infinite",
             pointerEvents: "none",
           }} />
 
-          {/* Monster */}
-          <div style={{
-            position: "relative", width: 220, height: 220,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          {/* Monster — draggable 360° */}
+          <div
+            ref={monsterRef}
+            onMouseDown={(e) => handleDragStart(e.clientX)}
+            onMouseMove={(e) => handleDragMove(e.clientX)}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
+            onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+            onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+            onTouchEnd={handleDragEnd}
+            style={{
+              position: "relative", width: 260, height: 260,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: dragging ? "grabbing" : "grab",
+              zIndex: 20, perspective: 800,
+              touchAction: "none",
+            }}
+          >
             <img
               src={currentImg}
               alt={currentMonster.nome}
+              draggable={false}
               style={{
-                maxWidth: "85%", maxHeight: "85%", objectFit: "contain",
+                maxWidth: "90%", maxHeight: "90%", objectFit: "contain",
                 opacity: fade ? 1 : 0,
-                filter: `drop-shadow(0 0 30px ${currentMonster.glow}55)`,
+                filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
                 transition: "opacity .2s ease",
-                animation: fade ? "monsterFloat 3s ease-in-out infinite" : "none",
+                animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
+                transform: `rotateY(${rotation}deg) scale(${1 + Math.abs(Math.sin(rotation * Math.PI / 180)) * 0.08})`,
               }}
             />
             {/* Scan line */}
