@@ -180,113 +180,80 @@ export default function TelaLobbyPrincipal({
 
         {/* ═══ LEFT SIDE PANELS ═══ */}
         <div style={{
-          position: "absolute", left: 8, top: 60, zIndex: 5,
-          display: "flex", flexDirection: "column", gap: 6,
-          justifyContent: "space-evenly",
+          position: "absolute", left: 6, top: 56, bottom: 60, zIndex: 5,
+          display: "flex", flexDirection: "column", gap: 8,
+          justifyContent: "center",
           animation: "slideInLeft .6s ease forwards",
-          opacity: 0.7, filter: "blur(0.3px)",
+          opacity: 0.75, filter: "blur(0.2px)",
           transition: "opacity .3s, filter .3s",
-        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0.3px)"; }}>
-          {/* League badge */}
-          <div
-            onClick={onRanking}
-            style={{
-              background: `linear-gradient(135deg, ${leagueInfo.color}15, ${leagueInfo.color}08)`,
-              border: `1px solid ${leagueInfo.color}33`,
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-              width: 130,
-            }}
-          >
-            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: leagueInfo.color, letterSpacing: 2 }}>
+        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.filter = "blur(0.2px)"; }}>
+          <SidePanel onClick={onRanking} bg={`linear-gradient(135deg, ${leagueInfo.color}15, ${leagueInfo.color}08)`} border={`${leagueInfo.color}33`}>
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: leagueInfo.color, letterSpacing: 2 }}>
               {leagueInfo.emoji} {leagueInfo.label}
             </div>
-            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", marginTop: 2 }}>
-              {stats?.total_wins || 0}V / {stats?.total_losses || 0}D
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              {stats?.total_wins || 0}V / {stats?.total_losses || 0}D • ELO {league?.rating || 1000}
             </div>
-          </div>
+          </SidePanel>
 
-          {/* Season Pass */}
-          <div
-            onClick={onSeasonPass}
-            style={{
-              background: "linear-gradient(135deg, rgba(255,213,79,.08), rgba(255,152,0,.05))",
-              border: "1px solid rgba(255,213,79,.2)",
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-              width: 130,
-            }}
-          >
-            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#ffd54f", letterSpacing: 1 }}>
+          <SidePanel onClick={onSeasonPass} bg="linear-gradient(135deg, rgba(255,213,79,.1), rgba(255,152,0,.06))" border="rgba(255,213,79,.25)">
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#ffd54f", letterSpacing: 1 }}>
               🏆 SEASON PASS
             </div>
-            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", marginTop: 2 }}>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
               Tier {seasonPass?.tier || 0} • S{seasonPass?.season || 1}
             </div>
-          </div>
+          </SidePanel>
 
-          {/* Shop */}
-          <div
-            onClick={onLoja}
-            style={{
-              background: "rgba(0,229,255,.06)", border: "1px solid rgba(0,229,255,.15)",
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-              width: 130,
-            }}
-          >
-            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#00e5ff", letterSpacing: 1 }}>
+          <SidePanel onClick={onLoja} bg="rgba(0,229,255,.08)" border="rgba(0,229,255,.2)">
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#00e5ff", letterSpacing: 1 }}>
               🏪 LOJA
             </div>
-          </div>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              Itens e skins
+            </div>
+          </SidePanel>
 
-          {/* Missions */}
-          <div
-            onClick={onMissoes}
-            style={{
-              background: "rgba(105,240,174,.06)", border: "1px solid rgba(105,240,174,.15)",
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-              width: 130,
-            }}
-          >
-            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
+          <SidePanel onClick={onMissoes} bg="rgba(105,240,174,.08)" border="rgba(105,240,174,.2)">
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#69f0ae", letterSpacing: 1 }}>
               🎯 MISSÕES
             </div>
-          </div>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              Diárias
+            </div>
+          </SidePanel>
 
-          {/* Achievements */}
-          <div
-            onClick={onConquistas}
-            style={{
-              background: "rgba(179,136,255,.06)", border: "1px solid rgba(179,136,255,.15)",
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-              width: 130,
-            }}
-          >
-            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#b388ff", letterSpacing: 1 }}>
+          <SidePanel onClick={onConquistas} bg="rgba(179,136,255,.08)" border="rgba(179,136,255,.2)">
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#b388ff", letterSpacing: 1 }}>
               🏅 CONQUISTAS
             </div>
-          </div>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              Badges
+            </div>
+          </SidePanel>
         </div>
 
         {/* ═══ RIGHT SIDE — GAME MODES ═══ */}
         <div style={{
-          position: "absolute", right: 8, top: 60, zIndex: 5,
-          display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end",
-          justifyContent: "space-evenly",
+          position: "absolute", right: 6, top: 56, bottom: 60, zIndex: 5,
+          display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end",
+          justifyContent: "center",
           animation: "slideInRight .6s ease forwards",
-          opacity: 0.7, filter: "blur(0.3px)",
+          opacity: 0.75, filter: "blur(0.2px)",
           transition: "opacity .3s, filter .3s",
-        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0.3px)"; }}>
+        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.filter = "blur(0.2px)"; }}>
           {!showDiff ? (
             <>
-              <ModeButton label="⚔️ DUELO IA" color="#00e5ff" onClick={() => setShowDiff(true)} />
-              <ModeButton label="🌐 MULTIJOGADOR" color="#69f0ae" onClick={onMulti} />
-              <ModeButton label="🎯 RANQUEADA" color="#ffd54f" onClick={onMatchmaking} />
-              <ModeButton label="🏆 RANKING" color="#b388ff" onClick={onRanking} />
+              <ModeButton label="⚔️ DUELO IA" color="#00e5ff" desc="vs CPU" onClick={() => setShowDiff(true)} />
+              <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} />
+              <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} />
+              <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} />
             </>
           ) : (
             <>
               <ModeButton label="😊 FÁCIL" color="#69f0ae" onClick={() => { setShowDiff(false); onIniciar("duel", "facil"); }} />
               <ModeButton label="⚔️ MÉDIO" color="#00e5ff" onClick={() => { setShowDiff(false); onIniciar("duel", "medio"); }} />
-              <ModeButton label="💀 AVANÇADO" color="#ffd54f" onClick={() => { setShowDiff(false); onIniciar("duel", "avancado"); }} />
+              <ModeButton label="💀 HARD" color="#ffd54f" onClick={() => { setShowDiff(false); onIniciar("duel", "avancado"); }} />
               <ModeButton label="← VOLTAR" color="#8a95aa" onClick={() => setShowDiff(false)} />
             </>
           )}
@@ -306,7 +273,7 @@ export default function TelaLobbyPrincipal({
             pointerEvents: "none",
           }} />
 
-          {/* Monster — draggable 360° */}
+          {/* Monster — draggable 360° with silhouette effect */}
           <div
             ref={monsterRef}
             onMouseDown={(e) => handleDragStart(e.clientX)}
@@ -320,23 +287,74 @@ export default function TelaLobbyPrincipal({
               position: "relative", width: 260, height: 260,
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: dragging ? "grabbing" : "grab",
-              zIndex: 20, perspective: 800,
+              zIndex: 20, perspective: 1000,
               touchAction: "none",
             }}
           >
-            <img
-              src={currentImg}
-              alt={currentMonster.nome}
-              draggable={false}
-              style={{
-                maxWidth: "90%", maxHeight: "90%", objectFit: "contain",
-                opacity: fade ? 1 : 0,
-                filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
-                transition: "opacity .2s ease",
-                animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
-                transform: `rotateY(${rotation}deg) scale(${1 + Math.abs(Math.sin(rotation * Math.PI / 180)) * 0.08})`,
-              }}
-            />
+            {/* Shadow/reflection under monster */}
+            <div style={{
+              position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)",
+              width: 140, height: 20, borderRadius: "50%",
+              background: `radial-gradient(ellipse, ${currentMonster.glow}20, transparent 70%)`,
+              filter: "blur(6px)", pointerEvents: "none",
+            }} />
+
+            {/* Main monster image with 3D rotation */}
+            <div style={{
+              transformStyle: "preserve-3d",
+              transform: `rotateY(${rotation}deg)`,
+              transition: dragging ? "none" : "transform 0.1s ease-out",
+            }}>
+              <img
+                src={currentImg}
+                alt={currentMonster.nome}
+                draggable={false}
+                style={{
+                  maxWidth: 220, maxHeight: 220, objectFit: "contain",
+                  opacity: fade ? 1 : 0,
+                  filter: `drop-shadow(0 0 40px ${currentMonster.glow}66) ${
+                    // Darken when showing "back" side (90-270 deg)
+                    (Math.abs(((rotation % 360) + 360) % 360 - 180) < 90)
+                      ? `brightness(0.3) contrast(1.2) drop-shadow(0 0 20px ${currentMonster.glow}44)`
+                      : `brightness(1)`
+                  }`,
+                  transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
+                  animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
+                  backfaceVisibility: "visible",
+                }}
+              />
+              {/* "Back side" label when rotated */}
+              {Math.abs(((rotation % 360) + 360) % 360 - 180) < 70 && (
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  transform: "translate(-50%, -50%) rotateY(180deg)",
+                  fontFamily: "Bangers, cursive", fontSize: 14,
+                  color: currentMonster.glow, letterSpacing: 2,
+                  textShadow: `0 0 12px ${currentMonster.glow}`,
+                  whiteSpace: "nowrap", opacity: 0.8,
+                  pointerEvents: "none",
+                }}>
+                  {currentMonster.nome}
+                </div>
+              )}
+            </div>
+
+            {/* Side indicator — shows rotation angle */}
+            <div style={{
+              position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)",
+              fontFamily: "Oswald, sans-serif", fontSize: 8,
+              color: "rgba(255,255,255,.25)", letterSpacing: 1,
+              opacity: dragging ? 1 : 0, transition: "opacity .3s",
+            }}>
+              {(() => {
+                const norm = (((rotation % 360) + 360) % 360);
+                if (norm < 45 || norm > 315) return "▶ FRENTE";
+                if (norm >= 45 && norm < 135) return "◀ LATERAL";
+                if (norm >= 135 && norm < 225) return "◆ COSTAS";
+                return "▶ LATERAL";
+              })()}
+            </div>
+
             {/* Scan line */}
             <div style={{
               position: "absolute", left: 0, right: 0, height: 1,
@@ -398,17 +416,30 @@ export default function TelaLobbyPrincipal({
 
 /* ── Sub-components ── */
 
-function ModeButton({ label, color, onClick }: { label: string; color: string; onClick: () => void }) {
+function SidePanel({ children, onClick, bg, border }: { children: React.ReactNode; onClick: () => void; bg: string; border: string }) {
+  return (
+    <div onClick={onClick} style={{
+      background: bg, border: `1px solid ${border}`,
+      borderRadius: 10, padding: "10px 12px", cursor: "pointer",
+      width: 110, transition: "transform .2s, box-shadow .2s",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function ModeButton({ label, color, desc, onClick }: { label: string; color: string; desc?: string; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{
-      background: `${color}10`, border: `1px solid ${color}33`,
-      borderRadius: 8, padding: "8px 14px", cursor: "pointer",
+      background: `${color}12`, border: `1px solid ${color}33`,
+      borderRadius: 10, padding: "10px 14px", cursor: "pointer",
       fontFamily: "Bangers, cursive", fontSize: 11, color,
-      letterSpacing: 2, textAlign: "right", minWidth: 120,
-      display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6,
+      letterSpacing: 2, textAlign: "right", minWidth: 110,
+      display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
       transition: "all .2s ease",
     }}>
-      {label}
+      <span>{label}</span>
+      {desc && <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", letterSpacing: 1 }}>{desc}</span>}
     </button>
   );
 }
