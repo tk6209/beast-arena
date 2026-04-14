@@ -400,6 +400,46 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         }
         @keyframes fxFlash { 0%{opacity:.6;} 100%{opacity:0;} }
         @keyframes fxPulse { 0%{transform:scale(1);opacity:.5;} 100%{transform:scale(2.5);opacity:0;} }
+        @keyframes monsterAttack {
+          0% { transform: scale(1) translateY(0); }
+          20% { transform: scale(1.15) translateY(-10px); }
+          40% { transform: scale(1.2) translateX(20px) translateY(-5px); }
+          60% { transform: scale(1.2) translateX(-20px) translateY(-5px); }
+          80% { transform: scale(1.1) translateY(-8px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes monsterDefend {
+          0% { transform: scale(1); filter: brightness(1); }
+          30% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          70% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes monsterHeal {
+          0% { transform: scale(1); filter: brightness(1); }
+          50% { transform: scale(1.1); filter: brightness(1.4) drop-shadow(0 0 24px #34d399); }
+          100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes monsterEvolve {
+          0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+          25% { transform: scale(0.9) rotate(-5deg); filter: brightness(0.8); }
+          50% { transform: scale(1.3) rotate(5deg); filter: brightness(1.8) drop-shadow(0 0 30px #ffd54f); }
+          75% { transform: scale(1.15) rotate(-2deg); filter: brightness(1.3); }
+          100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+        @keyframes monsterSwarm {
+          0% { transform: scale(1); }
+          30% { transform: scale(1.1) translateY(-8px); }
+          60% { transform: scale(1.05) translateY(-4px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes timerPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes monsterIdle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
       `}</style>
 
       {/* Screen effect overlay */}
