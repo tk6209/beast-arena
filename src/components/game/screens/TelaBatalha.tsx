@@ -357,7 +357,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           stopBattleMusic();
-          onFim(winner === slotLocal ? { id: "p1" } as any : null);
+          onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
       }
 
@@ -879,7 +879,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 28, color: serverState.vencedor === slotLocal ? "#69f0ae" : "#ef5350", textShadow: "0 0 20px currentColor" }}>
               {serverState.vencedor === slotLocal ? "🏆 VITÓRIA!" : "💀 DERROTA!"}
             </div>
-            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null)} style={{ marginTop: 12 }}>
+            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null, bStats)} style={{ marginTop: 12 }}>
               CONTINUAR
             </BtnMain>
           </div>
