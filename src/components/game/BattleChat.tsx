@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { CHAT_PRESETS, CHAT_COOLDOWN_MS } from "@/game/chatPresets";
 
 interface BattleChatProps {
   sessionId: string;
   slotLocal: number;
+  opponentMuted?: boolean;
 }
 
-const QUICK_MSGS = [
-  { emoji: "👏", text: "GG" },
-  { emoji: "😮", text: "Wow" },
-  { emoji: "🎯", text: "Boa jogada" },
-  { emoji: "😂", text: "Haha" },
-  { emoji: "😅", text: "Ops" },
-  { emoji: "👀", text: "" },
-];
-
-export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
+export default function BattleChat({ sessionId, slotLocal, opponentMuted = false }: BattleChatProps) {
   const [open, setOpen] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [floatingMsg, setFloatingMsg] = useState<string | null>(null);
@@ -31,7 +24,7 @@ export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
         filter: `session_id=eq.${sessionId}`,
       }, (payload: any) => {
         const row = payload.new;
-        if (row.event_type === "chat" && row.player_slot !== slotLocal) {
+        if (row.event_type === "chat" && row.player_slot !== slotLocal && !opponentMuted) {
           const msg = (row.payload_json as any)?.msg || "👀";
           setFloatingMsg(msg);
           if (floatTimer.current) clearTimeout(floatTimer.current);
@@ -41,7 +34,7 @@ export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [sessionId, slotLocal]);
+  }, [sessionId, slotLocal, opponentMuted]);
 
   async function send(msg: string) {
     if (cooldown) return;
@@ -53,7 +46,7 @@ export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
       event_type: "chat",
       payload_json: { msg },
     });
-    setTimeout(() => setCooldown(false), 3000);
+    setTimeout(() => setCooldown(false), CHAT_COOLDOWN_MS);
   }
 
   return (
@@ -68,7 +61,7 @@ export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
           <div style={{
             background: "rgba(255,255,255,.12)", backdropFilter: "blur(8px)",
             border: "1px solid rgba(255,255,255,.2)", borderRadius: 16,
-            padding: "8px 20px", fontSize: 28, textAlign: "center",
+            padding: "8px 20px", fontSize: 22, textAlign: "center",
             boxShadow: "0 0 30px rgba(0,229,255,.2)",
           }}>
             {floatingMsg}
@@ -101,30 +94,31 @@ export default function BattleChat({ sessionId, slotLocal }: BattleChatProps) {
         💬
       </button>
 
-      {/* Emoji panel */}
+      {/* Emoji/phrase panel — 3x4 grid */}
       {open && (
         <div style={{
           position: "fixed", bottom: 120, right: 10, zIndex: 150,
-          background: "rgba(15,23,42,.9)", backdropFilter: "blur(8px)",
+          background: "rgba(15,23,42,.95)", backdropFilter: "blur(8px)",
           border: "1px solid rgba(0,229,255,.2)", borderRadius: 12,
           padding: 8, display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 4, width: 150,
+          gap: 4, width: 200,
         }}>
-          {QUICK_MSGS.map((m, i) => (
+          {CHAT_PRESETS.map((m) => (
             <button
-              key={i}
-              onClick={() => send(`${m.emoji} ${m.text}`.trim())}
+              key={m.key}
+              onClick={() => send(`${m.emoji} ${m.text}`)}
               disabled={cooldown}
               style={{
                 background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)",
-                borderRadius: 8, padding: "6px 4px", cursor: "pointer",
+                borderRadius: 8, padding: "6px 4px", cursor: cooldown ? "default" : "pointer",
                 fontSize: 10, color: "#e8f0ff", fontFamily: "Nunito, sans-serif",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
                 opacity: cooldown ? 0.4 : 1,
+                transition: "transform .1s",
               }}
             >
-              <span style={{ fontSize: 18 }}>{m.emoji}</span>
-              {m.text && <span style={{ fontSize: 7, letterSpacing: 0.5 }}>{m.text}</span>}
+              <span style={{ fontSize: 16 }}>{m.emoji}</span>
+              <span style={{ fontSize: 7, letterSpacing: 0.3, lineHeight: 1.2, textAlign: "center" }}>{m.text}</span>
             </button>
           ))}
         </div>

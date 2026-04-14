@@ -4,19 +4,28 @@ import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { supabase } from "@/integrations/supabase/client";
 import { MONSTROS } from "@/game/data";
+import {
+  isSfxEnabled, isMusicEnabled, isVoiceEnabled,
+  setSfxEnabled, setMusicEnabled, setVoiceEnabled,
+  savePrefsToDb,
+} from "@/game/audioPreferences";
+import { validateDisplayName, canChangeName, daysUntilNameChange } from "@/game/nameValidation";
 import type { User } from "@supabase/supabase-js";
 
 interface TelaPefilProps {
   user: User;
   onVoltar: () => void;
   onLogout: () => void;
+  onReplayTutorial?: () => void;
 }
 
 interface Profile {
   display_name: string;
+  public_id: string;
   level: number;
   xp: number;
   coins: number;
+  name_changed_at: string | null;
 }
 
 interface Stats {
@@ -27,18 +36,29 @@ interface Stats {
   favorite_monster: string | null;
 }
 
-export default function TelaPerfil({ user, onVoltar, onLogout }: TelaPefilProps) {
+export default function TelaPerfil({ user, onVoltar, onLogout, onReplayTutorial }: TelaPefilProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Audio toggles
+  const [sfx, setSfx] = useState(isSfxEnabled());
+  const [music, setMusic] = useState(isMusicEnabled());
+  const [voice, setVoice] = useState(isVoiceEnabled());
+
+  // Name editing
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [nameSaving, setNameSaving] = useState(false);
+
   useEffect(() => {
     (async () => {
       const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from("profiles").select("display_name, level, xp, coins").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("display_name, public_id, level, xp, coins, name_changed_at").eq("user_id", user.id).single(),
         supabase.from("user_stats").select("total_wins, total_losses, win_streak, best_streak, favorite_monster").eq("user_id", user.id).single(),
       ]);
-      if (p) setProfile(p);
+      if (p) { setProfile(p as Profile); setNewName(p.display_name); }
       if (s) setStats(s);
       setLoading(false);
     })();
@@ -53,6 +73,41 @@ export default function TelaPerfil({ user, onVoltar, onLogout }: TelaPefilProps)
   };
 
   const favoriteMonster = stats?.favorite_monster ? MONSTROS[stats.favorite_monster] : null;
+
+  // Audio toggle handlers
+  const toggleSfx = () => { const v = !sfx; setSfx(v); setSfxEnabled(v); savePrefsToDb(user.id); };
+  const toggleMusic = () => { const v = !music; setMusic(v); setMusicEnabled(v); savePrefsToDb(user.id); };
+  const toggleVoice = () => { const v = !voice; setVoice(v); setVoiceEnabled(v); savePrefsToDb(user.id); };
+
+  // Name change
+  const handleSaveName = async () => {
+    const validation = validateDisplayName(newName);
+    if (!validation.valid) { setNameError(validation.error || "Nome inválido"); return; }
+    if (!canChangeName(profile?.name_changed_at || null)) {
+      const days = daysUntilNameChange(profile?.name_changed_at || null);
+      setNameError(`Aguarde ${days} dia(s) para trocar novamente.`);
+      return;
+    }
+
+    setNameSaving(true);
+    setNameError("");
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        display_name: newName.trim(),
+        display_name_normalized: newName.trim().toLowerCase(),
+        name_changed_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      setNameError("Erro ao salvar nome.");
+    } else {
+      setProfile(p => p ? { ...p, display_name: newName.trim(), name_changed_at: new Date().toISOString() } : p);
+      setEditingName(false);
+    }
+    setNameSaving(false);
+  };
 
   return (
     <div style={pageBg()}>
@@ -85,14 +140,55 @@ export default function TelaPerfil({ user, onVoltar, onLogout }: TelaPefilProps)
             }}>
               {favoriteMonster?.emoji || "⚔️"}
             </div>
+
+            {/* Display name — editable */}
+            {editingName ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+                <input
+                  value={newName}
+                  onChange={e => { setNewName(e.target.value); setNameError(""); }}
+                  maxLength={20}
+                  style={{
+                    padding: "6px 12px", borderRadius: 8,
+                    background: "rgba(255,255,255,.06)", border: "1px solid rgba(0,229,255,.2)",
+                    color: "#e8f0ff", fontSize: 16, fontFamily: "Bangers, cursive",
+                    textAlign: "center", outline: "none", width: 200,
+                  }}
+                />
+                {nameError && <div style={{ fontSize: 10, color: "#ef4444", fontFamily: "Nunito, sans-serif" }}>{nameError}</div>}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={handleSaveName} disabled={nameSaving} style={{
+                    padding: "4px 14px", borderRadius: 6,
+                    background: "rgba(105,240,174,.15)", border: "1px solid rgba(105,240,174,.3)",
+                    color: "#69f0ae", fontSize: 11, cursor: "pointer", fontFamily: "Nunito, sans-serif",
+                  }}>Salvar</button>
+                  <button onClick={() => { setEditingName(false); setNameError(""); setNewName(profile?.display_name || ""); }} style={{
+                    padding: "4px 14px", borderRadius: 6,
+                    background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)",
+                    color: "#8a95aa", fontSize: 11, cursor: "pointer", fontFamily: "Nunito, sans-serif",
+                  }}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  fontFamily: "Bangers, cursive", fontSize: 24,
+                  color: "#e8f0ff", letterSpacing: 2,
+                  cursor: "pointer",
+                }} onClick={() => setEditingName(true)}>
+                  {profile?.display_name || "Jogador"} ✏️
+                </div>
+                <div style={{
+                  fontFamily: "Oswald, sans-serif", fontSize: 11, color: "#00e5ff",
+                  letterSpacing: 1, marginTop: 2,
+                }}>
+                  {profile?.public_id || ""}
+                </div>
+              </div>
+            )}
+
             <div style={{
-              fontFamily: "Bangers, cursive", fontSize: 24,
-              color: "#e8f0ff", letterSpacing: 2,
-            }}>
-              {profile?.display_name || "Jogador"}
-            </div>
-            <div style={{
-              fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#8a95aa",
+              fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#8a95aa", marginTop: 2,
             }}>
               {user.email}
             </div>
@@ -144,7 +240,7 @@ export default function TelaPerfil({ user, onVoltar, onLogout }: TelaPefilProps)
           <div style={{
             background: "rgba(0,229,255,.04)",
             border: "1px solid rgba(0,229,255,.1)",
-            borderRadius: 10, padding: "12px 16px", marginBottom: 16,
+            borderRadius: 10, padding: "12px 16px", marginBottom: 10,
           }}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#00e5ff", letterSpacing: 2, marginBottom: 8, textAlign: "center" }}>
               📊 ESTATÍSTICAS
@@ -172,7 +268,50 @@ export default function TelaPerfil({ user, onVoltar, onLogout }: TelaPefilProps)
             )}
           </div>
 
+          {/* Audio Settings */}
+          <div style={{
+            background: "rgba(179,136,255,.04)",
+            border: "1px solid rgba(179,136,255,.15)",
+            borderRadius: 10, padding: "12px 16px", marginBottom: 10,
+          }}>
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#b388ff", letterSpacing: 2, marginBottom: 8, textAlign: "center" }}>
+              🔊 ÁUDIO
+            </div>
+            {[
+              { label: "Efeitos Sonoros", value: sfx, toggle: toggleSfx, emoji: "🎵" },
+              { label: "Música", value: music, toggle: toggleMusic, emoji: "🎶" },
+              { label: "Narração", value: voice, toggle: toggleVoice, emoji: "🗣️" },
+            ].map(a => (
+              <div key={a.label} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,.04)",
+              }}>
+                <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#94a3b8" }}>
+                  {a.emoji} {a.label}
+                </span>
+                <button onClick={a.toggle} style={{
+                  width: 40, height: 22, borderRadius: 11, cursor: "pointer",
+                  background: a.value ? "rgba(105,240,174,.3)" : "rgba(255,255,255,.1)",
+                  border: `1px solid ${a.value ? "rgba(105,240,174,.5)" : "rgba(255,255,255,.15)"}`,
+                  position: "relative", transition: "all .2s ease",
+                }}>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: "50%",
+                    background: a.value ? "#69f0ae" : "#8a95aa",
+                    position: "absolute", top: 2,
+                    left: a.value ? 20 : 2,
+                    transition: "all .2s ease",
+                  }} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Tutorial replay + actions */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {onReplayTutorial && (
+              <BtnMain variant="dark" onClick={onReplayTutorial}>📖 REPETIR TUTORIAL</BtnMain>
+            )}
             <BtnMain variant="blue" onClick={onVoltar}>← VOLTAR</BtnMain>
             <BtnMain variant="dark" onClick={handleLogout}>🚪 SAIR DA CONTA</BtnMain>
           </div>
