@@ -377,7 +377,7 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
   const ai = state.players[aiSlot];
   if (!ai || ai.hp <= 0) return { state, events: [] };
 
-  const { tipo, carta } = iaJogar(ai);
+  const { tipo, carta } = iaJogar(ai, state.dificuldade || "medio");
   const events: any[] = [];
   let log = [...(state.log || [])];
   const playerSlot = aiSlot === 0 ? 1 : 0;
