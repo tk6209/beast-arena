@@ -8,10 +8,11 @@ interface TelaNomeProps {
 }
 
 export default function TelaNome({ onConfirmar }: TelaNomeProps) {
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(() => localStorage.getItem("beast_arena_nome") || "");
 
   const handleSubmit = () => {
     const trimmed = nome.trim().slice(0, 20) || "Jogador";
+    localStorage.setItem("beast_arena_nome", trimmed);
     onConfirmar(trimmed);
   };
 
