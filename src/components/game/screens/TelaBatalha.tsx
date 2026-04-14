@@ -582,22 +582,69 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             </div>
           )}
 
+          {/* Monster action animation overlay */}
+          {monsterAction.active && (
+            <div style={{
+              position: "absolute", inset: 0, zIndex: 15,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexDirection: "column", gap: 8,
+              pointerEvents: "none",
+            }}>
+              <div style={{
+                animation:
+                  monsterAction.type === "ataque" ? "monsterAttack 1.2s ease forwards" :
+                  monsterAction.type === "defesa" ? "monsterDefend 1.2s ease forwards" :
+                  monsterAction.type === "cura" ? "monsterHeal 1.2s ease forwards" :
+                  monsterAction.type === "evolucao" ? "monsterEvolve 1.2s ease forwards" :
+                  monsterAction.type === "swarm" ? "monsterSwarm 1.2s ease forwards" :
+                  "monsterAttack 1.2s ease forwards",
+              }}>
+                <MonsterAvatar monstroId={monstroP1} size={120} glow={p1Display.monstro.glow} />
+              </div>
+              <div style={{
+                fontFamily: "Bangers, cursive",
+                fontSize: 16,
+                letterSpacing: 2,
+                color:
+                  monsterAction.type === "ataque" ? "#ef4444" :
+                  monsterAction.type === "defesa" ? "#3b82f6" :
+                  monsterAction.type === "cura" ? "#34d399" :
+                  monsterAction.type === "evolucao" ? "#ffd54f" :
+                  monsterAction.type === "swarm" ? "#a78bfa" : "#fff",
+                textShadow: "0 0 12px currentColor",
+                animation: "fadeUp .3s ease forwards",
+              }}>
+                {monsterAction.type === "ataque" ? "⚔️ ATAQUE!" :
+                 monsterAction.type === "defesa" ? "🛡️ DEFESA!" :
+                 monsterAction.type === "cura" ? "💚 CURA!" :
+                 monsterAction.type === "evolucao" ? "⭐ EVOLUÇÃO!" :
+                 monsterAction.type === "swarm" ? "🐾 SWARM!" :
+                 monsterAction.type === "desafio" ? "🎯 DESAFIO!" : "⚡ AÇÃO!"}
+              </div>
+            </div>
+          )}
+
           {displayCard ? (
             <div style={{ transformOrigin: "center", ...cardAnimStyle }}>
               <Carta carta={displayCard} sel={true} disabled />
             </div>
           ) : (
-            <div
-              style={{
-                textAlign: "center",
-                color: "#4a5568",
-                fontFamily: "Bangers, cursive",
-                fontSize: 18,
-                letterSpacing: 2,
-              }}
-            >
-              {gameOver ? "" : "👆 TOQUE UMA CARTA"}
-            </div>
+            !monsterAction.active && (
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                {/* Idle monster display */}
+                <div style={{ animation: "monsterIdle 3s ease-in-out infinite" }}>
+                  <MonsterAvatar monstroId={monstroP1} size={80} glow={p1Display.monstro.glow} style={{ opacity: 0.3 }} />
+                </div>
+                <div style={{
+                  color: "#4a5568",
+                  fontFamily: "Bangers, cursive",
+                  fontSize: 18,
+                  letterSpacing: 2,
+                }}>
+                  {gameOver ? "" : "👆 TOQUE UMA CARTA"}
+                </div>
+              </div>
+            )
           )}
         </div>
 
