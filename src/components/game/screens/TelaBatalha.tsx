@@ -590,6 +590,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
           minHeight: 0, padding: "4px 0", position: "relative", overflow: "hidden",
         }}>
+          {/* Combat particles */}
+          <CombatParticles type={particleType} trigger={particleTrigger} />
+
           {/* Octagon arena background */}
           <div style={{
             position: "absolute",
