@@ -142,6 +142,8 @@ export default function Index() {
     setCampaignIndex(0);
     setCampaignWins(0);
     setCampaignFinished(false);
+    setLastPowerId(null);
+    setIsCampaignContinue(false);
   };
 
   const handleRecomecar = () => { resetAll(); setTela("monstro"); };
