@@ -153,34 +153,49 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
       // Narrate card played + results
       const logs = result.state.log || [];
-      const recentLogs = logs.slice(-3);
+      const recentLogs = logs.slice(-6);
       let narration = `Você jogou ${cartaNome}. `;
+
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
           if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
+          triggerFx("ataque");
           setHitCount(c => c + 1);
-          
-        } else if (entry.t === "def") {
-          narration += `Defesa ativada! `;
-          sfxDefesa();
+        } else if (entry.t === "def" || entry.t === "efeito") {
+          if (entry.msg?.includes("defende") || entry.msg?.includes("escudo") || entry.msg?.includes("esquiva")) {
+            sfxDefesa();
+            triggerFx("defesa");
+          }
         } else if (entry.t === "evolucao") {
           narration += `Evolução para nível ${entry.nivel || ""}! `;
           sfxEvolucao();
+          triggerFx("evolucao");
         } else if (entry.t === "swarm") {
           narration += `Swarm capturado! `;
           sfxSwarm();
         } else if (entry.t === "cura") {
           narration += `Curou ${entry.hp || ""} pontos de vida! `;
           sfxCura();
+          triggerFx("cura");
         }
       }
 
-      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
-        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
-        narration += `O inimigo jogou ${eName}. `;
-        setEnemyCard(result.state.lastPlayedCard);
-        setTimeout(() => setEnemyCard(null), 2500);
+      // Narrate AI played card
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          const aiCardName = evt.carta.nome || evt.tipo;
+          narration += `O adversário jogou ${aiCardName}. `;
+          setEnemyCard(evt.carta);
+          setTimeout(() => setEnemyCard(null), 2500);
+
+          // SFX and effects for AI card
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); }
+        }
       }
 
       let gameEnded = false;
