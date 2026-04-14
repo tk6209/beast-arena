@@ -127,6 +127,7 @@ export default function Index() {
     const nextIdx = campaignIndex + 1;
     setCampaignIndex(nextIdx);
     setSalaId(null);
+    setIsCampaignContinue(true);
     setTela("batalha");
   };
 
