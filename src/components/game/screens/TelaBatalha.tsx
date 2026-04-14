@@ -26,6 +26,7 @@ import MonsterAvatar from "@/components/game/MonsterAvatar";
 import CombatParticles from "@/components/game/CombatParticles";
 import BuffIndicators from "@/components/game/BuffIndicators";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
+import BattleChat from "@/components/game/BattleChat";
 
 interface ServerState {
   players: any[];
@@ -41,13 +42,21 @@ interface ServerState {
 
 type MonsterActionState = { type: string; active: boolean; who: "player" | "enemy" | "both" };
 
+export interface BattleStats {
+  cardsPlayed: number;
+  healsUsed: number;
+  evolutions: number;
+  damageDealt: number;
+  defenseCards: number;
+}
+
 interface TelaBatalhaProps {
   modo: string;
   monstroP1: string;
   nomeJogador?: string;
   salaId?: string | null;
   slotLocal?: number;
-  onFim: (vencedor: Jogador | null) => void;
+  onFim: (vencedor: Jogador | null, stats: BattleStats) => void;
   dificuldade?: string;
   aiMonstroId?: string;
   skipPowerSelect?: boolean;
@@ -75,6 +84,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [particleType, setParticleType] = useState("ataque");
   const [showTutorial, setShowTutorial] = useState(false);
   const [showBattleIntro, setShowBattleIntro] = useState(true);
+  const [bStats, setBStats] = useState<BattleStats>({ cardsPlayed: 0, healsUsed: 0, evolutions: 0, damageDealt: 0, defenseCards: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
@@ -234,6 +244,15 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       triggerMonsterAction(cardType);
       hapticMedium();
 
+      // Track battle stats
+      setBStats(s => ({
+        ...s,
+        cardsPlayed: s.cardsPlayed + 1,
+        healsUsed: s.healsUsed + (cardType === "cura" ? 1 : 0),
+        evolutions: s.evolutions + (cardType === "evolucao" ? 1 : 0),
+        defenseCards: s.defenseCards + (cardType === "defesa" ? 1 : 0),
+      }));
+
       setCartaSel(null);
 
       // Narrate card played + results
@@ -246,6 +265,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           narration += `${entry.dmg || ""} de dano! `;
           if (cartaNome === "EXPLODE") { sfxExplode(); hapticExplosion(); } else { sfxAtaque(); hapticHeavy(); }
           triggerFx("ataque");
+          setBStats(s => ({ ...s, damageDealt: s.damageDealt + (entry.dmg || 0) }));
           setHitCount(c => c + 1);
         } else if (entry.t === "def" || entry.t === "efeito") {
           if (entry.msg?.includes("defende") || entry.msg?.includes("escudo") || entry.msg?.includes("esquiva")) {
@@ -291,7 +311,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
           gameEnded = true;
           stopBattleMusic();
-          onFim(winner === slotLocal ? { id: "p1" } as any : null);
+           onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
       }
 
@@ -337,7 +357,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           stopBattleMusic();
-          onFim(winner === slotLocal ? { id: "p1" } as any : null);
+          onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
       }
 
@@ -347,6 +367,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     }
     setLoading(false);
   }
+
+  const handleIntroDone = useCallback(() => setShowBattleIntro(false), []);
 
   // Loading state
   if (!serverState) {
@@ -392,8 +414,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const p1Display = buildJog(myPlayer, "p1", "Você", true);
   const enemyDisplay = buildJog(opponent, "p2", "Adversário", false);
   const enemyMonstroId = opponent?.monstro?.id || aiMonstroId || "panther";
-
-  const handleIntroDone = useCallback(() => setShowBattleIntro(false), []);
 
   const handCards: CartaData[] = myPlayer?.mao || [];
   const isMyTurn = serverState.fase === "acao";
@@ -859,7 +879,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 28, color: serverState.vencedor === slotLocal ? "#69f0ae" : "#ef5350", textShadow: "0 0 20px currentColor" }}>
               {serverState.vencedor === slotLocal ? "🏆 VITÓRIA!" : "💀 DERROTA!"}
             </div>
-            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null)} style={{ marginTop: 12 }}>
+            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor === slotLocal ? p1Display : null, bStats)} style={{ marginTop: 12 }}>
               CONTINUAR
             </BtnMain>
           </div>
@@ -913,6 +933,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           localStorage.setItem("beast_tutorial_done", "1");
         }} />
       )}
+      {modo === "multi" && sid && <BattleChat sessionId={sid} slotLocal={slotLocal} />}
     </div>
   );
 }

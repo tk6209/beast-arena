@@ -19,6 +19,7 @@ import TelaConquistas from "@/components/game/screens/TelaConquistas";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
+import type { BattleStats } from "@/components/game/screens/TelaBatalha";
 import type { User } from "@supabase/supabase-js";
 
 type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
@@ -45,6 +46,7 @@ export default function Index() {
   const [campaignFinished, setCampaignFinished] = useState(false);
   const [lastPowerId, setLastPowerId] = useState<string | null>(null);
   const [isCampaignContinue, setIsCampaignContinue] = useState(false);
+  const [lastBattleStats, setLastBattleStats] = useState<BattleStats | undefined>(undefined);
 
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [showDailyReward, setShowDailyReward] = useState(false);
@@ -144,8 +146,9 @@ export default function Index() {
     setTela("batalha");
   }, []);
 
-  const handleFim = (v: Jogador | null) => {
+  const handleFim = (v: Jogador | null, stats?: BattleStats) => {
     setVencedor(v);
+    setLastBattleStats(stats);
     if (v) {
       setCampaignWins(w => w + 1);
       const nextIdx = campaignIndex + 1;
@@ -290,7 +293,7 @@ export default function Index() {
           nomeJogador={nomeJogador}
           salaId={salaId}
           slotLocal={slotLocal}
-          onFim={(v) => { handleFim(v); setIsCampaignContinue(false); }}
+          onFim={(v, stats) => { handleFim(v, stats); setIsCampaignContinue(false); }}
           dificuldade={dificuldade}
           aiMonstroId={currentOpponent}
           skipPowerSelect={isCampaignContinue && !!lastPowerId}
@@ -313,6 +316,7 @@ export default function Index() {
           campaignIndex={campaignIndex}
           userId={user?.id}
           dificuldade={dificuldade}
+          battleStats={lastBattleStats}
         />
       );
 
