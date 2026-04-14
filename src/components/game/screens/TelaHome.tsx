@@ -656,43 +656,10 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
             )}
           </div>
 
-          {/* Auth buttons - below game modes */}
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            {user ? (
-              <div
-                onClick={onPerfil}
-                style={{
-                  flex: 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: "rgba(0,229,255,.06)",
-                  border: "1px solid rgba(0,229,255,.15)",
-                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
-                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
-                }}
-              >
-                👤 {user.email?.split("@")[0] || "Perfil"}
-              </div>
-            ) : (
-              <div
-                onClick={onLogin}
-                style={{
-                  flex: 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: "rgba(0,229,255,.06)",
-                  border: "1px solid rgba(0,229,255,.15)",
-                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
-                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
-                }}
-              >
-                🔑 LOGIN / CADASTRO
-              </div>
-            )}
-          </div>
-
           {/* Ranking */}
           {rankings.length > 0 && (
             <div style={{
-              marginTop: 20,
+              marginTop: 12,
               background: "rgba(0,229,255,.04)",
               border: "1px solid rgba(0,229,255,.1)",
               borderRadius: 8,
@@ -734,6 +701,39 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
               ))}
             </div>
           )}
+
+          {/* Auth buttons */}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            {user ? (
+              <div
+                onClick={onPerfil}
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "rgba(0,229,255,.06)",
+                  border: "1px solid rgba(0,229,255,.15)",
+                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
+                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
+                }}
+              >
+                👤 {user.email?.split("@")[0] || "Perfil"}
+              </div>
+            ) : (
+              <div
+                onClick={onLogin}
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "rgba(0,229,255,.06)",
+                  border: "1px solid rgba(0,229,255,.15)",
+                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
+                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
+                }}
+              >
+                🔑 LOGIN / CADASTRO
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
           <div
