@@ -699,7 +699,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ state: result.state, events: result.events }), {
+    return new Response(JSON.stringify({ state: result.state, events: result.events, sessionId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

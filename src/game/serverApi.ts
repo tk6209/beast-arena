@@ -26,7 +26,7 @@ async function callEngine(action: string, sessionId: string | null, payload: any
   return res.json();
 }
 
-export async function initGame(sessionId: string, modo: string, players: { slot: number; nome: string; monstroId: string }[], dificuldade?: string, aiMonstroId?: string) {
+export async function initGame(sessionId: string | null, modo: string, players: { slot: number; nome: string; monstroId: string }[], dificuldade?: string, aiMonstroId?: string) {
   return callEngine("init_game", sessionId, { modo, players, dificuldade, aiMonstroId });
 }
 
