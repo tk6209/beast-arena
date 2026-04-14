@@ -330,11 +330,11 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 /* ── Main Home Screen ── */
 export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => !localStorage.getItem("beast_intro_seen"));
   const [showDiffSelect, setShowDiffSelect] = useState(false);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const [contentReady, setContentReady] = useState(false);
+  const [contentReady, setContentReady] = useState(() => !!localStorage.getItem("beast_intro_seen"));
   const [rankings, setRankings] = useState<any[]>([]);
 
   const handleTap = useCallback(() => {
@@ -358,6 +358,7 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
   const handleIntroDone = useCallback(() => {
     setShowIntro(false);
     setContentReady(true);
+    localStorage.setItem("beast_intro_seen", "1");
   }, []);
 
   useEffect(() => {

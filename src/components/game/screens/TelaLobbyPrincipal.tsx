@@ -404,7 +404,7 @@ export default function TelaLobbyPrincipal({
         {/* ═══ BOTTOM BAR ═══ */}
         <div style={{
           display: "flex", justifyContent: "space-around", alignItems: "center",
-          padding: "8px 16px 14px",
+          padding: "8px 16px max(14px, env(safe-area-inset-bottom))",
           background: "linear-gradient(180deg, transparent, rgba(0,0,0,.4))",
           zIndex: 10,
         }}>

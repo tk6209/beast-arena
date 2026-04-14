@@ -2,11 +2,14 @@ import type { CSSProperties } from "react";
 
 export function pageBg(): CSSProperties {
   return {
-    minHeight: "100vh",
+    minHeight: "100dvh",
     background:
       "radial-gradient(ellipse at 50% -10%, #18335a 0%, #0b1223 38%, #070716 66%, #020207 100%)",
     position: "relative",
     overflow: "hidden",
+    paddingTop: "env(safe-area-inset-top)",
+    paddingLeft: "env(safe-area-inset-left)",
+    paddingRight: "env(safe-area-inset-right)",
   };
 }
 
@@ -53,6 +56,11 @@ export const MONSTER_GLOW: Record<string, { g: string }> = {
   macaco: { g: "#ff8a65" },
   morcego: { g: "#64b5f6" },
   sprouts: { g: "#69f0ae" },
+  drako: { g: "#ff5252" },
+  crystal: { g: "#b388ff" },
+  phantom: { g: "#ce93d8" },
+  tsunami: { g: "#4fc3f7" },
+  volt: { g: "#ffee58" },
 };
 
 export function cartaPaleta(c: { tipo: string; esp?: string; bg1?: string; bg2?: string; raridade?: string }) {

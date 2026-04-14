@@ -212,6 +212,39 @@ export default function Index() {
     setTela("entrar");
   };
 
+  const handleConvidarAmigo = async (friendUserId: string) => {
+    if (!user) return;
+    try {
+      // Create a game session via edge function
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/game-engine`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+          body: JSON.stringify({ action: "init_game", monstroP1: monstroP1 || "panther", monstroP2: "panther", nomeP1: nomeJogador, nomeP2: "Convidado" }),
+        }
+      );
+      const data = await res.json();
+      const sessionId = data?.sessionId;
+      if (!sessionId) return;
+
+      // Insert game invite
+      await supabase.from("game_invites").insert({
+        inviter_id: user.id,
+        invitee_id: friendUserId,
+        session_id: sessionId,
+      });
+
+      // Navigate inviter to lobby to wait
+      setSalaId(sessionId);
+      setSlotLocal(0);
+      setModo("multi");
+      setTela("lobby");
+    } catch (e) {
+      console.error("Invite error:", e);
+    }
+  };
+
   const currentOpponent = campaignQueue[campaignIndex] || undefined;
 
   // Daily reward overlay
@@ -280,7 +313,7 @@ export default function Index() {
 
     case "amigos":
       return user ? (
-        <TelaAmigos user={user} onVoltar={() => setTela("lobby_principal")} />
+        <TelaAmigos user={user} onVoltar={() => setTela("lobby_principal")} onConvidar={handleConvidarAmigo} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
     case "home":
