@@ -576,6 +576,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           <div key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
             <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
+          <BuffIndicators
+            defAtiva={enemyDisplay.defAtiva}
+            imune={enemyDisplay.imune}
+            dobra={enemyDisplay.dobra}
+            dodgeOnce={enemyDisplay.dodgeOnce}
+            swarms={enemyDisplay.swarms}
+          />
         </div>
 
         {/* ═══ BEAST ARENA — Octagon center ═══ */}
