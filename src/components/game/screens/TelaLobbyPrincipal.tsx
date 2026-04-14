@@ -299,45 +299,29 @@ export default function TelaLobbyPrincipal({
               filter: "blur(6px)", pointerEvents: "none",
             }} />
 
-            {/* Main monster image with 3D rotation */}
-            <div style={{
-              transformStyle: "preserve-3d",
-              transform: `rotateY(${rotation}deg)`,
-              transition: dragging ? "none" : "transform 0.1s ease-out",
-            }}>
-              <img
-                src={currentImg}
-                alt={currentMonster.nome}
-                draggable={false}
-                style={{
-                  maxWidth: 220, maxHeight: 220, objectFit: "contain",
-                  opacity: fade ? 1 : 0,
-                  filter: `drop-shadow(0 0 40px ${currentMonster.glow}66) ${
-                    // Darken when showing "back" side (90-270 deg)
-                    (Math.abs(((rotation % 360) + 360) % 360 - 180) < 90)
-                      ? `brightness(0.3) contrast(1.2) drop-shadow(0 0 20px ${currentMonster.glow}44)`
-                      : `brightness(1)`
-                  }`,
-                  transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
-                  animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
-                  backfaceVisibility: "visible",
-                }}
-              />
-              {/* "Back side" label when rotated */}
-              {Math.abs(((rotation % 360) + 360) % 360 - 180) < 70 && (
-                <div style={{
-                  position: "absolute", top: "50%", left: "50%",
-                  transform: "translate(-50%, -50%) rotateY(180deg)",
-                  fontFamily: "Bangers, cursive", fontSize: 14,
-                  color: currentMonster.glow, letterSpacing: 2,
-                  textShadow: `0 0 12px ${currentMonster.glow}`,
-                  whiteSpace: "nowrap", opacity: 0.8,
-                  pointerEvents: "none",
-                }}>
-                  {currentMonster.nome}
+            {/* Main monster image — swaps between front/side/back based on drag angle */}
+            {(() => {
+              const norm = (((rotation % 360) + 360) % 360);
+              const isLeftSide = norm >= 225 && norm < 315;
+              const activeImg = getMonsterImageForAngle(currentKey, rotation);
+              return (
+                <div style={{ position: "relative" }}>
+                  <img
+                    src={activeImg}
+                    alt={currentMonster.nome}
+                    draggable={false}
+                    style={{
+                      maxWidth: 220, maxHeight: 220, objectFit: "contain",
+                      opacity: fade ? 1 : 0,
+                      filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
+                      transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
+                      animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
+                      transform: isLeftSide ? "scaleX(-1)" : "scaleX(1)",
+                    }}
+                  />
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Side indicator — shows rotation angle */}
             <div style={{
