@@ -767,6 +767,9 @@ Deno.serve(async (req) => {
       case "pass_turn":
         result = handlePassTurn(state, payload);
         break;
+      case "combo_cards":
+        result = handleComboCards(state, payload);
+        break;
       default:
         return new Response(JSON.stringify({ error: "Ação desconhecida" }), {
           status: 400,
