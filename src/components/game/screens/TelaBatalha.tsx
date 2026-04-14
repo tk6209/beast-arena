@@ -391,6 +391,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
   const p1Display = buildJog(myPlayer, "p1", "Você", true);
   const enemyDisplay = buildJog(opponent, "p2", "Adversário", false);
+  const enemyMonstroId = opponent?.monstro?.id || aiMonstroId || "panther";
+
+  const handleIntroDone = useCallback(() => setShowBattleIntro(false), []);
 
   const handCards: CartaData[] = myPlayer?.mao || [];
   const isMyTurn = serverState.fase === "acao";
@@ -402,6 +405,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       : cardAnimState === "exiting"
       ? { animation: "cardExit .2s ease forwards" }
       : {};
+
+  // Show battle intro cutscene
+  if (showBattleIntro && !skipPowerSelect) {
+    return (
+      <BattleIntro
+        monstroP1={monstroP1}
+        monstroP2={enemyMonstroId}
+        nomeP1={nomeJogador}
+        nomeP2={enemyDisplay.nome}
+        onDone={handleIntroDone}
+      />
+    );
+  }
 
   return (
     <div style={pageBg()}>
