@@ -46,8 +46,8 @@ const EASY_HP_MULTIPLIER = 1.4;
 const EASY_ROUND_HEAL = 5;
 
 function easyDamageMultiplier(round: number): number {
-  if (round <= 2) return 0.6;
-  if (round <= 4) return 0.8;
+  if (round <= 2) return 0.85;
+  if (round <= 4) return 0.95;
   return 1.0;
 }
 
@@ -56,8 +56,7 @@ function easyAiPassChance(round: number): number {
   return 0.3;
 }
 
-function easyDamageCap(round: number): number {
-  if (round <= 3) return 30;
+function easyDamageCap(_round: number): number {
   return Infinity;
 }
 
