@@ -487,6 +487,20 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             >
               {gameOver ? "FIM" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
             </span>
+            {/* Turn timer */}
+            {isMyTurn && !gameOver && !mostraPoder && (
+              <span style={{
+                fontFamily: "Oswald, sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                color: turnTimer <= 10 ? "#ef4444" : turnTimer <= 20 ? "#ffd54f" : "#69f0ae",
+                animation: turnTimer <= 5 ? "timerPulse .5s infinite" : turnTimer <= 10 ? "timerPulse 1s infinite" : undefined,
+                minWidth: 24,
+                textAlign: "center",
+              }}>
+                ⏱ {turnTimer}s
+              </span>
+            )}
             {loading && <span style={{ fontSize: 10, color: "#ff9800" }}>⏳</span>}
             <button
               onClick={() => {
