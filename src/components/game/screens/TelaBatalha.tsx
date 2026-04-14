@@ -16,6 +16,7 @@ import { pageBg } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
 import { isMuted, toggleMuted } from "@/game/audioState";
 import { hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticError, hapticExplosion } from "@/game/haptic";
+import { setBattleId, getBattleId, clearBattle, battleTimeout, ifBattleActive } from "@/game/battleContext";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -25,7 +26,7 @@ import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
 import CombatParticles from "@/components/game/CombatParticles";
 import BuffIndicators from "@/components/game/BuffIndicators";
-import TutorialOverlay from "@/components/game/TutorialOverlay";
+import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
 
 interface ServerState {
@@ -87,6 +88,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [bStats, setBStats] = useState<BattleStats>({ cardsPlayed: 0, healsUsed: 0, evolutions: 0, damageDealt: 0, defenseCards: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
+  const battleIdRef = useRef<string>("");
+
+  // Set up battle context on mount, clear on unmount
+  useEffect(() => {
+    const bid = `battle-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    battleIdRef.current = bid;
+    setBattleId(bid);
+    return () => {
+      clearBattle();
+      stopBattleMusic();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   // Check if first battle ever — show tutorial
   useEffect(() => {
@@ -123,7 +137,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       }
     }
     init();
-    return () => { stopBattleMusic(); if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   useEffect(() => {
@@ -133,10 +146,10 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       if (session.state_json && typeof session.state_json === "object") {
         const newState = session.state_json as unknown as ServerState;
         setServerState(newState);
-        // Show enemy's last played card
         if (newState.lastPlayedCard && newState.lastPlayedBy !== slotLocal) {
           setEnemyCard(newState.lastPlayedCard);
-          setTimeout(() => setEnemyCard(null), 2500);
+          const bid = battleIdRef.current;
+          battleTimeout(() => ifBattleActive(bid, () => setEnemyCard(null)), 2500, bid);
         }
       }
     });
@@ -151,14 +164,15 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       setCardAnimState("entering");
     } else if (displayCard) {
       setCardAnimState("exiting");
-      setTimeout(() => {
+      const bid = battleIdRef.current;
+      battleTimeout(() => ifBattleActive(bid, () => {
         setDisplayCard(null);
         setCardAnimState("idle");
-      }, 200);
+      }), 200, bid);
     }
   }, [cartaSel]);
 
-  // Turn timer — resets when fase changes, auto-passes when expires
+  // Turn timer
   useEffect(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (!serverState || serverState.fase !== "acao" || mostraPoder) { setTurnTimer(TURN_TIMER_SECONDS); return; }
@@ -167,7 +181,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       setTurnTimer(prev => {
         if (prev <= 1) {
           if (timerRef.current) clearInterval(timerRef.current);
-          // Auto-pass
           handlePassar();
           return TURN_TIMER_SECONDS;
         }
@@ -178,30 +191,32 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   }, [serverState?.fase, serverState?.turno, mostraPoder]);
 
   function triggerMonsterAction(type: string, who: "player" | "enemy" | "both" = "player") {
+    const bid = battleIdRef.current;
     if (who === "player" || who === "both") {
       setMonsterAction({ type, active: true, who: "player" });
-      setTimeout(() => setMonsterAction({ type: "", active: false, who: "player" }), 1200);
+      battleTimeout(() => ifBattleActive(bid, () => setMonsterAction({ type: "", active: false, who: "player" })), 1200, bid);
     }
     if (who === "enemy" || who === "both") {
       setEnemyAction({ type, active: true, who: "enemy" });
-      setTimeout(() => setEnemyAction({ type: "", active: false, who: "enemy" }), 1200);
+      battleTimeout(() => ifBattleActive(bid, () => setEnemyAction({ type: "", active: false, who: "enemy" })), 1200, bid);
     }
   }
 
   const sid = sessionIdRef.current;
 
   function triggerFx(type: string) {
+    const bid = battleIdRef.current;
     setScreenFx(type);
     setParticleType(type);
     setParticleTrigger(t => t + 1);
-    setTimeout(() => setScreenFx(null), 600);
+    battleTimeout(() => ifBattleActive(bid, () => setScreenFx(null)), 600, bid);
   }
 
-  // Start battle music when power is chosen
   async function escolherPoder(pid: string) {
     if (!sid) return;
     markGesture();
-    const speak = criarFalaGesture();
+    const bid = battleIdRef.current;
+    const speak = criarFalaGesture(bid);
     setMostraPoder(false);
     setLoading(true);
     try {
@@ -225,26 +240,25 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     if (!isDeselecting) {
       sfxTap();
       hapticLight();
-      falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
+      falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false, battleIdRef.current);
     }
   }
 
   async function jogarCarta() {
     if (!cartaSel || !sid || loading) return;
     markGesture();
-    const speak = criarFalaGesture();
+    const bid = battleIdRef.current;
+    const speak = criarFalaGesture(bid);
     const cartaNome = cartaSel.nome || cartaSel.id;
     setLoading(true);
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
 
-      // Trigger monster action animation based on card type
       const cardType = cartaSel.tipo || "ataque";
       triggerMonsterAction(cardType);
       hapticMedium();
 
-      // Track battle stats
       setBStats(s => ({
         ...s,
         cardsPlayed: s.cardsPlayed + 1,
@@ -255,7 +269,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
       setCartaSel(null);
 
-      // Narrate card played + results
       const logs = result.state.log || [];
       const recentLogs = logs.slice(-6);
       let narration = `Você jogou ${cartaNome}. `;
@@ -286,15 +299,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         }
       }
 
-      // Narrate AI played card
       for (const evt of (result.events || [])) {
         if (evt.type === "ai_played" && evt.carta) {
           const aiCardName = evt.carta.nome || evt.tipo;
           narration += `O adversário jogou ${aiCardName}. `;
           setEnemyCard(evt.carta);
-          setTimeout(() => setEnemyCard(null), 2500);
+          battleTimeout(() => ifBattleActive(bid, () => setEnemyCard(null)), 2500, bid);
 
-          // SFX and effects for AI card
           if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
           else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
           else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); triggerMonsterAction("evolucao", "enemy"); }
@@ -308,10 +319,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
-          if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          // Only play victory/defeat sfx if this battle is still active
+          ifBattleActive(bid, () => {
+            if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          });
           gameEnded = true;
           stopBattleMusic();
-           onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
+          onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
       }
 
@@ -325,7 +339,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   async function handlePassar() {
     if (!sid || loading) return;
     markGesture();
-    const speak = criarFalaGesture();
+    const bid = battleIdRef.current;
+    const speak = criarFalaGesture(bid);
     setLoading(true);
     try {
       const result = await passTurn(sid, slotLocal);
@@ -335,13 +350,12 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
       let narration = `Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas. `;
 
-      // Narrate AI played card
       for (const evt of (result.events || [])) {
         if (evt.type === "ai_played" && evt.carta) {
           const aiCardName = evt.carta.nome || evt.tipo;
           narration += `O adversário jogou ${aiCardName}. `;
           setEnemyCard(evt.carta);
-          setTimeout(() => setEnemyCard(null), 2500);
+          battleTimeout(() => ifBattleActive(bid, () => setEnemyCard(null)), 2500, bid);
 
           if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
           else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
@@ -355,7 +369,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
-          if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
+          ifBattleActive(bid, () => {
+            if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
+          });
           stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
@@ -611,7 +627,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               {muted ? "🔇" : "🔊"}
             </button>
           </div>
-          <div key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
+          <div data-tutorial-hp key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
             <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
           <BuffIndicators
@@ -623,15 +639,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           />
         </div>
 
-        {/* ═══ BEAST ARENA — Octagon center ═══ */}
+        {/* Beast Arena — Octagon center */}
         <div style={{
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
           minHeight: 0, padding: "4px 0", position: "relative", overflow: "hidden",
         }}>
-          {/* Combat particles */}
           <CombatParticles type={particleType} trigger={particleTrigger} />
 
-          {/* Octagon arena background */}
           <div style={{
             position: "absolute",
             width: "min(280px, 80vw)", height: "min(280px, 80vw)",
@@ -640,14 +654,12 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             border: "none",
             animation: "arenaGlow 3s ease-in-out infinite",
           }}>
-            {/* Inner octagon ring */}
             <div style={{
               position: "absolute", inset: 4,
               clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
               border: "1px solid rgba(0,229,255,.12)",
               background: "transparent",
             }} />
-            {/* Arena cross lines */}
             <div style={{
               position: "absolute", inset: 0,
               background: `
@@ -692,7 +704,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "0 12px",
           }}>
-            {/* Player monster — left side */}
+            {/* Player monster */}
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
             }}>
@@ -742,7 +754,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               flexShrink: 0,
             }}>VS</div>
 
-            {/* Enemy monster — right side (mirrored) */}
+            {/* Enemy monster */}
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
             }}>
@@ -802,9 +814,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           )}
         </div>
 
-        {/* ═══ 8-BIT TIMER — Center bottom ═══ */}
+        {/* Timer */}
         {isMyTurn && !gameOver && !mostraPoder && (
-          <div style={{
+          <div data-tutorial-timer style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             gap: 8, flexShrink: 0, marginBottom: 4,
           }}>
@@ -816,7 +828,6 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               animation: turnTimer <= 5 ? "timerPulse .5s infinite" : undefined,
               imageRendering: "pixelated",
             }}>
-              {/* 8-bit clock icon */}
               <div style={{
                 width: 18, height: 18, position: "relative",
                 border: `2px solid ${turnTimer <= 10 ? "#ef4444" : "#00e5ff"}`,
@@ -853,7 +864,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         )}
         {/* Action buttons */}
         {!gameOver && (
-          <div style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>
+          <div data-tutorial-actions style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>
             <BtnMain
               variant={cartaSel ? "gold" : "dark"}
               disabled={!cartaSel || !isMyTurn || loading}
@@ -885,9 +896,10 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           </div>
         )}
 
-        {/* Card thumbnails — scrollable row */}
+        {/* Card thumbnails */}
         {!gameOver && (
           <div
+            data-tutorial-hand
             style={{
               display: "flex",
               gap: 6,
@@ -928,7 +940,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
       {mostraPoder && <ModalPoder onEscolha={escolherPoder} />}
       {showTutorial && (
-        <TutorialOverlay onComplete={() => {
+        <InteractiveTutorial onComplete={() => {
           setShowTutorial(false);
           localStorage.setItem("beast_tutorial_done", "1");
         }} />

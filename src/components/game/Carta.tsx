@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { cartaPaleta } from "@/game/styles";
 import type { CartaData } from "@/game/data";
 import { getCardImage } from "@/game/cardImages";
@@ -12,89 +12,153 @@ interface CartaProps {
   mini?: boolean;
 }
 
-/* ─── MINI THUMBNAIL (64×90) ─── */
+/** Short effect description for mini cards */
+function shortDesc(carta: CartaData): string {
+  if (carta.tipo === "ataque") return carta.valor ? `${carta.valor} dano` : "Dano variável";
+  if (carta.tipo === "defesa") return carta.valor ? `${carta.valor} defesa` : "Bloqueia dano";
+  if (carta.tipo === "cura") return carta.valor ? `+${carta.valor} HP` : "Cura";
+  if (carta.tipo === "evolucao") return "Evolui monstro";
+  if (carta.tipo === "swarm") return "Captura swarm";
+  if (carta.tipo === "desafio") return "Efeito especial";
+  if (carta.tipo === "poderzinho") return "Buff temporário";
+  return "";
+}
+
+/* ─── MINI THUMBNAIL (72×108) ─── */
 function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
   const p = cartaPaleta(carta);
   const imgSrc = getCardImage(carta.nome, carta.tipo);
+  const [showPreview, setShowPreview] = useState(false);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTouchStart = useCallback(() => {
+    longPressRef.current = setTimeout(() => setShowPreview(true), 300);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
+  }, []);
 
   return (
-    <div
-      onClick={disabled ? undefined : onClick}
-      style={{
-        width: 64,
-        height: 90,
-        borderRadius: 10,
-        border: sel ? "2px solid #ffd54f" : `1.5px solid ${p.bc}88`,
-        background: "linear-gradient(180deg, rgba(18,16,34,.98), rgba(8,9,18,.98))",
-        boxShadow: sel
-          ? `0 0 0 1px #ffd54f, 0 6px 16px rgba(0,0,0,.4), 0 0 14px ${p.bc}55`
-          : `0 4px 12px rgba(0,0,0,.3)`,
-        cursor: disabled ? "default" : "pointer",
-        transform: sel ? "translateY(-6px) scale(1.08)" : "translateY(0)",
-        transition: "transform .18s ease, box-shadow .18s ease",
-        flexShrink: 0,
-        userSelect: "none" as const,
-        display: "flex",
-        flexDirection: "column" as const,
-        overflow: "hidden",
-        fontFamily: "Nunito, sans-serif",
-      }}
-    >
-      {/* Type badge */}
+    <>
       <div
+        onClick={disabled ? undefined : onClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={handleTouchEnd}
         style={{
-          background: `linear-gradient(135deg, ${p.t}, ${p.m})`,
-          padding: "3px 4px 2px",
-          borderBottom: `1px solid ${p.bc}44`,
-          textAlign: "center",
+          width: 72,
+          height: 108,
+          borderRadius: 10,
+          border: sel ? "2px solid #ffd54f" : `1.5px solid ${p.bc}88`,
+          background: "linear-gradient(180deg, rgba(18,16,34,.98), rgba(8,9,18,.98))",
+          boxShadow: sel
+            ? `0 0 0 1px #ffd54f, 0 6px 16px rgba(0,0,0,.4), 0 0 14px ${p.bc}55`
+            : `0 4px 12px rgba(0,0,0,.3)`,
+          cursor: disabled ? "default" : "pointer",
+          transform: sel ? "translateY(-6px) scale(1.08)" : "translateY(0)",
+          transition: "transform .18s ease, box-shadow .18s ease",
+          flexShrink: 0,
+          userSelect: "none" as const,
+          display: "flex",
+          flexDirection: "column" as const,
+          overflow: "hidden",
+          fontFamily: "Nunito, sans-serif",
         }}
       >
-        <span
+        {/* Type badge */}
+        <div
           style={{
-            fontSize: 6,
-            fontWeight: 900,
-            color: "#fff",
-            letterSpacing: 0.5,
-            textTransform: "uppercase" as const,
+            background: `linear-gradient(135deg, ${p.t}, ${p.m})`,
+            padding: "2px 4px 1px",
+            borderBottom: `1px solid ${p.bc}44`,
+            textAlign: "center",
           }}
         >
-          {p.badge}
-        </span>
-      </div>
-
-      {/* Art */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: `radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 36%), linear-gradient(160deg, ${p.m}dd, ${p.t})`,
-          overflow: "hidden",
-        }}
-      >
-        {imgSrc ? (
-          <img src={imgSrc} alt={carta.nome} loading="lazy" width={48} height={48} style={{ width: 48, height: 48, objectFit: "contain", filter: `drop-shadow(0 0 4px ${p.bc}88)` }} />
-        ) : (
-          <span style={{ fontSize: 22, filter: `drop-shadow(0 0 4px ${p.bc}88)` }}>
-            {carta.emoji}
+          <span
+            style={{
+              fontSize: 6,
+              fontWeight: 900,
+              color: "#fff",
+              letterSpacing: 0.5,
+              textTransform: "uppercase" as const,
+            }}
+          >
+            {p.badge}
           </span>
-        )}
+        </div>
+
+        {/* Art */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: `radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 36%), linear-gradient(160deg, ${p.m}dd, ${p.t})`,
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
+          {imgSrc ? (
+            <img src={imgSrc} alt={carta.nome} loading="lazy" width={40} height={40} style={{ width: 40, height: 40, objectFit: "contain", filter: `drop-shadow(0 0 4px ${p.bc}88)` }} />
+          ) : (
+            <span style={{ fontSize: 20, filter: `drop-shadow(0 0 4px ${p.bc}88)` }}>
+              {carta.emoji}
+            </span>
+          )}
+        </div>
+
+        {/* Name + short desc + value */}
+        <div
+          style={{
+            background: "rgba(0,0,0,.6)",
+            padding: "3px 4px 2px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          <div style={{
+            fontFamily: "Bangers, cursive", fontSize: 8, color: "#fff",
+            lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            letterSpacing: 0.3,
+          }}>
+            {carta.nome}
+          </div>
+          <div style={{
+            fontSize: 6, color: "#94a3b8", lineHeight: 1.1,
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {shortDesc(carta)}
+          </div>
+          <div style={{
+            fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#ffd54f", fontWeight: 700,
+            textAlign: "right",
+          }}>
+            {carta.tipo === "ataque" || carta.tipo === "defesa" ? carta.valor || "?" : "✦"}
+          </div>
+        </div>
       </div>
 
-      {/* Value */}
-      <div
-        style={{
-          background: "rgba(0,0,0,.5)",
-          padding: "2px 0",
-          textAlign: "center",
-        }}
-      >
-        <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 10, color: "#fff", fontWeight: 700 }}>
-          {carta.tipo === "ataque" || carta.tipo === "defesa" ? carta.valor || "?" : "✦"}
-        </span>
-      </div>
-    </div>
+      {/* Long-press preview overlay */}
+      {showPreview && (
+        <div
+          onClick={() => setShowPreview(false)}
+          onTouchStart={() => setShowPreview(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9990,
+            background: "rgba(3,8,16,.85)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <Carta carta={carta} sel={false} disabled />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -196,7 +260,7 @@ export default function Carta({ carta, sel, onClick, disabled, angulo = 0, mini 
         </div>
       </div>
 
-      {/* Art area — BIG */}
+      {/* Art area */}
       <div
         style={{
           background: `radial-gradient(circle at 30% 20%, rgba(255,255,255,.14), transparent 40%), linear-gradient(160deg, ${p.m}dd, ${p.t})`,

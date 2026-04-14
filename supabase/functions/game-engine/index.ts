@@ -36,6 +36,33 @@ const SWARMS: any[] = [
   { id: "swarm_trovao", nome: "Trovão", emoji: "⚡", efeito: "atk_flat", valor: 15 },
 ];
 
+/* ─── Easy Mode Balance Constants ─── */
+const EASY_HP_MULTIPLIER = 1.4;
+const EASY_ROUND_HEAL = 5;
+
+function easyDamageMultiplier(round: number): number {
+  if (round <= 2) return 0.6;
+  if (round <= 4) return 0.8;
+  return 1.0;
+}
+
+function easyAiPassChance(round: number): number {
+  if (round <= 3) return 0.4;
+  return 0.3;
+}
+
+function easyDamageCap(round: number): number {
+  if (round <= 3) return 30;
+  return Infinity;
+}
+
+/* Difficulty multipliers for AI stats */
+const DIFFICULTY_MULTIPLIERS: Record<string, { hp: number; atk: number; def: number }> = {
+  facil: { hp: 1.0, atk: 0.7, def: 0.7 },
+  medio: { hp: 1.0, atk: 1.0, def: 1.0 },
+  avancado: { hp: 1.4, atk: 1.3, def: 1.3 },
+};
+
 const POOL_ATK = [
   { nome: "Garra de Aço", emoji: "⚔️", valor: 25 },
   { nome: "Pancada", emoji: "👊", valor: 15 },
@@ -157,13 +184,15 @@ function aplicarPoison(alvo: any, log: any[]): { alvo: any; log: any[] } {
 }
 
 /* ─── AI Logic ─── */
-function iaJogar(ai: any, dificuldade: string = "medio"): { tipo: string; carta?: any } {
+function iaJogar(ai: any, dificuldade: string = "medio", turno: number = 0): { tipo: string; carta?: any } {
   const h = ai.mao || [];
 
-  // Easy: 30% chance to just pass (play dumb)
-  if (dificuldade === "facil" && Math.random() < 0.3) return { tipo: "passar" };
+  // Easy mode: higher pass chance in early rounds
+  if (dificuldade === "facil") {
+    const passChance = easyAiPassChance(turno);
+    if (Math.random() < passChance) return { tipo: "passar" };
+  }
 
-  // Low HP: prioritize healing, then defense
   const hpThreshold = dificuldade === "avancado" ? 50 : 40;
   if (ai.hp < hpThreshold) {
     const cura = h.find((c: any) => c.tipo === "cura");
@@ -176,7 +205,6 @@ function iaJogar(ai: any, dificuldade: string = "medio"): { tipo: string; carta?
   const ev = h.find((c: any) => c.tipo === "evolucao" && (ai.monstro.nivel || 0) < 3 && ai.monstro.poder);
   if (ev && (ai.monstro.nivel || 0) < 2) return { tipo: "evolucao", carta: ev };
 
-  // Advanced: pick strongest attack
   if (dificuldade === "avancado") {
     const ataques = h.filter((c: any) => c.tipo === "ataque").sort((a: any, b: any) => (b.valor || 0) - (a.valor || 0));
     if (ataques.length > 0) return { tipo: "ataque", carta: ataques[0] };
@@ -230,7 +258,15 @@ function handleChoosePower(state: any, payload: any): any {
   return { state, events: [{ type: "power_chosen", slot, powerId }] };
 }
 
-function processAttack(attacker: any, defender: any, carta: any, log: any[]): any[] {
+/** Apply easy mode damage scaling */
+function applyEasyDamageScaling(dmg: number, dificuldade: string, turno: number): number {
+  if (dificuldade !== "facil") return dmg;
+  const mult = easyDamageMultiplier(turno);
+  const capped = Math.min(dmg, easyDamageCap(turno));
+  return Math.floor(capped * mult);
+}
+
+function processAttack(attacker: any, defender: any, carta: any, log: any[], dificuldade: string = "medio", turno: number = 0): any[] {
   const fxAtk = swarmBonus(attacker.swarms || []);
   let dmg = carta.esp === "tudoOuNada"
     ? (Math.random() < 0.5 ? 80 : 0)
@@ -239,6 +275,9 @@ function processAttack(attacker: any, defender: any, carta: any, log: any[]): an
   if (attacker.dobra) { dmg *= 2; attacker.dobra = false; log.push({ msg: `✖️ Dano dobrado!`, t: "combo" }); }
   if (carta.autoDano) { attacker.hp = Math.max(0, attacker.hp - carta.autoDano); log.push({ msg: `💥 Auto-dano de ${carta.autoDano}!`, t: "dano" }); }
   if (attacker.monstro.id === "macaco" && Math.random() < 0.5) { dmg *= 2; log.push({ msg: `🐒 Hit duplo do Macaco!`, t: "combo" }); }
+
+  // Apply easy mode damage scaling
+  dmg = applyEasyDamageScaling(dmg, dificuldade, turno);
 
   if (defender.imune) {
     defender.imune = false;
@@ -251,7 +290,7 @@ function processAttack(attacker: any, defender: any, carta: any, log: any[]): an
     const def = defender.monstro.def + (defender.defAtiva || 0) + fxDef.defBonus;
     const fin = Math.max(0, dmg - def);
     defender.hp = Math.max(0, defender.hp - fin);
-    log.push({ msg: `⚔️ ${attacker.monstro.nome} causa ${fin} de dano em ${defender.monstro.nome}!`, t: "dano" });
+    log.push({ msg: `⚔️ ${attacker.monstro.nome} causa ${fin} de dano em ${defender.monstro.nome}!`, t: "dano", dmg: fin });
 
     const pr = aplicarPoison(defender, log);
     defender = pr.alvo;
@@ -274,10 +313,12 @@ function handlePlayCard(state: any, payload: any): any {
   let log = [...(state.log || [])];
   const opSlot = slot === 0 ? 1 : 0;
   let opponent = state.players[opSlot];
+  const dificuldade = state.dificuldade || "medio";
+  const turno = state.turno || 0;
 
   if (carta.tipo === "ataque") {
     if (opponent && opponent.hp > 0) {
-      log = processAttack(player, opponent, carta, log);
+      log = processAttack(player, opponent, carta, log, dificuldade, turno);
       state.players[opSlot] = opponent;
     }
   } else if (carta.tipo === "defesa") {
@@ -314,9 +355,11 @@ function handlePlayCard(state: any, payload: any): any {
     }
   } else if (carta.tipo === "desafio") {
     if (carta.ef === "global" && opponent) {
-      opponent.hp = Math.max(0, opponent.hp - 15);
+      let globalDmg = 15;
+      globalDmg = applyEasyDamageScaling(globalDmg, dificuldade, turno);
+      opponent.hp = Math.max(0, opponent.hp - globalDmg);
       state.players[opSlot] = opponent;
-      log.push({ msg: `🌍 Dano global! 15 de dano!`, t: "grande" });
+      log.push({ msg: `🌍 Dano global! ${globalDmg} de dano!`, t: "grande" });
     } else if (carta.ef === "imunidade") {
       player.imune = true;
       log.push({ msg: `💎 ${player.monstro.nome} ativou imunidade!`, t: "efeito" });
@@ -353,7 +396,6 @@ function handlePlayCard(state: any, payload: any): any {
     state = aiResult.state;
     events.push(...aiResult.events);
 
-    // Check if AI won
     if (state.players[slot].hp <= 0) {
       state.fase = "resultado";
       state.vencedor = opSlot;
@@ -361,11 +403,9 @@ function handlePlayCard(state: any, payload: any): any {
       return { state, events };
     }
 
-    // New turn
     state = advanceTurn(state);
     events.push({ type: "new_turn", turno: state.turno });
   } else {
-    // Multiplayer: switch turn
     state.currentTurn = opSlot;
     events.push({ type: "turn_changed", currentTurn: opSlot });
   }
@@ -377,7 +417,9 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
   const ai = state.players[aiSlot];
   if (!ai || ai.hp <= 0) return { state, events: [] };
 
-  const { tipo, carta } = iaJogar(ai, state.dificuldade || "medio");
+  const dificuldade = state.dificuldade || "medio";
+  const turno = state.turno || 0;
+  const { tipo, carta } = iaJogar(ai, dificuldade, turno);
   const events: any[] = [];
   let log = [...(state.log || [])];
   const playerSlot = aiSlot === 0 ? 1 : 0;
@@ -393,7 +435,7 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
       log.push({ msg: `🐾 ${ai.monstro.nome} equipou ${swarm.nome}!`, t: "efeito" });
     }
   } else if (tipo === "ataque" && carta) {
-    log = processAttack(ai, player, carta, log);
+    log = processAttack(ai, player, carta, log, dificuldade, turno);
     state.players[playerSlot] = player;
   } else if (tipo === "defesa" && carta) {
     ai.defAtiva = (ai.defAtiva || 0) + (carta.valor || 0);
@@ -422,11 +464,27 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
 
 function advanceTurn(state: any): any {
   let log = [...(state.log || [])];
+  const dificuldade = state.dificuldade || "medio";
+
   for (let i = 0; i < state.players.length; i++) {
     const r = aplicarInicioTurno(state.players[i], log);
     state.players[i] = r.j;
     log = r.log;
   }
+
+  // Easy mode: mini-heal between rounds for both players
+  if (dificuldade === "facil") {
+    for (let i = 0; i < state.players.length; i++) {
+      const p = state.players[i];
+      const antes = p.hp;
+      p.hp = Math.min(p.maxHp, p.hp + EASY_ROUND_HEAL);
+      const healed = p.hp - antes;
+      if (healed > 0) {
+        log.push({ msg: `💚 ${p.monstro.nome} regenera ${healed} HP entre rounds.`, t: "cura" });
+      }
+    }
+  }
+
   state.turno = (state.turno || 0) + 1;
   for (let i = 0; i < state.players.length; i++) {
     state.players[i].mao = novaMao(5, state.players[i].monstro.poder);
@@ -469,16 +527,20 @@ function handlePassTurn(state: any, payload: any): any {
 
 function handleInitGame(state: any, payload: any): any {
   const { modo, players: playerConfigs, dificuldade = "medio", aiMonstroId } = payload;
+  const diffMult = DIFFICULTY_MULTIPLIERS[dificuldade] || DIFFICULTY_MULTIPLIERS.medio;
 
   const players: any[] = [];
   for (const pc of playerConfigs) {
-    players[pc.slot] = criarJogador(pc.slot.toString(), pc.nome, pc.monstroId);
+    const p = criarJogador(pc.slot.toString(), pc.nome, pc.monstroId);
+    // Apply easy mode HP boost to player too
+    if (dificuldade === "facil") {
+      p.monstro.maxHp = Math.floor(p.monstro.maxHp * EASY_HP_MULTIPLIER);
+      p.monstro.hp = p.monstro.maxHp;
+      p.hp = p.monstro.maxHp;
+      p.maxHp = p.monstro.maxHp;
+    }
+    players[pc.slot] = p;
   }
-
-  // Difficulty multipliers
-  const diffMult = dificuldade === "facil" ? { hp: 0.7, atk: 0.7, def: 0.7 }
-    : dificuldade === "avancado" ? { hp: 1.4, atk: 1.3, def: 1.3 }
-    : { hp: 1, atk: 1, def: 1 };
 
   // For AI mode, set up AI player
   if (modo === "ai" && players.length < 2) {
@@ -487,10 +549,16 @@ function handleInitGame(state: any, payload: any): any {
     let ai = criarJogador("ai", "Rival Sombrio", aiM);
     ai.monstro = evoluir(ai.monstro, aiP);
 
-    // Apply difficulty scaling
+    // Apply difficulty scaling to AI
     ai.monstro.atk = Math.round(ai.monstro.atk * diffMult.atk);
     ai.monstro.def = Math.round(ai.monstro.def * diffMult.def);
     ai.monstro.maxHp = Math.round(ai.monstro.maxHp * diffMult.hp);
+    
+    // Easy mode: also boost AI HP so fights last longer
+    if (dificuldade === "facil") {
+      ai.monstro.maxHp = Math.floor(ai.monstro.maxHp * EASY_HP_MULTIPLIER);
+    }
+    
     ai.hp = ai.monstro.maxHp;
     ai.maxHp = ai.monstro.maxHp;
     ai.mao = novaMao(5, aiP);
@@ -522,7 +590,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- Auth check: require valid JWT ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -553,7 +620,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Load current state from DB
     let state: any = {};
     if (sessionId) {
       const { data: session } = await supabase
@@ -594,7 +660,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Save state to DB
     if (sessionId) {
       await supabase
         .from("game_sessions")
@@ -605,7 +670,6 @@ Deno.serve(async (req) => {
         })
         .eq("id", sessionId);
 
-      // Emit events to game_events table for realtime sync
       for (const evt of (result.events || [])) {
         await supabase.from("game_events").insert({
           session_id: sessionId,

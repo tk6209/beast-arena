@@ -1,0 +1,19 @@
+{
+  "name": "Beast Arena - Card Battle Game",
+  "short_name": "Beast Arena",
+  "description": "Jogo de cartas com monstros em tempo real",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0d2137",
+  "background_color": "#0a0f1e",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"]
+}
