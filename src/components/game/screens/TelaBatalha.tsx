@@ -127,6 +127,30 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     }
   }, [cartaSel]);
 
+  // Turn timer — resets when fase changes, auto-passes when expires
+  useEffect(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (!serverState || serverState.fase !== "acao" || mostraPoder) { setTurnTimer(TURN_TIMER_SECONDS); return; }
+    setTurnTimer(TURN_TIMER_SECONDS);
+    timerRef.current = setInterval(() => {
+      setTurnTimer(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          // Auto-pass
+          handlePassar();
+          return TURN_TIMER_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [serverState?.fase, serverState?.turno, mostraPoder]);
+
+  function triggerMonsterAction(type: string) {
+    setMonsterAction({ type, active: true });
+    setTimeout(() => setMonsterAction({ type: "", active: false }), 1200);
+  }
+
   const sid = sessionIdRef.current;
 
   function triggerFx(type: string) {
