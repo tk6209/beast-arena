@@ -636,6 +636,21 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
             )}
           </div>
 
+          {/* Shop button */}
+          {user && (
+            <div
+              onClick={onLoja}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                background: "rgba(255,213,79,.06)", border: "1px solid rgba(255,213,79,.15)",
+                borderRadius: 6, padding: "8px 12px", cursor: "pointer", marginBottom: 12,
+                fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#ffd54f",
+              }}
+            >
+              🏪 LOJA
+            </div>
+          )}
+
           {/* Buttons */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {!showDiffSelect ? (
