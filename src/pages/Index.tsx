@@ -212,6 +212,8 @@ export default function Index() {
             onMatchmaking={() => { setModo("matchmaking"); setTela("nome"); }}
             onRanking={() => setTela("ranking")}
             onSeasonPass={() => setTela("season_pass")}
+            onMissoes={() => setTela("missoes")}
+            onConquistas={() => setTela("conquistas")}
             onLogout={handleLogout}
           />
         </>
