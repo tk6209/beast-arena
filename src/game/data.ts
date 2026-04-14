@@ -316,6 +316,56 @@ const SWARMS_JSON = `[
     "efeito": "atk_flat",
     "valor": 15,
     "desc": "+15 de ataque ao monstro principal"
+  },
+  {
+    "id": "swarm_vampiro",
+    "nome": "Vampiro Sombrio",
+    "emoji": "🧛",
+    "raridade": "epico",
+    "tipo": "efeito",
+    "efeito": "drain",
+    "valor": 8,
+    "desc": "Drena 8 HP do inimigo por turno e cura você"
+  },
+  {
+    "id": "swarm_espelho",
+    "nome": "Espelho Arcano",
+    "emoji": "🪞",
+    "raridade": "lendario",
+    "tipo": "defesa",
+    "efeito": "reflect",
+    "valor": 25,
+    "desc": "Reflete 25% do dano recebido ao atacante"
+  },
+  {
+    "id": "swarm_paralisia",
+    "nome": "Aranha Elétrica",
+    "emoji": "🕷️",
+    "raridade": "epico",
+    "tipo": "efeito",
+    "efeito": "stun",
+    "valor": 30,
+    "desc": "30% de chance de atordoar o inimigo por 1 turno"
+  },
+  {
+    "id": "swarm_fenix",
+    "nome": "Fênix Menor",
+    "emoji": "🔥",
+    "raridade": "lendario",
+    "tipo": "suporte",
+    "efeito": "revive",
+    "valor": 20,
+    "desc": "Ao morrer, revive com 20 HP (1 vez)"
+  },
+  {
+    "id": "swarm_gelo_eterno",
+    "nome": "Gelo Eterno",
+    "emoji": "🧊",
+    "raridade": "raro",
+    "tipo": "defesa",
+    "efeito": "def_flat",
+    "valor": 12,
+    "desc": "+12 de defesa permanente ao monstro"
   }
 ]`;
 
