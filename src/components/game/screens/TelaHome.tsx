@@ -328,7 +328,6 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showDiffSelect, setShowDiffSelect] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [contentReady, setContentReady] = useState(false);
