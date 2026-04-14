@@ -153,6 +153,92 @@ export type Database = {
         }
         Relationships: []
       }
+      matchmaking_queue: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: string
+          league: string
+          matched_session_id: string | null
+          monster_id: string
+          player_name: string
+          rating: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          league?: string
+          matched_session_id?: string | null
+          monster_id: string
+          player_name?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          league?: string
+          matched_session_id?: string | null
+          monster_id?: string
+          player_name?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaking_queue_matched_session_id_fkey"
+            columns: ["matched_session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_leagues: {
+        Row: {
+          created_at: string
+          id: string
+          league: string
+          rating: number
+          season: number
+          season_losses: number
+          season_wins: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league?: string
+          rating?: number
+          season?: number
+          season_losses?: number
+          season_wins?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league?: string
+          rating?: number
+          season?: number
+          season_losses?: number
+          season_wins?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -216,6 +302,42 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           wins?: number
+        }
+        Relationships: []
+      }
+      season_pass: {
+        Row: {
+          claimed_tiers: number[]
+          created_at: string
+          id: string
+          premium: boolean
+          season: number
+          tier: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          claimed_tiers?: number[]
+          created_at?: string
+          id?: string
+          premium?: boolean
+          season?: number
+          tier?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          claimed_tiers?: number[]
+          created_at?: string
+          id?: string
+          premium?: boolean
+          season?: number
+          tier?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }
