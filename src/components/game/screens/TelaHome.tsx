@@ -619,48 +619,10 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
             </div>
           )}
 
-          {/* Buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {!showDiffSelect ? (
-              <>
-                <BtnMain variant="blue" onClick={() => setShowDiffSelect(true)}>
-                  ⚔️ DUELO vs IA
-                </BtnMain>
-                <BtnMain variant="green" onClick={() => onIniciar("multi")}>
-                  🌐 MULTIJOGADOR
-                </BtnMain>
-              </>
-            ) : (
-              <>
-                <div style={{
-                  fontFamily: "Bangers, cursive",
-                  fontSize: 18,
-                  color: "#00e5ff",
-                  letterSpacing: 2,
-                  marginBottom: 4,
-                }}>
-                  DIFICULDADE
-                </div>
-                <BtnMain variant="green" onClick={() => onIniciar("duel", "facil")}>
-                  😊 FÁCIL
-                </BtnMain>
-                <BtnMain variant="blue" onClick={() => onIniciar("duel", "medio")}>
-                  ⚔️ MÉDIO
-                </BtnMain>
-                <BtnMain variant="gold" onClick={() => onIniciar("duel", "avancado")}>
-                  💀 AVANÇADO
-                </BtnMain>
-                <BtnMain variant="dark" onClick={() => setShowDiffSelect(false)}>
-                  ← VOLTAR
-                </BtnMain>
-              </>
-            )}
-          </div>
-
           {/* Ranking */}
           {rankings.length > 0 && (
             <div style={{
-              marginTop: 12,
+              marginBottom: 12,
               background: "rgba(0,229,255,.04)",
               border: "1px solid rgba(0,229,255,.1)",
               borderRadius: 8,
@@ -702,6 +664,44 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
               ))}
             </div>
           )}
+
+          {/* Buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {!showDiffSelect ? (
+              <>
+                <BtnMain variant="blue" onClick={() => setShowDiffSelect(true)}>
+                  ⚔️ DUELO vs IA
+                </BtnMain>
+                <BtnMain variant="green" onClick={() => onIniciar("multi")}>
+                  🌐 MULTIJOGADOR
+                </BtnMain>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  fontFamily: "Bangers, cursive",
+                  fontSize: 18,
+                  color: "#00e5ff",
+                  letterSpacing: 2,
+                  marginBottom: 4,
+                }}>
+                  DIFICULDADE
+                </div>
+                <BtnMain variant="green" onClick={() => onIniciar("duel", "facil")}>
+                  😊 FÁCIL
+                </BtnMain>
+                <BtnMain variant="blue" onClick={() => onIniciar("duel", "medio")}>
+                  ⚔️ MÉDIO
+                </BtnMain>
+                <BtnMain variant="gold" onClick={() => onIniciar("duel", "avancado")}>
+                  💀 AVANÇADO
+                </BtnMain>
+                <BtnMain variant="dark" onClick={() => setShowDiffSelect(false)}>
+                  ← VOLTAR
+                </BtnMain>
+              </>
+            )}
+          </div>
 
           {/* Auth buttons */}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
