@@ -181,7 +181,7 @@ export default function TelaLobbyPrincipal({
         {/* ═══ LEFT SIDE PANELS ═══ */}
         <div style={{
           position: "absolute", left: 6, top: 56, bottom: 60, zIndex: 5,
-          display: "flex", flexDirection: "column", gap: 8,
+          display: "flex", flexDirection: "column", gap: 16,
           justifyContent: "center",
           animation: "slideInLeft .6s ease forwards",
           opacity: 0.75, filter: "blur(0.2px)",
@@ -236,7 +236,7 @@ export default function TelaLobbyPrincipal({
         {/* ═══ RIGHT SIDE — GAME MODES ═══ */}
         <div style={{
           position: "absolute", right: 6, top: 56, bottom: 60, zIndex: 5,
-          display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end",
+          display: "flex", flexDirection: "column", gap: 16, alignItems: "flex-end",
           justifyContent: "center",
           animation: "slideInRight .6s ease forwards",
           opacity: 0.75, filter: "blur(0.2px)",
@@ -391,7 +391,7 @@ export default function TelaLobbyPrincipal({
           <BottomTab icon="🏪" label="LOJA" onClick={onLoja} />
           <BottomTab icon="🏆" label="RANKING" onClick={onRanking} />
           <BottomTab icon="👤" label="PERFIL" onClick={onPerfil} />
-          <BottomTab icon="⚙️" label="SAIR" onClick={onLogout} />
+          <BottomTab icon="🚪" label="SAIR" onClick={onLogout} />
         </div>
       </div>
     </div>
