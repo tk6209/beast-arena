@@ -875,13 +875,26 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           </div>
         )}
 
-        {/* Player HP bar */}
+        {/* Player buff indicators + HP bar */}
+        <BuffIndicators
+          defAtiva={p1Display.defAtiva}
+          imune={p1Display.imune}
+          dobra={p1Display.dobra}
+          dodgeOnce={p1Display.dodgeOnce}
+          swarms={p1Display.swarms}
+        />
         <div style={{ flexShrink: 0, paddingTop: 2, paddingBottom: 2 }}>
           <HpBar jog={p1Display} />
         </div>
       </div>
 
       {mostraPoder && <ModalPoder onEscolha={escolherPoder} />}
+      {showTutorial && (
+        <TutorialOverlay onComplete={() => {
+          setShowTutorial(false);
+          localStorage.setItem("beast_tutorial_done", "1");
+        }} />
+      )}
     </div>
   );
 }
