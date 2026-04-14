@@ -16,13 +16,16 @@ import TelaMatchmaking from "@/components/game/screens/TelaMatchmaking";
 import TelaSeasonPass from "@/components/game/screens/TelaSeasonPass";
 import TelaMissoes from "@/components/game/screens/TelaMissoes";
 import TelaConquistas from "@/components/game/screens/TelaConquistas";
+import TelaAmigos from "@/components/game/screens/TelaAmigos";
+import GameInviteNotification from "@/components/game/GameInviteNotification";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
+import { loadPrefsFromDB } from "@/game/audioPreferences";
 import type { Jogador } from "@/game/engine";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "amigos" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -38,6 +41,7 @@ export default function Index() {
   const [dificuldade, setDificuldade] = useState<Dificuldade>("medio");
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [forceReplayTutorial, setForceReplayTutorial] = useState(false);
 
   // Campaign state
   const [campaignQueue, setCampaignQueue] = useState<string[]>([]);
@@ -58,15 +62,19 @@ export default function Index() {
       const u = session?.user ?? null;
       setUser(u);
       setAuthChecked(true);
-      // If user just logged in and on home, go to lobby
-      if (u && tela === "home") setTela("lobby_principal");
+      if (u) {
+        setTela("lobby_principal");
+        loadPrefsFromDB(u.id);
+      }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
       setAuthChecked(true);
-      // Redirect logged-in users to lobby
-      if (u) setTela("lobby_principal");
+      if (u) {
+        setTela("lobby_principal");
+        loadPrefsFromDB(u.id);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -191,11 +199,29 @@ export default function Index() {
     setTela("home");
   };
 
+  const handleReplayTutorial = () => {
+    localStorage.removeItem("beast_tutorial_done");
+    setForceReplayTutorial(true);
+    // Go start a battle to show the tutorial
+    setTela("lobby_principal");
+  };
+
+  const handleInviteAccept = (sessionId: string) => {
+    setSalaId(sessionId);
+    setSlotLocal(1);
+    setTela("entrar");
+  };
+
   const currentOpponent = campaignQueue[campaignIndex] || undefined;
 
   // Daily reward overlay
   const dailyOverlay = showDailyReward && user ? (
     <TelaDailyReward user={user} onClose={() => setShowDailyReward(false)} />
+  ) : null;
+
+  // Game invite notification (shown on lobby)
+  const inviteNotification = user ? (
+    <GameInviteNotification userId={user.id} onAccept={handleInviteAccept} />
   ) : null;
 
   switch (tela) {
@@ -206,6 +232,7 @@ export default function Index() {
       return user ? (
         <>
           {dailyOverlay}
+          {inviteNotification}
           <TelaLobbyPrincipal
             user={user}
             onIniciar={handleIniciar}
@@ -224,7 +251,7 @@ export default function Index() {
 
     case "perfil":
       return user ? (
-        <TelaPerfil user={user} onVoltar={() => setTela(user ? "lobby_principal" : "home")} onLogout={handleLogout} />
+        <TelaPerfil user={user} onVoltar={() => setTela(user ? "lobby_principal" : "home")} onLogout={handleLogout} onReplayTutorial={handleReplayTutorial} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
     case "loja":
@@ -248,6 +275,11 @@ export default function Index() {
     case "conquistas":
       return user ? (
         <TelaConquistas user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "amigos":
+      return user ? (
+        <TelaAmigos user={user} onVoltar={() => setTela("lobby_principal")} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
     case "home":
