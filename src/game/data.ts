@@ -325,6 +325,13 @@ const POOL_DEF = [
   { nome: "Barreira", emoji: "💎", valor: 25, desc: "Barreira energética absorve dano." },
 ];
 
+const POOL_CURA = [
+  { nome: "Poção Vital", emoji: "🧪", valor: 25, desc: "Recupera 25 pontos de vida." },
+  { nome: "Cura Divina", emoji: "💖", valor: 40, desc: "Cura poderosa de 40 HP." },
+  { nome: "Ervas Místicas", emoji: "🌿", valor: 15, desc: "Cura leve de 15 HP com essência natural." },
+  { nome: "Banho de Luz", emoji: "✨", valor: 30, desc: "Luz restauradora cura 30 HP." },
+];
+
 export const mkAtk = (): CartaData => ({
   id: nid(),
   tipo: "ataque",
@@ -335,6 +342,12 @@ export const mkDef = (): CartaData => ({
   id: nid(),
   tipo: "defesa",
   ...POOL_DEF[Math.floor(Math.random() * POOL_DEF.length)],
+});
+
+export const mkCura = (): CartaData => ({
+  id: nid(),
+  tipo: "cura",
+  ...POOL_CURA[Math.floor(Math.random() * POOL_CURA.length)],
 });
 
 export const mkPod = (pt: string): CartaData => ({
@@ -383,11 +396,12 @@ export function novaMao(n: number, poder: string | null): CartaData[] {
   const cs: CartaData[] = [mkAtk(), mkDef()];
   for (let i = 2; i < n; i++) {
     const r = Math.random();
-    if (r < 0.26) cs.push(mkAtk());
-    else if (r < 0.44) cs.push(mkDef());
-    else if (r < 0.56 && poder) cs.push(mkPod(poder));
-    else if (r < 0.67) cs.push(mkDes());
-    else if (r < 0.79) cs.push(mkSwarmCard());
+    if (r < 0.22) cs.push(mkAtk());
+    else if (r < 0.38) cs.push(mkDef());
+    else if (r < 0.50) cs.push(mkCura());
+    else if (r < 0.60 && poder) cs.push(mkPod(poder));
+    else if (r < 0.70) cs.push(mkDes());
+    else if (r < 0.82) cs.push(mkSwarmCard());
     else cs.push(mkEvo(Math.ceil(Math.random() * 3)));
   }
   return cs.sort(() => Math.random() - 0.5);

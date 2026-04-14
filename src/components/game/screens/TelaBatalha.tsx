@@ -48,6 +48,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const [enemyCard, setEnemyCard] = useState<CartaData | null>(null);
   const [cardAnimState, setCardAnimState] = useState<"idle" | "entering" | "exiting">("idle");
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
+  const [screenFx, setScreenFx] = useState<string | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
@@ -106,6 +107,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   const sid = sessionIdRef.current;
 
+  function triggerFx(type: string) {
+    setScreenFx(type);
+    setTimeout(() => setScreenFx(null), 600);
+  }
+
   async function escolherPoder(pid: string) {
     if (!sid) return;
     markGesture();
@@ -147,34 +153,49 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
       // Narrate card played + results
       const logs = result.state.log || [];
-      const recentLogs = logs.slice(-3);
+      const recentLogs = logs.slice(-6);
       let narration = `Você jogou ${cartaNome}. `;
+
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
           if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
+          triggerFx("ataque");
           setHitCount(c => c + 1);
-          
-        } else if (entry.t === "def") {
-          narration += `Defesa ativada! `;
-          sfxDefesa();
+        } else if (entry.t === "def" || entry.t === "efeito") {
+          if (entry.msg?.includes("defende") || entry.msg?.includes("escudo") || entry.msg?.includes("esquiva")) {
+            sfxDefesa();
+            triggerFx("defesa");
+          }
         } else if (entry.t === "evolucao") {
           narration += `Evolução para nível ${entry.nivel || ""}! `;
           sfxEvolucao();
+          triggerFx("evolucao");
         } else if (entry.t === "swarm") {
           narration += `Swarm capturado! `;
           sfxSwarm();
         } else if (entry.t === "cura") {
           narration += `Curou ${entry.hp || ""} pontos de vida! `;
           sfxCura();
+          triggerFx("cura");
         }
       }
 
-      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
-        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
-        narration += `O inimigo jogou ${eName}. `;
-        setEnemyCard(result.state.lastPlayedCard);
-        setTimeout(() => setEnemyCard(null), 2500);
+      // Narrate AI played card
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          const aiCardName = evt.carta.nome || evt.tipo;
+          narration += `O adversário jogou ${aiCardName}. `;
+          setEnemyCard(evt.carta);
+          setTimeout(() => setEnemyCard(null), 2500);
+
+          // SFX and effects for AI card
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); }
+        }
       }
 
       let gameEnded = false;
@@ -208,24 +229,19 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
       let narration = `Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas. `;
 
-      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
-        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
-        narration += `O inimigo jogou ${eName}. `;
-        setEnemyCard(result.state.lastPlayedCard);
-        setTimeout(() => setEnemyCard(null), 2500);
-      }
+      // Narrate AI played card
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          const aiCardName = evt.carta.nome || evt.tipo;
+          narration += `O adversário jogou ${aiCardName}. `;
+          setEnemyCard(evt.carta);
+          setTimeout(() => setEnemyCard(null), 2500);
 
-      const logs = result.state.log || [];
-      const recentLogs = logs.slice(-3);
-      for (const entry of recentLogs) {
-        if (entry.t === "dano") {
-          narration += `${entry.dmg || ""} de dano! `;
-          sfxAtaque();
-          setHitCount(c => c + 1);
-          
-        } else if (entry.t === "evolucao") {
-          narration += `Evolução para nível ${entry.nivel || ""}! `;
-          sfxEvolucao();
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); }
         }
       }
 
@@ -326,7 +342,23 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           80% { opacity: 1; transform: translateY(0) scale(0.75); }
           100% { opacity: 0; transform: translateY(20px) scale(0.5); }
         }
+        @keyframes fxFlash { 0%{opacity:.6;} 100%{opacity:0;} }
+        @keyframes fxPulse { 0%{transform:scale(1);opacity:.5;} 100%{transform:scale(2.5);opacity:0;} }
       `}</style>
+
+      {/* Screen effect overlay */}
+      {screenFx && (
+        <div key={screenFx + Date.now()} style={{
+          position: "fixed", inset: 0, zIndex: 100, pointerEvents: "none",
+          background:
+            screenFx === "ataque" ? "radial-gradient(circle, #ef444466 0%, transparent 70%)" :
+            screenFx === "defesa" ? "radial-gradient(circle, #3b82f666 0%, transparent 70%)" :
+            screenFx === "evolucao" ? "radial-gradient(circle, #ffd54f66 0%, transparent 70%)" :
+            screenFx === "cura" ? "radial-gradient(circle, #34d39966 0%, transparent 70%)" :
+            "transparent",
+          animation: "fxFlash .6s ease forwards",
+        }} />
+      )}
       <ChromeNoise />
       <GameLog ents={serverState.log || []} />
 

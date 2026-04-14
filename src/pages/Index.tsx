@@ -66,7 +66,17 @@ export default function Index() {
     setTela("resultado");
   };
 
-  const handleRejogo = () => {
+  const handleRecomecar = () => {
+    window.history.replaceState({}, "", window.location.pathname);
+    setSalaId(null);
+    setJoinCode(null);
+    setSlotLocal(0);
+    setVencedor(null);
+    setMonstroP1("");
+    setTela("monstro");
+  };
+
+  const handleSair = () => {
     window.history.replaceState({}, "", window.location.pathname);
     setSalaId(null);
     setJoinCode(null);
@@ -98,7 +108,7 @@ export default function Index() {
         />
       );
     case "resultado":
-      return <TelaResultado vencedor={vencedor} onRejogo={handleRejogo} />;
+      return <TelaResultado vencedor={vencedor} onRecomecar={handleRecomecar} onSair={handleSair} />;
     default:
       return <TelaHome onIniciar={handleIniciar} />;
   }

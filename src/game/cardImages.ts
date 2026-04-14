@@ -13,6 +13,7 @@ import evolucao from "@/assets/cards/evolucao.png";
 import swarm from "@/assets/cards/swarm.png";
 import desafio from "@/assets/cards/desafio.png";
 import poderzinho from "@/assets/cards/poderzinho.png";
+import cura from "@/assets/cards/cura.png";
 
 /** Maps card nome → illustration asset */
 const CARD_IMAGES: Record<string, string> = {
@@ -35,6 +36,7 @@ const TYPE_FALLBACK: Record<string, string> = {
   swarm: swarm,
   desafio: desafio,
   poderzinho: poderzinho,
+  cura: cura,
 };
 
 export function getCardImage(nome: string, tipo: string): string | null {

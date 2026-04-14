@@ -53,6 +53,13 @@ const POOL_DEF = [
   { nome: "Barreira", emoji: "💎", valor: 25 },
 ];
 
+const POOL_CURA = [
+  { nome: "Poção Vital", emoji: "🧪", valor: 25 },
+  { nome: "Cura Divina", emoji: "💖", valor: 40 },
+  { nome: "Ervas Místicas", emoji: "🌿", valor: 15 },
+  { nome: "Banho de Luz", emoji: "✨", valor: 30 },
+];
+
 /* ─── Helpers ─── */
 let _cid = 0;
 function nid() { return ++_cid; }
@@ -61,6 +68,7 @@ function rndItem<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.len
 
 function mkAtk(): any { return { id: nid(), tipo: "ataque", desc: "", ...rndItem(POOL_ATK) }; }
 function mkDef(): any { return { id: nid(), tipo: "defesa", desc: "", ...rndItem(POOL_DEF) }; }
+function mkCura(): any { return { id: nid(), tipo: "cura", desc: "", ...rndItem(POOL_CURA) }; }
 function mkPod(pt: string): any {
   const p = PODERES[pt];
   return { id: nid(), tipo: "poderzinho", sub: pt, nome: `Poderzinho ${p.nome}`, emoji: p.emoji, desc: "" };
@@ -85,11 +93,12 @@ function novaMao(n: number, poder: string | null): any[] {
   const cs = [mkAtk(), mkDef()];
   for (let i = 2; i < n; i++) {
     const r = Math.random();
-    if (r < 0.26) cs.push(mkAtk());
-    else if (r < 0.44) cs.push(mkDef());
-    else if (r < 0.56 && poder) cs.push(mkPod(poder));
-    else if (r < 0.67) cs.push(mkDes());
-    else if (r < 0.79) cs.push(mkSwarmCard());
+    if (r < 0.22) cs.push(mkAtk());
+    else if (r < 0.38) cs.push(mkDef());
+    else if (r < 0.50) cs.push(mkCura());
+    else if (r < 0.60 && poder) cs.push(mkPod(poder));
+    else if (r < 0.70) cs.push(mkDes());
+    else if (r < 0.82) cs.push(mkSwarmCard());
     else cs.push(mkEvo(Math.ceil(Math.random() * 3)));
   }
   return cs.sort(() => Math.random() - 0.5);
@@ -150,13 +159,20 @@ function aplicarPoison(alvo: any, log: any[]): { alvo: any; log: any[] } {
 /* ─── AI Logic ─── */
 function iaJogar(ai: any): { tipo: string; carta?: any } {
   const h = ai.mao || [];
-  if (ai.hp < 35) { const d = h.find((c: any) => c.tipo === "defesa"); if (d) return { tipo: "defesa", carta: d }; }
+  // Low HP: prioritize healing, then defense
+  if (ai.hp < 40) {
+    const cura = h.find((c: any) => c.tipo === "cura");
+    if (cura) return { tipo: "cura", carta: cura };
+    const d = h.find((c: any) => c.tipo === "defesa");
+    if (d) return { tipo: "defesa", carta: d };
+  }
   const sw = h.find((c: any) => c.tipo === "swarm");
   if (sw && (ai.swarms || []).some((s: any) => s === null)) return { tipo: "swarm", carta: sw };
   const ev = h.find((c: any) => c.tipo === "evolucao" && (ai.monstro.nivel || 0) < 3 && ai.monstro.poder);
   if (ev && (ai.monstro.nivel || 0) < 2) return { tipo: "evolucao", carta: ev };
   const a = h.find((c: any) => c.tipo === "ataque"); if (a) return { tipo: "ataque", carta: a };
   const d = h.find((c: any) => c.tipo === "defesa"); if (d) return { tipo: "defesa", carta: d };
+  const cura = h.find((c: any) => c.tipo === "cura"); if (cura) return { tipo: "cura", carta: cura };
   const ch = h.find((c: any) => c.tipo === "desafio"); if (ch) return { tipo: "desafio", carta: ch };
   return { tipo: "passar" };
 }
@@ -296,6 +312,12 @@ function handlePlayCard(state: any, payload: any): any {
       player.dobra = true;
       log.push({ msg: `❌ Próximo ataque com dano dobrado!`, t: "combo" });
     }
+  } else if (carta.tipo === "cura") {
+    const curaVal = carta.valor || 20;
+    const hpAntes = player.hp;
+    player.hp = Math.min(player.maxHp, player.hp + curaVal);
+    const curado = player.hp - hpAntes;
+    log.push({ msg: `💖 ${player.monstro.nome} recupera ${curado} HP com ${carta.nome}!`, t: "cura", hp: curado });
   }
 
   // Remove card from hand
@@ -370,6 +392,12 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
       ai.maxHp = ai.monstro.maxHp;
       log.push({ msg: `✨ ${ai.monstro.nome} evolui para nível ${ai.monstro.nivel}!`, t: "efeito" });
     }
+  } else if (tipo === "cura" && carta) {
+    const curaVal = carta.valor || 20;
+    const hpAntes = ai.hp;
+    ai.hp = Math.min(ai.maxHp, ai.hp + curaVal);
+    const curado = ai.hp - hpAntes;
+    log.push({ msg: `💖 ${ai.monstro.nome} recupera ${curado} HP com ${carta.nome}!`, t: "cura", hp: curado });
   }
 
   if (carta) ai.mao = ai.mao.filter((c: any) => c.id !== carta.id);
