@@ -113,17 +113,16 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   useEffect(() => {
     async function init() {
       try {
-        let sid = salaId;
-        if (!sid) {
-          const sess = await criarSessao();
-          sid = sess.id;
-          sessionIdRef.current = sid;
-        } else {
-          sessionIdRef.current = sid;
-        }
-        const result = await initGame(sid!, modo === "multi" ? "multi" : "ai", [
+        let sid = salaId || null;
+        // For AI mode without a session, let the edge function create one
+        const result = await initGame(sid, modo === "multi" ? "multi" : "ai", [
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1 },
         ], dificuldade, aiMonstroId);
+        // Use session ID returned from server if we didn't have one
+        if (!sid && result.sessionId) {
+          sid = result.sessionId;
+        }
+        sessionIdRef.current = sid!;
         setServerState(result.state);
         // Auto-select power if continuing campaign
         if (skipPowerSelect && lastPowerId) {
