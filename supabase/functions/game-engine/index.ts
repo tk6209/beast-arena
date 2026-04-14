@@ -392,6 +392,12 @@ function runAITurn(state: any, aiSlot: number): { state: any; events: any[] } {
       ai.maxHp = ai.monstro.maxHp;
       log.push({ msg: `✨ ${ai.monstro.nome} evolui para nível ${ai.monstro.nivel}!`, t: "efeito" });
     }
+  } else if (tipo === "cura" && carta) {
+    const curaVal = carta.valor || 20;
+    const hpAntes = ai.hp;
+    ai.hp = Math.min(ai.maxHp, ai.hp + curaVal);
+    const curado = ai.hp - hpAntes;
+    log.push({ msg: `💖 ${ai.monstro.nome} recupera ${curado} HP com ${carta.nome}!`, t: "cura", hp: curado });
   }
 
   if (carta) ai.mao = ai.mao.filter((c: any) => c.id !== carta.id);
