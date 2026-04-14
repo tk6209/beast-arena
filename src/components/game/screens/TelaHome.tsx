@@ -7,8 +7,10 @@ import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 
+import type { Dificuldade } from "@/pages/Index";
+
 interface TelaHomeProps {
-  onIniciar: (modo: string) => void;
+  onIniciar: (modo: string, diff?: Dificuldade) => void;
 }
 
 const monsterKeys = Object.keys(MONSTROS);
@@ -325,6 +327,7 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 export default function TelaHome({ onIniciar }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [showDiffSelect, setShowDiffSelect] = useState(false);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [contentReady, setContentReady] = useState(false);
@@ -598,12 +601,40 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
 
           {/* Buttons */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <BtnMain variant="blue" onClick={() => onIniciar("duel")}>
-              ⚔️ DUELO vs IA
-            </BtnMain>
-            <BtnMain variant="green" onClick={() => onIniciar("multi")}>
-              🌐 MULTIJOGADOR
-            </BtnMain>
+            {!showDiffSelect ? (
+              <>
+                <BtnMain variant="blue" onClick={() => setShowDiffSelect(true)}>
+                  ⚔️ DUELO vs IA
+                </BtnMain>
+                <BtnMain variant="green" onClick={() => onIniciar("multi")}>
+                  🌐 MULTIJOGADOR
+                </BtnMain>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  fontFamily: "Bangers, cursive",
+                  fontSize: 18,
+                  color: "#00e5ff",
+                  letterSpacing: 2,
+                  marginBottom: 4,
+                }}>
+                  DIFICULDADE
+                </div>
+                <BtnMain variant="green" onClick={() => onIniciar("duel", "facil")}>
+                  😊 FÁCIL
+                </BtnMain>
+                <BtnMain variant="blue" onClick={() => onIniciar("duel", "medio")}>
+                  ⚔️ MÉDIO
+                </BtnMain>
+                <BtnMain variant="gold" onClick={() => onIniciar("duel", "avancado")}>
+                  💀 AVANÇADO
+                </BtnMain>
+                <BtnMain variant="dark" onClick={() => setShowDiffSelect(false)}>
+                  ← VOLTAR
+                </BtnMain>
+              </>
+            )}
           </div>
 
           {/* Ranking */}
