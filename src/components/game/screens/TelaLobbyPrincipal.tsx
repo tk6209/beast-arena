@@ -268,10 +268,13 @@ export default function TelaLobbyPrincipal({
 
         {/* ═══ RIGHT SIDE — GAME MODES ═══ */}
         <div style={{
-          position: "absolute", right: 8, top: 60, zIndex: 10,
+          position: "absolute", right: 8, top: 60, zIndex: 5,
           display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end",
+          justifyContent: "space-evenly",
           animation: "slideInRight .6s ease forwards",
-        }}>
+          opacity: 0.7, filter: "blur(0.3px)",
+          transition: "opacity .3s, filter .3s",
+        }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.filter = "blur(0.3px)"; }}>
           {!showDiff ? (
             <>
               <ModeButton label="⚔️ DUELO IA" color="#00e5ff" onClick={() => setShowDiff(true)} />
