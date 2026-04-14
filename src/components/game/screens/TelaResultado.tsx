@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { falar } from "@/game/voice";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
@@ -162,6 +163,20 @@ export default function TelaResultado({
             user_id: uid,
             achievement_id: ach.id,
           });
+          // Show toast notification for unlocked achievement
+          toast(
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 28, animation: "popIn .4s cubic-bezier(.34,1.56,.64,1) forwards" }}>{ach.emoji}</span>
+              <div>
+                <div style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#ffd54f", letterSpacing: 1 }}>
+                  🏅 CONQUISTA DESBLOQUEADA!
+                </div>
+                <div style={{ fontSize: 12, color: "#e8f0ff", fontWeight: 600 }}>{ach.title}</div>
+                <div style={{ fontSize: 10, color: "#8a95aa" }}>{ach.description}</div>
+              </div>
+            </div>,
+            { duration: 5000 }
+          );
         }
       }
     } catch (e) { console.error("Achievement check error:", e); }
