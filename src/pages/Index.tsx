@@ -18,6 +18,8 @@ export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
 
+// Track power across campaign continues
+
 export default function Index() {
   const [tela, setTela] = useState<Tela>("home");
   const [modo, setModo] = useState<string>("duel");
@@ -35,6 +37,8 @@ export default function Index() {
   const [campaignIndex, setCampaignIndex] = useState(0);
   const [campaignWins, setCampaignWins] = useState(0);
   const [campaignFinished, setCampaignFinished] = useState(false);
+  const [lastPowerId, setLastPowerId] = useState<string | null>(null);
+  const [isCampaignContinue, setIsCampaignContinue] = useState(false);
 
   const [joinCode, setJoinCode] = useState<string | null>(null);
 
@@ -123,6 +127,7 @@ export default function Index() {
     const nextIdx = campaignIndex + 1;
     setCampaignIndex(nextIdx);
     setSalaId(null);
+    setIsCampaignContinue(true);
     setTela("batalha");
   };
 
@@ -137,6 +142,8 @@ export default function Index() {
     setCampaignIndex(0);
     setCampaignWins(0);
     setCampaignFinished(false);
+    setLastPowerId(null);
+    setIsCampaignContinue(false);
   };
 
   const handleRecomecar = () => { resetAll(); setTela("monstro"); };
@@ -181,9 +188,12 @@ export default function Index() {
           nomeJogador={nomeJogador}
           salaId={salaId}
           slotLocal={slotLocal}
-          onFim={handleFim}
+          onFim={(v) => { handleFim(v); setIsCampaignContinue(false); }}
           dificuldade={dificuldade}
           aiMonstroId={currentOpponent}
+          skipPowerSelect={isCampaignContinue && !!lastPowerId}
+          lastPowerId={lastPowerId || undefined}
+          onPowerChosen={(pid) => setLastPowerId(pid)}
         />
       );
     case "resultado":

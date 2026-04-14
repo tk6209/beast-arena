@@ -20,6 +20,7 @@ import GameLog from "@/components/game/GameLog";
 import BtnMain from "@/components/game/BtnMain";
 import ModalPoder from "@/components/game/ModalPoder";
 import ChromeNoise from "@/components/game/ChromeNoise";
+import MonsterAvatar from "@/components/game/MonsterAvatar";
 
 interface ServerState {
   players: any[];
@@ -42,10 +43,15 @@ interface TelaBatalhaProps {
   onFim: (vencedor: Jogador | null) => void;
   dificuldade?: string;
   aiMonstroId?: string;
+  skipPowerSelect?: boolean;
+  lastPowerId?: string;
+  onPowerChosen?: (powerId: string) => void;
 }
 
-export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId }: TelaBatalhaProps) {
-  const [mostraPoder, setMostraPoder] = useState(true);
+const TURN_TIMER_SECONDS = 30;
+
+export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId, onPowerChosen }: TelaBatalhaProps) {
+  const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
   const [hitCount, setHitCount] = useState(0);
@@ -55,6 +61,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
   const [screenFx, setScreenFx] = useState<string | null>(null);
   const [muted, setMuted] = useState(isMuted());
+  const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
+  const [monsterAction, setMonsterAction] = useState<{ type: string; active: boolean }>({ type: "", active: false });
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
@@ -72,12 +81,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1 },
         ], dificuldade, aiMonstroId);
         setServerState(result.state);
+        // Auto-select power if continuing campaign
+        if (skipPowerSelect && lastPowerId) {
+          const powerResult = await choosePower(sid!, slotLocal, lastPowerId);
+          setServerState(powerResult.state);
+          sfxPoder();
+          startBattleMusic();
+        }
       } catch (err) {
         console.error("Init error:", err);
       }
     }
     init();
-    return () => { stopBattleMusic(); };
+    return () => { stopBattleMusic(); if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   useEffect(() => {
@@ -112,6 +128,30 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     }
   }, [cartaSel]);
 
+  // Turn timer — resets when fase changes, auto-passes when expires
+  useEffect(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (!serverState || serverState.fase !== "acao" || mostraPoder) { setTurnTimer(TURN_TIMER_SECONDS); return; }
+    setTurnTimer(TURN_TIMER_SECONDS);
+    timerRef.current = setInterval(() => {
+      setTurnTimer(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          // Auto-pass
+          handlePassar();
+          return TURN_TIMER_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [serverState?.fase, serverState?.turno, mostraPoder]);
+
+  function triggerMonsterAction(type: string) {
+    setMonsterAction({ type, active: true });
+    setTimeout(() => setMonsterAction({ type: "", active: false }), 1200);
+  }
+
   const sid = sessionIdRef.current;
 
   function triggerFx(type: string) {
@@ -133,6 +173,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       startBattleMusic();
       const p = PODERES[pid];
       speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
+      onPowerChosen?.(pid);
     } catch (err) {
       console.error("Power error:", err);
     }
@@ -158,6 +199,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
+
+      // Trigger monster action animation based on card type
+      const cardType = cartaSel.tipo || "ataque";
+      triggerMonsterAction(cardType);
+
       setCartaSel(null);
 
       // Narrate card played + results
@@ -355,6 +401,46 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         }
         @keyframes fxFlash { 0%{opacity:.6;} 100%{opacity:0;} }
         @keyframes fxPulse { 0%{transform:scale(1);opacity:.5;} 100%{transform:scale(2.5);opacity:0;} }
+        @keyframes monsterAttack {
+          0% { transform: scale(1) translateY(0); }
+          20% { transform: scale(1.15) translateY(-10px); }
+          40% { transform: scale(1.2) translateX(20px) translateY(-5px); }
+          60% { transform: scale(1.2) translateX(-20px) translateY(-5px); }
+          80% { transform: scale(1.1) translateY(-8px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes monsterDefend {
+          0% { transform: scale(1); filter: brightness(1); }
+          30% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          70% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes monsterHeal {
+          0% { transform: scale(1); filter: brightness(1); }
+          50% { transform: scale(1.1); filter: brightness(1.4) drop-shadow(0 0 24px #34d399); }
+          100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes monsterEvolve {
+          0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+          25% { transform: scale(0.9) rotate(-5deg); filter: brightness(0.8); }
+          50% { transform: scale(1.3) rotate(5deg); filter: brightness(1.8) drop-shadow(0 0 30px #ffd54f); }
+          75% { transform: scale(1.15) rotate(-2deg); filter: brightness(1.3); }
+          100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+        @keyframes monsterSwarm {
+          0% { transform: scale(1); }
+          30% { transform: scale(1.1) translateY(-8px); }
+          60% { transform: scale(1.05) translateY(-4px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes timerPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes monsterIdle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
       `}</style>
 
       {/* Screen effect overlay */}
@@ -402,6 +488,20 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             >
               {gameOver ? "FIM" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
             </span>
+            {/* Turn timer */}
+            {isMyTurn && !gameOver && !mostraPoder && (
+              <span style={{
+                fontFamily: "Oswald, sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                color: turnTimer <= 10 ? "#ef4444" : turnTimer <= 20 ? "#ffd54f" : "#69f0ae",
+                animation: turnTimer <= 5 ? "timerPulse .5s infinite" : turnTimer <= 10 ? "timerPulse 1s infinite" : undefined,
+                minWidth: 24,
+                textAlign: "center",
+              }}>
+                ⏱ {turnTimer}s
+              </span>
+            )}
             {loading && <span style={{ fontSize: 10, color: "#ff9800" }}>⏳</span>}
             <button
               onClick={() => {
@@ -483,22 +583,69 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             </div>
           )}
 
+          {/* Monster action animation overlay */}
+          {monsterAction.active && (
+            <div style={{
+              position: "absolute", inset: 0, zIndex: 15,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexDirection: "column", gap: 8,
+              pointerEvents: "none",
+            }}>
+              <div style={{
+                animation:
+                  monsterAction.type === "ataque" ? "monsterAttack 1.2s ease forwards" :
+                  monsterAction.type === "defesa" ? "monsterDefend 1.2s ease forwards" :
+                  monsterAction.type === "cura" ? "monsterHeal 1.2s ease forwards" :
+                  monsterAction.type === "evolucao" ? "monsterEvolve 1.2s ease forwards" :
+                  monsterAction.type === "swarm" ? "monsterSwarm 1.2s ease forwards" :
+                  "monsterAttack 1.2s ease forwards",
+              }}>
+                <MonsterAvatar monstroId={monstroP1} size={120} glow={p1Display.monstro.glow} />
+              </div>
+              <div style={{
+                fontFamily: "Bangers, cursive",
+                fontSize: 16,
+                letterSpacing: 2,
+                color:
+                  monsterAction.type === "ataque" ? "#ef4444" :
+                  monsterAction.type === "defesa" ? "#3b82f6" :
+                  monsterAction.type === "cura" ? "#34d399" :
+                  monsterAction.type === "evolucao" ? "#ffd54f" :
+                  monsterAction.type === "swarm" ? "#a78bfa" : "#fff",
+                textShadow: "0 0 12px currentColor",
+                animation: "fadeUp .3s ease forwards",
+              }}>
+                {monsterAction.type === "ataque" ? "⚔️ ATAQUE!" :
+                 monsterAction.type === "defesa" ? "🛡️ DEFESA!" :
+                 monsterAction.type === "cura" ? "💚 CURA!" :
+                 monsterAction.type === "evolucao" ? "⭐ EVOLUÇÃO!" :
+                 monsterAction.type === "swarm" ? "🐾 SWARM!" :
+                 monsterAction.type === "desafio" ? "🎯 DESAFIO!" : "⚡ AÇÃO!"}
+              </div>
+            </div>
+          )}
+
           {displayCard ? (
             <div style={{ transformOrigin: "center", ...cardAnimStyle }}>
               <Carta carta={displayCard} sel={true} disabled />
             </div>
           ) : (
-            <div
-              style={{
-                textAlign: "center",
-                color: "#4a5568",
-                fontFamily: "Bangers, cursive",
-                fontSize: 18,
-                letterSpacing: 2,
-              }}
-            >
-              {gameOver ? "" : "👆 TOQUE UMA CARTA"}
-            </div>
+            !monsterAction.active && (
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                {/* Idle monster display */}
+                <div style={{ animation: "monsterIdle 3s ease-in-out infinite" }}>
+                  <MonsterAvatar monstroId={monstroP1} size={80} glow={p1Display.monstro.glow} style={{ opacity: 0.3 }} />
+                </div>
+                <div style={{
+                  color: "#4a5568",
+                  fontFamily: "Bangers, cursive",
+                  fontSize: 18,
+                  letterSpacing: 2,
+                }}>
+                  {gameOver ? "" : "👆 TOQUE UMA CARTA"}
+                </div>
+              </div>
+            )
           )}
         </div>
 
