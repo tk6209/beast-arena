@@ -9,7 +9,7 @@ import {
   criarSessao, ouvirSessao, fecharCanal,
   type GameSession,
 } from "@/game/multiplayer";
-import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
+import { initGame, choosePower, playCard, passTurn, comboCards } from "@/game/serverApi";
 import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
@@ -71,6 +71,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
+  const [comboSel, setComboSel] = useState<any[]>([]);
   const [hitCount, setHitCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [enemyCard, setEnemyCard] = useState<CartaData | null>(null);
