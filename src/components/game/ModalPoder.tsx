@@ -112,11 +112,8 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
 
       {/* Title */}
       <div style={{ textAlign: "center", marginBottom: 16, flexShrink: 0 }}>
-        <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, letterSpacing: 3, color: "#00e5ff" }}>
-          MR BEAST LAB
-        </div>
-        <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#ffd54f", letterSpacing: 2, marginTop: 4 }}>
-          ⚗️ ESCOLHA SEU PODER
+        <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#ffd54f", letterSpacing: 2 }}>
+          ⚡ ESCOLHA SEU PODER
         </div>
         <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "#8b94a8", marginTop: 4 }}>
           Deslize ou toque nas setas
