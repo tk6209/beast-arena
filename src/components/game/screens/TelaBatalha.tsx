@@ -209,6 +209,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           gameEnded = true;
+          stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
