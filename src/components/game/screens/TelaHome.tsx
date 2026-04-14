@@ -328,9 +328,24 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [contentReady, setContentReady] = useState(false);
+  const [rankings, setRankings] = useState<any[]>([]);
 
   const handleTap = useCallback(() => {
     setTapReady(true);
+  }, []);
+
+  // Load rankings
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("rankings")
+          .select("player_name, wins, losses")
+          .order("wins", { ascending: false })
+          .limit(5);
+        if (data) setRankings(data);
+      } catch {}
+    })();
   }, []);
 
   const handleIntroDone = useCallback(() => {
@@ -591,10 +606,56 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
             </BtnMain>
           </div>
 
+          {/* Ranking */}
+          {rankings.length > 0 && (
+            <div style={{
+              marginTop: 20,
+              background: "rgba(0,229,255,.04)",
+              border: "1px solid rgba(0,229,255,.1)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              textAlign: "left",
+            }}>
+              <div style={{
+                fontFamily: "Bangers, cursive",
+                fontSize: 14,
+                color: "#00e5ff",
+                letterSpacing: 2,
+                marginBottom: 6,
+                textAlign: "center",
+              }}>🏆 RANKING</div>
+              {rankings.map((r, i) => (
+                <div key={i} style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "3px 0",
+                  borderBottom: i < rankings.length - 1 ? "1px solid rgba(255,255,255,.05)" : "none",
+                }}>
+                  <span style={{
+                    fontFamily: "Nunito, sans-serif",
+                    fontSize: 11,
+                    color: i === 0 ? "#ffd54f" : i === 1 ? "#c0c0c0" : i === 2 ? "#cd7f32" : "#8a95aa",
+                  }}>
+                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`} {r.player_name}
+                  </span>
+                  <span style={{
+                    fontFamily: "Oswald, sans-serif",
+                    fontSize: 10,
+                    color: "#69f0ae",
+                    letterSpacing: 1,
+                  }}>
+                    {r.wins}W / {r.losses}L
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Footer */}
           <div
             style={{
-              marginTop: 28,
+              marginTop: 16,
               fontFamily: "Oswald, sans-serif",
               color: "rgba(255,255,255,.15)",
               fontSize: 9,
