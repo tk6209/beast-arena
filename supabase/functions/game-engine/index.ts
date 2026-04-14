@@ -159,13 +159,20 @@ function aplicarPoison(alvo: any, log: any[]): { alvo: any; log: any[] } {
 /* ─── AI Logic ─── */
 function iaJogar(ai: any): { tipo: string; carta?: any } {
   const h = ai.mao || [];
-  if (ai.hp < 35) { const d = h.find((c: any) => c.tipo === "defesa"); if (d) return { tipo: "defesa", carta: d }; }
+  // Low HP: prioritize healing, then defense
+  if (ai.hp < 40) {
+    const cura = h.find((c: any) => c.tipo === "cura");
+    if (cura) return { tipo: "cura", carta: cura };
+    const d = h.find((c: any) => c.tipo === "defesa");
+    if (d) return { tipo: "defesa", carta: d };
+  }
   const sw = h.find((c: any) => c.tipo === "swarm");
   if (sw && (ai.swarms || []).some((s: any) => s === null)) return { tipo: "swarm", carta: sw };
   const ev = h.find((c: any) => c.tipo === "evolucao" && (ai.monstro.nivel || 0) < 3 && ai.monstro.poder);
   if (ev && (ai.monstro.nivel || 0) < 2) return { tipo: "evolucao", carta: ev };
   const a = h.find((c: any) => c.tipo === "ataque"); if (a) return { tipo: "ataque", carta: a };
   const d = h.find((c: any) => c.tipo === "defesa"); if (d) return { tipo: "defesa", carta: d };
+  const cura = h.find((c: any) => c.tipo === "cura"); if (cura) return { tipo: "cura", carta: cura };
   const ch = h.find((c: any) => c.tipo === "desafio"); if (ch) return { tipo: "desafio", carta: ch };
   return { tipo: "passar" };
 }

@@ -179,7 +179,9 @@ export function aplicarPoisonNoAlvo(
 export function iaJogar(ia: Jogador): { tipo: string; carta?: CartaData } {
   const h = ia.mao;
 
-  if (ia.hp < 35) {
+  if (ia.hp < 40) {
+    const cura = h.find((c) => c.tipo === "cura");
+    if (cura) return { tipo: "cura", carta: cura };
     const d = h.find((c) => c.tipo === "defesa");
     if (d) return { tipo: "defesa", carta: d };
   }
@@ -197,6 +199,9 @@ export function iaJogar(ia: Jogador): { tipo: string; carta?: CartaData } {
 
   const d = h.find((c) => c.tipo === "defesa");
   if (d) return { tipo: "defesa", carta: d };
+
+  const cura = h.find((c) => c.tipo === "cura");
+  if (cura) return { tipo: "cura", carta: cura };
 
   const ch = h.find((c) => c.tipo === "desafio");
   if (ch) return { tipo: "desafio", carta: ch };
