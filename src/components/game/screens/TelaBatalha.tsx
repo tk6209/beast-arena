@@ -34,6 +34,8 @@ interface ServerState {
   lastPlayedBy?: number | null;
 }
 
+type MonsterActionState = { type: string; active: boolean; who: "player" | "enemy" | "both" };
+
 interface TelaBatalhaProps {
   modo: string;
   monstroP1: string;
@@ -62,7 +64,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [screenFx, setScreenFx] = useState<string | null>(null);
   const [muted, setMuted] = useState(isMuted());
   const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
-  const [monsterAction, setMonsterAction] = useState<{ type: string; active: boolean }>({ type: "", active: false });
+  const [monsterAction, setMonsterAction] = useState<MonsterActionState>({ type: "", active: false, who: "player" });
+  const [enemyAction, setEnemyAction] = useState<MonsterActionState>({ type: "", active: false, who: "enemy" });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
@@ -147,9 +150,15 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [serverState?.fase, serverState?.turno, mostraPoder]);
 
-  function triggerMonsterAction(type: string) {
-    setMonsterAction({ type, active: true });
-    setTimeout(() => setMonsterAction({ type: "", active: false }), 1200);
+  function triggerMonsterAction(type: string, who: "player" | "enemy" | "both" = "player") {
+    if (who === "player" || who === "both") {
+      setMonsterAction({ type, active: true, who: "player" });
+      setTimeout(() => setMonsterAction({ type: "", active: false, who: "player" }), 1200);
+    }
+    if (who === "enemy" || who === "both") {
+      setEnemyAction({ type, active: true, who: "enemy" });
+      setTimeout(() => setEnemyAction({ type: "", active: false, who: "enemy" }), 1200);
+    }
   }
 
   const sid = sessionIdRef.current;
@@ -245,11 +254,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           setTimeout(() => setEnemyCard(null), 2500);
 
           // SFX and effects for AI card
-          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
-          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
-          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
-          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
-          else if (evt.tipo === "swarm") { sfxSwarm(); }
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); triggerMonsterAction("evolucao", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); triggerMonsterAction("cura", "enemy"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); triggerMonsterAction("swarm", "enemy"); }
         }
       }
 
@@ -293,11 +302,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           setEnemyCard(evt.carta);
           setTimeout(() => setEnemyCard(null), 2500);
 
-          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
-          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
-          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
-          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
-          else if (evt.tipo === "swarm") { sfxSwarm(); }
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); triggerMonsterAction("evolucao", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); triggerMonsterAction("cura", "enemy"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); triggerMonsterAction("swarm", "enemy"); }
         }
       }
 
@@ -441,6 +450,46 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
         }
+        @keyframes arenaGlow {
+          0%, 100% { box-shadow: inset 0 0 30px rgba(0,229,255,.08), 0 0 20px rgba(0,229,255,.05); }
+          50% { box-shadow: inset 0 0 50px rgba(0,229,255,.12), 0 0 40px rgba(0,229,255,.08); }
+        }
+        @keyframes vsFlash {
+          0%, 100% { text-shadow: 0 0 8px rgba(255,213,79,.4); }
+          50% { text-shadow: 0 0 20px rgba(255,213,79,.8), 0 0 40px rgba(255,213,79,.3); }
+        }
+        @keyframes enemyAttack {
+          0% { transform: scale(1) translateY(0) scaleX(-1); }
+          20% { transform: scale(1.15) translateY(-10px) scaleX(-1); }
+          40% { transform: scale(1.2) translateX(-20px) translateY(-5px) scaleX(-1); }
+          60% { transform: scale(1.2) translateX(20px) translateY(-5px) scaleX(-1); }
+          80% { transform: scale(1.1) translateY(-8px) scaleX(-1); }
+          100% { transform: scale(1) translateY(0) scaleX(-1); }
+        }
+        @keyframes enemyDefend {
+          0% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+          30% { transform: scale(1.05) scaleX(-1); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          70% { transform: scale(1.05) scaleX(-1); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          100% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemyHeal {
+          0% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+          50% { transform: scale(1.1) scaleX(-1); filter: brightness(1.4) drop-shadow(0 0 24px #34d399); }
+          100% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemyEvolve {
+          0% { transform: scale(1) rotate(0deg) scaleX(-1); filter: brightness(1); }
+          25% { transform: scale(0.9) rotate(5deg) scaleX(-1); filter: brightness(0.8); }
+          50% { transform: scale(1.3) rotate(-5deg) scaleX(-1); filter: brightness(1.8) drop-shadow(0 0 30px #ffd54f); }
+          75% { transform: scale(1.15) rotate(2deg) scaleX(-1); filter: brightness(1.3); }
+          100% { transform: scale(1) rotate(0deg) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemySwarm {
+          0% { transform: scale(1) scaleX(-1); }
+          30% { transform: scale(1.1) translateY(-8px) scaleX(-1); }
+          60% { transform: scale(1.05) translateY(-4px) scaleX(-1); }
+          100% { transform: scale(1) translateY(0) scaleX(-1); }
+        }
       `}</style>
 
       {/* Screen effect overlay */}
@@ -472,36 +521,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           boxSizing: "border-box",
         }}
       >
-        {/* Top: Turn + Enemy HP */}
+        {/* Top: Turn label + Mute + Enemy HP */}
         <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
-          {/* Turn indicator */}
           <div style={{ textAlign: "center", height: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <span style={{ fontFamily: "Bangers, cursive", fontSize: 12, color: "#00e5ff", letterSpacing: 1.5 }}>
               ⚔️ TURNO {(serverState.turno || 0) + 1}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                color: isMyTurn ? "#69f0ae" : "#ffd54f",
-                animation: !isMyTurn && !gameOver ? "pulseOpacity 1s infinite" : undefined,
-              }}
-            >
+            <span style={{
+              fontSize: 10,
+              color: isMyTurn ? "#69f0ae" : "#ffd54f",
+              animation: !isMyTurn && !gameOver ? "pulseOpacity 1s infinite" : undefined,
+            }}>
               {gameOver ? "FIM" : isMyTurn ? "SUA VEZ" : "AGUARDANDO..."}
             </span>
-            {/* Turn timer */}
-            {isMyTurn && !gameOver && !mostraPoder && (
-              <span style={{
-                fontFamily: "Oswald, sans-serif",
-                fontSize: 12,
-                fontWeight: 700,
-                color: turnTimer <= 10 ? "#ef4444" : turnTimer <= 20 ? "#ffd54f" : "#69f0ae",
-                animation: turnTimer <= 5 ? "timerPulse .5s infinite" : turnTimer <= 10 ? "timerPulse 1s infinite" : undefined,
-                minWidth: 24,
-                textAlign: "center",
-              }}>
-                ⏱ {turnTimer}s
-              </span>
-            )}
             {loading && <span style={{ fontSize: 10, color: "#ff9800" }}>⏳</span>}
             <button
               onClick={() => {
@@ -511,144 +543,247 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
                 else startBattleMusic();
               }}
               style={{
-                position: "absolute",
-                right: 12,
-                top: 8,
-                background: "rgba(255,255,255,.08)",
-                border: "1px solid rgba(255,255,255,.15)",
-                borderRadius: 6,
-                width: 28,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontSize: 14,
-                zIndex: 10,
+                position: "absolute", right: 12, top: 8,
+                background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)",
+                borderRadius: 6, width: 28, height: 28,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", fontSize: 14, zIndex: 10,
               }}
               aria-label={muted ? "Ativar som" : "Mutar som"}
             >
               {muted ? "🔇" : "🔊"}
             </button>
           </div>
-
-          {/* Enemy HP bar */}
           <div key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
             <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
         </div>
 
-        {/* Center: Selected Card or Enemy Card */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 0,
-            padding: "4px 0",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
+        {/* ═══ BEAST ARENA — Octagon center ═══ */}
+        <div style={{
+          flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+          minHeight: 0, padding: "4px 0", position: "relative", overflow: "hidden",
+        }}>
+          {/* Octagon arena background */}
+          <div style={{
+            position: "absolute",
+            width: "min(280px, 80vw)", height: "min(280px, 80vw)",
+            clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+            background: "linear-gradient(180deg, rgba(0,229,255,.03) 0%, rgba(0,0,0,.2) 50%, rgba(0,229,255,.03) 100%)",
+            border: "none",
+            animation: "arenaGlow 3s ease-in-out infinite",
+          }}>
+            {/* Inner octagon ring */}
+            <div style={{
+              position: "absolute", inset: 4,
+              clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+              border: "1px solid rgba(0,229,255,.12)",
+              background: "transparent",
+            }} />
+            {/* Arena cross lines */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: `
+                linear-gradient(0deg, transparent 48%, rgba(0,229,255,.06) 49%, rgba(0,229,255,.06) 51%, transparent 52%),
+                linear-gradient(90deg, transparent 48%, rgba(0,229,255,.06) 49%, rgba(0,229,255,.06) 51%, transparent 52%)
+              `,
+            }} />
+          </div>
+
           {/* Enemy played card overlay */}
           {enemyCard && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-                animation: "enemyCardSlide 2.5s ease forwards",
-              }}
-            >
+            <div style={{
+              position: "absolute", inset: 0, display: "flex",
+              alignItems: "center", justifyContent: "center", zIndex: 20,
+              animation: "enemyCardSlide 2.5s ease forwards",
+            }}>
               <div style={{ position: "relative" }}>
                 <div style={{
-                  position: "absolute",
-                  top: -20,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  fontFamily: "Bangers, cursive",
-                  fontSize: 12,
-                  color: "#ff8a80",
-                  whiteSpace: "nowrap",
-                  textShadow: "0 0 8px rgba(255,0,0,.5)",
-                }}>
-                  ⚔️ INIMIGO JOGOU
-                </div>
+                  position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)",
+                  fontFamily: "Bangers, cursive", fontSize: 12, color: "#ff8a80",
+                  whiteSpace: "nowrap", textShadow: "0 0 8px rgba(255,0,0,.5)",
+                }}>⚔️ INIMIGO JOGOU</div>
                 <Carta carta={enemyCard} sel={false} disabled />
               </div>
             </div>
           )}
 
-          {/* Monster action animation overlay */}
-          {monsterAction.active && (
+          {/* Selected card overlay */}
+          {displayCard && (
             <div style={{
-              position: "absolute", inset: 0, zIndex: 15,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexDirection: "column", gap: 8,
-              pointerEvents: "none",
+              position: "absolute", zIndex: 18,
+              transformOrigin: "center", ...cardAnimStyle,
             }}>
-              <div style={{
-                animation:
-                  monsterAction.type === "ataque" ? "monsterAttack 1.2s ease forwards" :
-                  monsterAction.type === "defesa" ? "monsterDefend 1.2s ease forwards" :
-                  monsterAction.type === "cura" ? "monsterHeal 1.2s ease forwards" :
-                  monsterAction.type === "evolucao" ? "monsterEvolve 1.2s ease forwards" :
-                  monsterAction.type === "swarm" ? "monsterSwarm 1.2s ease forwards" :
-                  "monsterAttack 1.2s ease forwards",
-              }}>
-                <MonsterAvatar monstroId={monstroP1} size={120} glow={p1Display.monstro.glow} />
-              </div>
-              <div style={{
-                fontFamily: "Bangers, cursive",
-                fontSize: 16,
-                letterSpacing: 2,
-                color:
-                  monsterAction.type === "ataque" ? "#ef4444" :
-                  monsterAction.type === "defesa" ? "#3b82f6" :
-                  monsterAction.type === "cura" ? "#34d399" :
-                  monsterAction.type === "evolucao" ? "#ffd54f" :
-                  monsterAction.type === "swarm" ? "#a78bfa" : "#fff",
-                textShadow: "0 0 12px currentColor",
-                animation: "fadeUp .3s ease forwards",
-              }}>
-                {monsterAction.type === "ataque" ? "⚔️ ATAQUE!" :
-                 monsterAction.type === "defesa" ? "🛡️ DEFESA!" :
-                 monsterAction.type === "cura" ? "💚 CURA!" :
-                 monsterAction.type === "evolucao" ? "⭐ EVOLUÇÃO!" :
-                 monsterAction.type === "swarm" ? "🐾 SWARM!" :
-                 monsterAction.type === "desafio" ? "🎯 DESAFIO!" : "⚡ AÇÃO!"}
-              </div>
+              <Carta carta={displayCard} sel={true} disabled />
             </div>
           )}
 
-          {displayCard ? (
-            <div style={{ transformOrigin: "center", ...cardAnimStyle }}>
-              <Carta carta={displayCard} sel={true} disabled />
-            </div>
-          ) : (
-            !monsterAction.active && (
-              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                {/* Idle monster display */}
-                <div style={{ animation: "monsterIdle 3s ease-in-out infinite" }}>
-                  <MonsterAvatar monstroId={monstroP1} size={80} glow={p1Display.monstro.glow} style={{ opacity: 0.3 }} />
-                </div>
-                <div style={{
-                  color: "#4a5568",
-                  fontFamily: "Bangers, cursive",
-                  fontSize: 18,
-                  letterSpacing: 2,
-                }}>
-                  {gameOver ? "" : "👆 TOQUE UMA CARTA"}
-                </div>
+          {/* Two monsters in the arena */}
+          <div style={{
+            position: "relative", zIndex: 5,
+            width: "min(280px, 80vw)", height: "min(200px, 50vw)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "0 12px",
+          }}>
+            {/* Player monster — left side */}
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            }}>
+              <div style={{
+                animation: monsterAction.active
+                  ? (monsterAction.type === "ataque" ? "monsterAttack 1.2s ease forwards" :
+                     monsterAction.type === "defesa" ? "monsterDefend 1.2s ease forwards" :
+                     monsterAction.type === "cura" ? "monsterHeal 1.2s ease forwards" :
+                     monsterAction.type === "evolucao" ? "monsterEvolve 1.2s ease forwards" :
+                     monsterAction.type === "swarm" ? "monsterSwarm 1.2s ease forwards" :
+                     "monsterAttack 1.2s ease forwards")
+                  : "monsterIdle 3s ease-in-out infinite",
+              }}>
+                <MonsterAvatar monstroId={monstroP1} size={80} glow={p1Display.monstro.glow} />
               </div>
-            )
+              {monsterAction.active && (
+                <div style={{
+                  fontFamily: "Bangers, cursive", fontSize: 11, letterSpacing: 1,
+                  color:
+                    monsterAction.type === "ataque" ? "#ef4444" :
+                    monsterAction.type === "defesa" ? "#3b82f6" :
+                    monsterAction.type === "cura" ? "#34d399" :
+                    monsterAction.type === "evolucao" ? "#ffd54f" :
+                    "#a78bfa",
+                  textShadow: "0 0 8px currentColor",
+                }}>
+                  {monsterAction.type === "ataque" ? "⚔️ ATK!" :
+                   monsterAction.type === "defesa" ? "🛡️ DEF!" :
+                   monsterAction.type === "cura" ? "💚 HEAL!" :
+                   monsterAction.type === "evolucao" ? "⭐ EVO!" :
+                   monsterAction.type === "swarm" ? "🐾 SWARM!" : "⚡"}
+                </div>
+              )}
+              <div style={{
+                fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#69f0ae",
+                letterSpacing: 1, textTransform: "uppercase", opacity: 0.7,
+              }}>
+                {p1Display.nome}
+              </div>
+            </div>
+
+            {/* VS badge */}
+            <div style={{
+              fontFamily: "Bangers, cursive", fontSize: 20, color: "#ffd54f",
+              animation: "vsFlash 2s ease-in-out infinite",
+              textShadow: "0 0 12px rgba(255,213,79,.5)",
+              flexShrink: 0,
+            }}>VS</div>
+
+            {/* Enemy monster — right side (mirrored) */}
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            }}>
+              <div style={{
+                transform: enemyAction.active ? undefined : "scaleX(-1)",
+                animation: enemyAction.active
+                  ? (enemyAction.type === "ataque" ? "enemyAttack 1.2s ease forwards" :
+                     enemyAction.type === "defesa" ? "enemyDefend 1.2s ease forwards" :
+                     enemyAction.type === "cura" ? "enemyHeal 1.2s ease forwards" :
+                     enemyAction.type === "evolucao" ? "enemyEvolve 1.2s ease forwards" :
+                     enemyAction.type === "swarm" ? "enemySwarm 1.2s ease forwards" :
+                     "enemyAttack 1.2s ease forwards")
+                  : "monsterIdle 3s ease-in-out infinite 0.5s",
+              }}>
+                <MonsterAvatar
+                  monstroId={enemyDisplay.monstro?.id || "panther"}
+                  size={80}
+                  glow={enemyDisplay.monstro?.glow || "#ff4444"}
+                />
+              </div>
+              {enemyAction.active && (
+                <div style={{
+                  fontFamily: "Bangers, cursive", fontSize: 11, letterSpacing: 1,
+                  color:
+                    enemyAction.type === "ataque" ? "#ef4444" :
+                    enemyAction.type === "defesa" ? "#3b82f6" :
+                    enemyAction.type === "cura" ? "#34d399" :
+                    enemyAction.type === "evolucao" ? "#ffd54f" :
+                    "#a78bfa",
+                  textShadow: "0 0 8px currentColor",
+                }}>
+                  {enemyAction.type === "ataque" ? "⚔️ ATK!" :
+                   enemyAction.type === "defesa" ? "🛡️ DEF!" :
+                   enemyAction.type === "cura" ? "💚 HEAL!" :
+                   enemyAction.type === "evolucao" ? "⭐ EVO!" :
+                   enemyAction.type === "swarm" ? "🐾 SWARM!" : "⚡"}
+                </div>
+              )}
+              <div style={{
+                fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#ff8a80",
+                letterSpacing: 1, textTransform: "uppercase", opacity: 0.7,
+              }}>
+                {enemyDisplay.nome}
+              </div>
+            </div>
+          </div>
+
+          {/* Idle prompt */}
+          {!displayCard && !monsterAction.active && !enemyAction.active && !enemyCard && !gameOver && (
+            <div style={{
+              position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)",
+              color: "#4a5568", fontFamily: "Bangers, cursive", fontSize: 14,
+              letterSpacing: 2, whiteSpace: "nowrap",
+            }}>
+              👆 TOQUE UMA CARTA
+            </div>
           )}
         </div>
 
+        {/* ═══ 8-BIT TIMER — Center bottom ═══ */}
+        {isMyTurn && !gameOver && !mostraPoder && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 8, flexShrink: 0, marginBottom: 4,
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: turnTimer <= 10 ? "rgba(239,68,68,.12)" : "rgba(0,229,255,.06)",
+              border: `2px solid ${turnTimer <= 10 ? "rgba(239,68,68,.4)" : turnTimer <= 20 ? "rgba(255,213,79,.3)" : "rgba(0,229,255,.2)"}`,
+              borderRadius: 8, padding: "4px 14px",
+              animation: turnTimer <= 5 ? "timerPulse .5s infinite" : undefined,
+              imageRendering: "pixelated",
+            }}>
+              {/* 8-bit clock icon */}
+              <div style={{
+                width: 18, height: 18, position: "relative",
+                border: `2px solid ${turnTimer <= 10 ? "#ef4444" : "#00e5ff"}`,
+                borderRadius: "50%", boxSizing: "border-box",
+              }}>
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  width: 2, height: 6,
+                  background: turnTimer <= 10 ? "#ef4444" : "#00e5ff",
+                  transformOrigin: "bottom center",
+                  transform: `translate(-50%, -100%) rotate(${(turnTimer / 30) * 360}deg)`,
+                  transition: "transform 1s linear",
+                }} />
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  width: 2, height: 4,
+                  background: turnTimer <= 10 ? "#ff8a80" : "#7eb8ff",
+                  transformOrigin: "bottom center",
+                  transform: `translate(-50%, -100%) rotate(${(turnTimer / 30) * 360 * 2}deg)`,
+                  transition: "transform 1s linear",
+                }} />
+              </div>
+              <span style={{
+                fontFamily: "'Courier New', monospace",
+                fontSize: 18, fontWeight: 900, letterSpacing: 2,
+                color: turnTimer <= 10 ? "#ef4444" : turnTimer <= 20 ? "#ffd54f" : "#00e5ff",
+                textShadow: turnTimer <= 10 ? "0 0 8px #ef4444" : "none",
+                minWidth: 36, textAlign: "center",
+              }}>
+                {String(turnTimer).padStart(2, "0")}
+              </span>
+            </div>
+          </div>
+        )}
         {/* Action buttons */}
         {!gameOver && (
           <div style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>

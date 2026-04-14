@@ -81,6 +81,72 @@ export const MONSTROS: Record<string, MonstroData> = {
     hab: "Crescimento",
     habD: "+5 ataque por turno",
   },
+  // ─── NOVOS MONSTROS (Fase 3) ───
+  drako: {
+    id: "drako",
+    nome: "Drako",
+    hp: 110,
+    atk: 40,
+    def: 12,
+    emoji: "🐉",
+    bg1: "#3a0a0a",
+    bg2: "#b71c1c",
+    glow: "#ff5252",
+    hab: "Fúria de Fogo",
+    habD: "Ataques de fogo causam +20% de dano",
+  },
+  crystal: {
+    id: "crystal",
+    nome: "Crystal",
+    hp: 80,
+    atk: 22,
+    def: 40,
+    emoji: "💎",
+    bg1: "#1a0033",
+    bg2: "#7c4dff",
+    glow: "#b388ff",
+    hab: "Armadura Cristal",
+    habD: "Reflete 15% do dano recebido",
+  },
+  phantom: {
+    id: "phantom",
+    nome: "Phantom",
+    hp: 75,
+    atk: 38,
+    def: 10,
+    emoji: "👻",
+    bg1: "#1a1a2e",
+    bg2: "#4a148c",
+    glow: "#ce93d8",
+    hab: "Fase Sombria",
+    habD: "25% chance de esquivar qualquer ataque",
+  },
+  tsunami: {
+    id: "tsunami",
+    nome: "Tsunami",
+    hp: 105,
+    atk: 25,
+    def: 28,
+    emoji: "🌊",
+    bg1: "#002244",
+    bg2: "#0277bd",
+    glow: "#4fc3f7",
+    hab: "Maré Alta",
+    habD: "Cura +8 HP por turno automaticamente",
+  },
+  volt: {
+    id: "volt",
+    nome: "Volt",
+    hp: 70,
+    atk: 45,
+    def: 8,
+    emoji: "⚡",
+    bg1: "#332200",
+    bg2: "#f9a825",
+    glow: "#ffee58",
+    hab: "Descarga Elétrica",
+    habD: "Primeiro ataque de cada turno causa dano dobrado",
+  },
 };
 
 /* ─────────────────────────────────────────────
@@ -250,6 +316,56 @@ const SWARMS_JSON = `[
     "efeito": "atk_flat",
     "valor": 15,
     "desc": "+15 de ataque ao monstro principal"
+  },
+  {
+    "id": "swarm_vampiro",
+    "nome": "Vampiro Sombrio",
+    "emoji": "🧛",
+    "raridade": "epico",
+    "tipo": "efeito",
+    "efeito": "drain",
+    "valor": 8,
+    "desc": "Drena 8 HP do inimigo por turno e cura você"
+  },
+  {
+    "id": "swarm_espelho",
+    "nome": "Espelho Arcano",
+    "emoji": "🪞",
+    "raridade": "lendario",
+    "tipo": "defesa",
+    "efeito": "reflect",
+    "valor": 25,
+    "desc": "Reflete 25% do dano recebido ao atacante"
+  },
+  {
+    "id": "swarm_paralisia",
+    "nome": "Aranha Elétrica",
+    "emoji": "🕷️",
+    "raridade": "epico",
+    "tipo": "efeito",
+    "efeito": "stun",
+    "valor": 30,
+    "desc": "30% de chance de atordoar o inimigo por 1 turno"
+  },
+  {
+    "id": "swarm_fenix",
+    "nome": "Fênix Menor",
+    "emoji": "🔥",
+    "raridade": "lendario",
+    "tipo": "suporte",
+    "efeito": "revive",
+    "valor": 20,
+    "desc": "Ao morrer, revive com 20 HP (1 vez)"
+  },
+  {
+    "id": "swarm_gelo_eterno",
+    "nome": "Gelo Eterno",
+    "emoji": "🧊",
+    "raridade": "raro",
+    "tipo": "defesa",
+    "efeito": "def_flat",
+    "valor": 12,
+    "desc": "+12 de defesa permanente ao monstro"
   }
 ]`;
 
@@ -392,17 +508,68 @@ export const mkDes = (): CartaData => {
   return { id: nid(), tipo: "desafio", ...p[Math.floor(Math.random() * p.length)] };
 };
 
-export function novaMao(n: number, poder: string | null): CartaData[] {
+/* ─── COMBO CARDS (Fase 3) ─── */
+const COMBO_CARDS: Record<string, { nome: string; emoji: string; valor: number; desc: string; tipo: string }[]> = {
+  fogo: [
+    { nome: "Chama Combo", emoji: "🔥", valor: 35, desc: "Combo de fogo! +35 dano com bônus elemental.", tipo: "ataque" },
+    { nome: "Escudo Ígneo", emoji: "🛡️🔥", valor: 25, desc: "Escudo de fogo que queima quem ataca.", tipo: "defesa" },
+  ],
+  gelo: [
+    { nome: "Congelamento Total", emoji: "❄️💎", valor: 30, desc: "Congela e defende 30 pontos.", tipo: "defesa" },
+    { nome: "Estilhaço Gélido", emoji: "❄️⚔️", valor: 30, desc: "Fragmentos de gelo causam 30 de dano.", tipo: "ataque" },
+  ],
+  raio: [
+    { nome: "Raio Duplo", emoji: "⚡⚡", valor: 40, desc: "Dois raios! 40 de dano elétrico.", tipo: "ataque" },
+    { nome: "Campo Elétrico", emoji: "⚡🛡️", valor: 20, desc: "Eletrifica o campo, +20 defesa.", tipo: "defesa" },
+  ],
+  metal: [
+    { nome: "Punho de Ferro", emoji: "🤖⚔️", valor: 35, desc: "Punho metálico devastador, 35 dano.", tipo: "ataque" },
+    { nome: "Armadura Reforçada", emoji: "⚙️🛡️", valor: 35, desc: "Armadura extra de 35 defesa.", tipo: "defesa" },
+  ],
+  natureza: [
+    { nome: "Tempestade Verde", emoji: "🌿🌪️", valor: 28, desc: "Tempestade natural causa 28 dano.", tipo: "ataque" },
+    { nome: "Regeneração Total", emoji: "🌿💚", valor: 45, desc: "A natureza cura 45 HP.", tipo: "cura" },
+  ],
+};
+
+export const mkCombo = (poder: string): CartaData | null => {
+  const pool = COMBO_CARDS[poder];
+  if (!pool) return null;
+  const card = pool[Math.floor(Math.random() * pool.length)];
+  return { id: nid(), tipo: card.tipo, ...card, esp: "combo", bg1: PODERES[poder].bg1, bg2: PODERES[poder].bg2, raridade: "raro" };
+};
+
+/* ─── LEGENDARY CARDS (Fase 3) ─── */
+const POOL_LENDARIO = [
+  { nome: "Meteoro Beast", emoji: "☄️", valor: 60, autoDano: 15, desc: "60 de dano massivo. Você recebe 15.", esp: "explode", tipo: "ataque" },
+  { nome: "Reviver Ancestral", emoji: "🌅", valor: 50, desc: "Recupera 50 HP. Lendário!", tipo: "cura" },
+  { nome: "Escudo dos Deuses", emoji: "🏛️", valor: 50, desc: "Defesa absoluta de 50 pontos.", tipo: "defesa" },
+  { nome: "Fúria Final", emoji: "💀", valor: 0, desc: "Quanto menos HP, mais dano (até 80).", esp: "furiaFinal", tipo: "ataque" },
+  { nome: "Espírito Guardião", emoji: "👼", valor: 0, desc: "Imune por 2 turnos + cura 20 HP.", esp: "espirito", tipo: "desafio", ef: "imunidade" },
+];
+
+export const mkLendario = (): CartaData => {
+  const card = POOL_LENDARIO[Math.floor(Math.random() * POOL_LENDARIO.length)];
+  return { id: nid(), ...card, raridade: "lendario" };
+};
+
+export function novaMao(n: number, poder: string | null, monstroId?: string): CartaData[] {
   const cs: CartaData[] = [mkAtk(), mkDef()];
   for (let i = 2; i < n; i++) {
     const r = Math.random();
-    if (r < 0.22) cs.push(mkAtk());
-    else if (r < 0.38) cs.push(mkDef());
-    else if (r < 0.50) cs.push(mkCura());
-    else if (r < 0.60 && poder) cs.push(mkPod(poder));
-    else if (r < 0.70) cs.push(mkDes());
-    else if (r < 0.82) cs.push(mkSwarmCard());
-    else cs.push(mkEvo(Math.ceil(Math.random() * 3)));
+    if (r < 0.20) cs.push(mkAtk());
+    else if (r < 0.34) cs.push(mkDef());
+    else if (r < 0.44) cs.push(mkCura());
+    else if (r < 0.52 && poder) cs.push(mkPod(poder));
+    else if (r < 0.58) cs.push(mkDes());
+    else if (r < 0.68) cs.push(mkSwarmCard());
+    else if (r < 0.76) cs.push(mkEvo(Math.ceil(Math.random() * 3)));
+    else if (r < 0.85 && poder) {
+      const combo = mkCombo(poder);
+      if (combo) cs.push(combo); else cs.push(mkAtk());
+    }
+    else if (r < 0.92) cs.push(mkLendario());
+    else cs.push(mkAtk());
   }
   return cs.sort(() => Math.random() - 0.5);
 }
@@ -424,4 +591,9 @@ export const SWARM_RARITY_STYLES: Record<string, { border: string; glow: string;
 export const IA_PRESETS = [
   { id: "p2", nome: "Rival Sombrio", monstro: "morcego" },
   { id: "p3", nome: "Mestre Banana", monstro: "banana" },
+  { id: "p4", nome: "Drako Flamejante", monstro: "drako" },
+  { id: "p5", nome: "Crystal Guardião", monstro: "crystal" },
+  { id: "p6", nome: "Phantom Noturno", monstro: "phantom" },
+  { id: "p7", nome: "Tsunami Profundo", monstro: "tsunami" },
+  { id: "p8", nome: "Volt Relâmpago", monstro: "volt" },
 ];
