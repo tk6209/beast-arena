@@ -58,6 +58,37 @@ export default function TelaResultado({
     }
   }, [g]);
 
+  async function updateUserProgress(uid: string, won: boolean, coins: number, xp: number) {
+    try {
+      // Update profile XP and coins
+      const { data: profile } = await supabase.from("profiles").select("xp, coins, level").eq("user_id", uid).single();
+      if (profile) {
+        let newXp = profile.xp + xp;
+        let newLevel = profile.level;
+        const xpNeeded = newLevel * 100;
+        if (newXp >= xpNeeded) {
+          newXp -= xpNeeded;
+          newLevel++;
+        }
+        await supabase.from("profiles").update({
+          xp: newXp, coins: profile.coins + coins, level: newLevel,
+        }).eq("user_id", uid);
+      }
+
+      // Update user stats
+      const { data: stats } = await supabase.from("user_stats").select("*").eq("user_id", uid).single();
+      if (stats) {
+        const newStreak = won ? stats.win_streak + 1 : 0;
+        await supabase.from("user_stats").update({
+          total_wins: stats.total_wins + (won ? 1 : 0),
+          total_losses: stats.total_losses + (won ? 0 : 1),
+          win_streak: newStreak,
+          best_streak: Math.max(stats.best_streak, newStreak),
+        }).eq("user_id", uid);
+      }
+    } catch (e) { console.error("Progress save error:", e); }
+  }
+
   async function saveRanking(name: string, wins: number, losses: number) {
     try {
       const { data } = await supabase
