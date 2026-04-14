@@ -7,8 +7,8 @@ export const EASY_HP_MULTIPLIER = 1.4;
 
 /** Damage multiplier by round range */
 export function easyDamageMultiplier(round: number): number {
-  if (round <= 2) return 0.6;
-  if (round <= 4) return 0.8;
+  if (round <= 2) return 0.85;
+  if (round <= 4) return 0.95;
   return 1.0;
 }
 
@@ -22,8 +22,7 @@ export function easyAiPassChance(round: number): number {
 export const EASY_ROUND_HEAL = 5;
 
 /** Max damage per card in early rounds (easy mode) */
-export function easyDamageCap(round: number): number {
-  if (round <= 3) return 30;
+export function easyDamageCap(_round: number): number {
   return Infinity;
 }
 
