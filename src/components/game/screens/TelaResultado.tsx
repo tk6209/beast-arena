@@ -100,6 +100,73 @@ export default function TelaResultado({
     } catch (e) { console.error("Progress save error:", e); }
   }
 
+  async function updateMissionProgress(uid: string, won: boolean, stats?: BattleStats) {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: missions } = await supabase
+        .from("user_missions")
+        .select("*, daily_missions!inner(mission_type, target_value)")
+        .eq("user_id", uid)
+        .eq("assigned_date", today)
+        .eq("completed", false);
+
+      if (!missions) return;
+
+      for (const m of missions) {
+        const type = (m as any).daily_missions?.mission_type;
+        const target = (m as any).daily_missions?.target_value || 1;
+        let inc = 0;
+
+        if (type === "wins" && won) inc = 1;
+        else if (type === "heal_cards") inc = stats?.healsUsed || 0;
+        else if (type === "evolutions") inc = stats?.evolutions || 0;
+        else if (type === "damage_dealt") inc = stats?.damageDealt || 0;
+        else if (type === "defense_cards") inc = stats?.defenseCards || 0;
+        else if (type === "play_cards") inc = stats?.cardsPlayed || 0;
+
+        if (inc > 0) {
+          const newProgress = Math.min(m.progress + inc, target);
+          await supabase.from("user_missions").update({
+            progress: newProgress,
+            completed: newProgress >= target,
+          }).eq("id", m.id);
+        }
+      }
+    } catch (e) { console.error("Mission progress error:", e); }
+  }
+
+  async function checkAchievements(uid: string) {
+    try {
+      const [{ data: achievements }, { data: unlocked }, { data: userStats }, { data: leagueData }] = await Promise.all([
+        supabase.from("achievements").select("*"),
+        supabase.from("user_achievements").select("achievement_id").eq("user_id", uid),
+        supabase.from("user_stats").select("*").eq("user_id", uid).single(),
+        supabase.from("player_leagues").select("rating").eq("user_id", uid).single(),
+      ]);
+
+      if (!achievements || !userStats) return;
+      const unlockedIds = new Set((unlocked || []).map(u => u.achievement_id));
+
+      for (const ach of achievements) {
+        if (unlockedIds.has(ach.id)) continue;
+
+        let current = 0;
+        if (ach.requirement_type === "total_wins") current = userStats.total_wins;
+        else if (ach.requirement_type === "win_streak") current = userStats.win_streak;
+        else if (ach.requirement_type === "best_streak") current = userStats.best_streak;
+        else if (ach.requirement_type === "total_battles") current = userStats.total_wins + userStats.total_losses;
+        else if (ach.requirement_type === "rating") current = leagueData?.rating || 0;
+
+        if (current >= ach.requirement_value) {
+          await supabase.from("user_achievements").insert({
+            user_id: uid,
+            achievement_id: ach.id,
+          });
+        }
+      }
+    } catch (e) { console.error("Achievement check error:", e); }
+  }
+
   async function saveRanking(name: string, wins: number, losses: number) {
     try {
       const { data } = await supabase
