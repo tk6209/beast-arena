@@ -220,6 +220,34 @@ export default function TelaLobbyPrincipal({
               🏪 LOJA
             </div>
           </div>
+
+          {/* Missions */}
+          <div
+            onClick={onMissoes}
+            style={{
+              background: "rgba(105,240,174,.06)", border: "1px solid rgba(105,240,174,.15)",
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
+              width: 130,
+            }}
+          >
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
+              🎯 MISSÕES
+            </div>
+          </div>
+
+          {/* Achievements */}
+          <div
+            onClick={onConquistas}
+            style={{
+              background: "rgba(179,136,255,.06)", border: "1px solid rgba(179,136,255,.15)",
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
+              width: 130,
+            }}
+          >
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#b388ff", letterSpacing: 1 }}>
+              🏅 CONQUISTAS
+            </div>
+          </div>
         </div>
 
         {/* ═══ RIGHT SIDE — GAME MODES ═══ */}

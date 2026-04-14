@@ -14,12 +14,14 @@ import TelaDailyReward from "@/components/game/screens/TelaDailyReward";
 import TelaRanking from "@/components/game/screens/TelaRanking";
 import TelaMatchmaking from "@/components/game/screens/TelaMatchmaking";
 import TelaSeasonPass from "@/components/game/screens/TelaSeasonPass";
+import TelaMissoes from "@/components/game/screens/TelaMissoes";
+import TelaConquistas from "@/components/game/screens/TelaConquistas";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
