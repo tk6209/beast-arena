@@ -15,6 +15,11 @@ const MONSTROS: Record<string, any> = {
   macaco: { id: "macaco", nome: "Macaco", hp: 90, atk: 28, def: 22, emoji: "🐒", hab: "Atq. Surpresa" },
   morcego: { id: "morcego", nome: "Morcego", hp: 85, atk: 32, def: 18, emoji: "🦇", hab: "Voo Sombrio" },
   sprouts: { id: "sprouts", nome: "Sprouts", hp: 95, atk: 18, def: 35, emoji: "🌱", hab: "Crescimento" },
+  drako: { id: "drako", nome: "Drako", hp: 110, atk: 40, def: 12, emoji: "🐉", hab: "Fúria de Fogo" },
+  crystal: { id: "crystal", nome: "Crystal", hp: 80, atk: 22, def: 40, emoji: "💎", hab: "Armadura Cristal" },
+  phantom: { id: "phantom", nome: "Phantom", hp: 75, atk: 38, def: 10, emoji: "👻", hab: "Fase Sombria" },
+  tsunami: { id: "tsunami", nome: "Tsunami", hp: 105, atk: 25, def: 28, emoji: "🌊", hab: "Maré Alta" },
+  volt: { id: "volt", nome: "Volt", hp: 70, atk: 45, def: 8, emoji: "⚡", hab: "Descarga Elétrica" },
 };
 
 const PODERES: Record<string, any> = {
