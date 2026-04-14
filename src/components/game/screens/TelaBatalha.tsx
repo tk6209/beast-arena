@@ -80,12 +80,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1 },
         ], dificuldade, aiMonstroId);
         setServerState(result.state);
+        // Auto-select power if continuing campaign
+        if (skipPowerSelect && lastPowerId) {
+          const powerResult = await choosePower(sid!, slotLocal, lastPowerId);
+          setServerState(powerResult.state);
+          sfxPoder();
+          startBattleMusic();
+        }
       } catch (err) {
         console.error("Init error:", err);
       }
     }
     init();
-    return () => { stopBattleMusic(); };
+    return () => { stopBattleMusic(); if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   useEffect(() => {
