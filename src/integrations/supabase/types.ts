@@ -113,6 +113,54 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_requests: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          id: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
       game_events: {
         Row: {
           created_at: string
@@ -141,6 +189,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "game_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          session_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          session_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          session_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_invites_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "game_sessions"
@@ -317,8 +403,11 @@ export type Database = {
           coins: number
           created_at: string
           display_name: string
+          display_name_normalized: string | null
           id: string
           level: number
+          name_changed_at: string | null
+          public_id: string
           updated_at: string
           user_id: string
           xp: number
@@ -328,8 +417,11 @@ export type Database = {
           coins?: number
           created_at?: string
           display_name?: string
+          display_name_normalized?: string | null
           id?: string
           level?: number
+          name_changed_at?: string | null
+          public_id?: string
           updated_at?: string
           user_id: string
           xp?: number
@@ -339,8 +431,11 @@ export type Database = {
           coins?: number
           created_at?: string
           display_name?: string
+          display_name_normalized?: string | null
           id?: string
           level?: number
+          name_changed_at?: string | null
+          public_id?: string
           updated_at?: string
           user_id?: string
           xp?: number
@@ -554,6 +649,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          music_enabled: boolean
+          opponent_chat_muted: boolean
+          sfx_enabled: boolean
+          tutorial_completed: boolean
+          updated_at: string
+          user_id: string
+          voice_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          music_enabled?: boolean
+          opponent_chat_muted?: boolean
+          sfx_enabled?: boolean
+          tutorial_completed?: boolean
+          updated_at?: string
+          user_id: string
+          voice_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          music_enabled?: boolean
+          opponent_chat_muted?: boolean
+          sfx_enabled?: boolean
+          tutorial_completed?: boolean
+          updated_at?: string
+          user_id?: string
+          voice_enabled?: boolean
+        }
+        Relationships: []
       }
       user_stats: {
         Row: {
