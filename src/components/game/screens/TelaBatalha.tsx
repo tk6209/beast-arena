@@ -427,6 +427,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     setLoading(false);
   }
 
+  async function handlePassar() {
     if (!sid || loading) return;
     markGesture();
     const bid = battleIdRef.current;
