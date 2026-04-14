@@ -187,7 +187,7 @@ export default function TelaLobbyPrincipal({
           opacity: 0.75, filter: "blur(0.2px)",
           transition: "opacity .3s, filter .3s",
         }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.filter = "blur(0.2px)"; }}>
-          <SidePanel onClick={onRanking} bg={`linear-gradient(135deg, ${leagueInfo.color}15, ${leagueInfo.color}08)`} border={`${leagueInfo.color}33`}>
+          <SidePanel onClick={onRanking} bg={`linear-gradient(135deg, ${leagueInfo.color}15, ${leagueInfo.color}08)`} border={`${leagueInfo.color}33`} delay={0}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: leagueInfo.color, letterSpacing: 2 }}>
               {leagueInfo.emoji} {leagueInfo.label}
             </div>
@@ -196,7 +196,7 @@ export default function TelaLobbyPrincipal({
             </div>
           </SidePanel>
 
-          <SidePanel onClick={onSeasonPass} bg="linear-gradient(135deg, rgba(255,213,79,.1), rgba(255,152,0,.06))" border="rgba(255,213,79,.25)">
+          <SidePanel onClick={onSeasonPass} bg="linear-gradient(135deg, rgba(255,213,79,.1), rgba(255,152,0,.06))" border="rgba(255,213,79,.25)" delay={1}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#ffd54f", letterSpacing: 1 }}>
               🏆 SEASON PASS
             </div>
@@ -205,7 +205,7 @@ export default function TelaLobbyPrincipal({
             </div>
           </SidePanel>
 
-          <SidePanel onClick={onLoja} bg="rgba(0,229,255,.08)" border="rgba(0,229,255,.2)">
+          <SidePanel onClick={onLoja} bg="rgba(0,229,255,.08)" border="rgba(0,229,255,.2)" delay={2}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#00e5ff", letterSpacing: 1 }}>
               🏪 LOJA
             </div>
@@ -214,7 +214,7 @@ export default function TelaLobbyPrincipal({
             </div>
           </SidePanel>
 
-          <SidePanel onClick={onMissoes} bg="rgba(105,240,174,.08)" border="rgba(105,240,174,.2)">
+          <SidePanel onClick={onMissoes} bg="rgba(105,240,174,.08)" border="rgba(105,240,174,.2)" delay={3}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#69f0ae", letterSpacing: 1 }}>
               🎯 MISSÕES
             </div>
@@ -223,7 +223,7 @@ export default function TelaLobbyPrincipal({
             </div>
           </SidePanel>
 
-          <SidePanel onClick={onConquistas} bg="rgba(179,136,255,.08)" border="rgba(179,136,255,.2)">
+          <SidePanel onClick={onConquistas} bg="rgba(179,136,255,.08)" border="rgba(179,136,255,.2)" delay={4}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#b388ff", letterSpacing: 1 }}>
               🏅 CONQUISTAS
             </div>
@@ -244,10 +244,10 @@ export default function TelaLobbyPrincipal({
         }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "none"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.filter = "blur(0.2px)"; }}>
           {!showDiff ? (
             <>
-              <ModeButton label="⚔️ DUELO IA" color="#00e5ff" desc="vs CPU" onClick={() => setShowDiff(true)} />
-              <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} />
-              <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} />
-              <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} />
+              <ModeButton label="⚔️ DUELO IA" color="#00e5ff" desc="vs CPU" onClick={() => setShowDiff(true)} delay={0} />
+              <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} delay={1} />
+              <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} delay={2} />
+              <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} delay={3} />
             </>
           ) : (
             <>
@@ -402,7 +402,7 @@ export default function TelaLobbyPrincipal({
 
 /* ── Sub-components ── */
 
-function SidePanel({ children, onClick, bg, border }: { children: React.ReactNode; onClick: () => void; bg: string; border: string }) {
+function SidePanel({ children, onClick, bg, border, delay = 0 }: { children: React.ReactNode; onClick: () => void; bg: string; border: string; delay?: number }) {
   const [pressed, setPressed] = React.useState(false);
   return (
     <div
@@ -417,6 +417,7 @@ function SidePanel({ children, onClick, bg, border }: { children: React.ReactNod
         transform: pressed ? "scale(0.93)" : "scale(1)",
         boxShadow: pressed ? `0 0 16px ${border}, inset 0 0 8px ${border}` : "none",
         transition: "transform .15s ease, box-shadow .15s ease",
+        animation: `fadeUp .5s ease ${delay * 0.1}s both`,
       }}
     >
       {children}
@@ -424,7 +425,7 @@ function SidePanel({ children, onClick, bg, border }: { children: React.ReactNod
   );
 }
 
-function ModeButton({ label, color, desc, onClick }: { label: string; color: string; desc?: string; onClick: () => void }) {
+function ModeButton({ label, color, desc, onClick, delay = 0 }: { label: string; color: string; desc?: string; onClick: () => void; delay?: number }) {
   const [pressed, setPressed] = React.useState(false);
   return (
     <button
@@ -441,6 +442,7 @@ function ModeButton({ label, color, desc, onClick }: { label: string; color: str
         transform: pressed ? "scale(0.93)" : "scale(1)",
         boxShadow: pressed ? `0 0 16px ${color}66, inset 0 0 8px ${color}33` : "none",
         transition: "transform .15s ease, box-shadow .15s ease",
+        animation: `fadeUp .5s ease ${delay * 0.1}s both`,
       }}
     >
       <span>{label}</span>
