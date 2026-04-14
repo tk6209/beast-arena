@@ -956,14 +956,25 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         {/* Action buttons */}
         {!gameOver && (
           <div data-tutorial-actions style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>
-            <BtnMain
-              variant={cartaSel ? "gold" : "dark"}
-              disabled={!cartaSel || !isMyTurn || loading}
-              onClick={jogarCarta}
-              style={{ flex: 2 }}
-            >
-              {cartaSel ? `⚡ JOGAR` : "Selecione"}
-            </BtnMain>
+            {comboSel.length === 2 ? (
+              <BtnMain
+                variant="gold"
+                disabled={!isMyTurn || loading}
+                onClick={jogarCombo}
+                style={{ flex: 2 }}
+              >
+                ⚡ COMBO!
+              </BtnMain>
+            ) : (
+              <BtnMain
+                variant={cartaSel ? "gold" : "dark"}
+                disabled={!cartaSel || !isMyTurn || loading}
+                onClick={jogarCarta}
+                style={{ flex: 2 }}
+              >
+                {cartaSel ? `⚡ JOGAR` : "Selecione"}
+              </BtnMain>
+            )}
             <BtnMain
               variant="dark"
               disabled={!isMyTurn || loading}
