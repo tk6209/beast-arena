@@ -42,6 +42,11 @@ export default function TelaResultado({
   const [show, setShow] = useState(false);
   const canContinue = g && !campaignFinished && campaignIndex < campaignTotal - 1;
 
+  // Monster image for final animation
+  const monstroId = vencedor?.monstro?.id;
+  const monsterImg = monstroId ? MONSTER_IMAGES[monstroId] : null;
+  const monsterGlow = monstroId && MONSTROS[monstroId] ? MONSTROS[monstroId].glow || "#00e5ff" : "#00e5ff";
+
   useEffect(() => {
     if (g) sfxVitoria(); else sfxDerrota();
 
