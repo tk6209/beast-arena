@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MONSTROS } from "@/game/data";
+import { supabase } from "@/integrations/supabase/client";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
@@ -10,15 +11,32 @@ import { sfxTap } from "@/game/sfx";
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
   titulo?: string;
+  userId?: string;
 }
 
 const monsters = Object.values(MONSTROS);
+const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO" }: TelaMonstroProps) {
+export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState<"left" | "right" | null>(null);
   const [animating, setAnimating] = useState(false);
   const touchStart = useRef<number | null>(null);
+  const [unlockedMonsters, setUnlockedMonsters] = useState<Set<string>>(new Set(STARTER_MONSTERS));
+
+  // Load unlocked monsters from inventory
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase.from("user_inventory")
+        .select("item_key")
+        .eq("user_id", userId)
+        .eq("item_type", "monster");
+      if (data) {
+        setUnlockedMonsters(new Set([...STARTER_MONSTERS, ...data.map((d: any) => d.item_key)]));
+      }
+    })();
+  }, [userId]);
 
   const m = monsters[idx];
 
@@ -55,7 +73,10 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
     goTo(idx === monsters.length - 1 ? 0 : idx + 1);
   }
 
+  const isUnlocked = !userId || unlockedMonsters.has(m.id);
+
   function handleConfirm() {
+    if (!isUnlocked) return;
     markGesture();
     falar(`${m.nome} selecionado! Prepare-se para a batalha.`, true);
     onConfirmar(m.id);
@@ -318,9 +339,15 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
 
         {/* Confirm button */}
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
-          <BtnMain variant="gold" onClick={handleConfirm}>
-            ✅ CONFIRMAR {m.nome.toUpperCase()}
-          </BtnMain>
+          {isUnlocked ? (
+            <BtnMain variant="gold" onClick={handleConfirm}>
+              ✅ CONFIRMAR {m.nome.toUpperCase()}
+            </BtnMain>
+          ) : (
+            <BtnMain variant="dark" onClick={() => {}}>
+              🔒 DESBLOQUEIE NA LOJA
+            </BtnMain>
+          )}
         </div>
       </div>
     </div>
