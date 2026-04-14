@@ -229,24 +229,19 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
       let narration = `Turno ${(result.state.turno || 0) + 1}. Novas cartas distribuídas. `;
 
-      if (result.state.lastPlayedCard && result.state.lastPlayedBy !== slotLocal) {
-        const eName = result.state.lastPlayedCard.nome || result.state.lastPlayedCard.id;
-        narration += `O inimigo jogou ${eName}. `;
-        setEnemyCard(result.state.lastPlayedCard);
-        setTimeout(() => setEnemyCard(null), 2500);
-      }
+      // Narrate AI played card
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          const aiCardName = evt.carta.nome || evt.tipo;
+          narration += `O adversário jogou ${aiCardName}. `;
+          setEnemyCard(evt.carta);
+          setTimeout(() => setEnemyCard(null), 2500);
 
-      const logs = result.state.log || [];
-      const recentLogs = logs.slice(-3);
-      for (const entry of recentLogs) {
-        if (entry.t === "dano") {
-          narration += `${entry.dmg || ""} de dano! `;
-          sfxAtaque();
-          setHitCount(c => c + 1);
-          
-        } else if (entry.t === "evolucao") {
-          narration += `Evolução para nível ${entry.nivel || ""}! `;
-          sfxEvolucao();
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); }
         }
       }
 
