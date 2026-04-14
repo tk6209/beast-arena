@@ -225,6 +225,27 @@ export default function TelaResultado({
           0% { opacity:1; transform:translate(0,0) scale(1); }
           100% { opacity:0; transform:translate(var(--px),var(--py)) scale(0); }
         }
+        @keyframes victoryBounce {
+          0% { opacity:0; transform:scale(0.3) rotate(-10deg); }
+          50% { transform:scale(1.15) rotate(3deg); }
+          70% { transform:scale(0.95) rotate(-1deg); }
+          100% { opacity:1; transform:scale(1) rotate(0deg); }
+        }
+        @keyframes defeatFall {
+          0% { opacity:0; transform:translateY(-40px) rotate(0deg); }
+          40% { opacity:1; transform:translateY(10px) rotate(5deg); }
+          60% { transform:translateY(-5px) rotate(-3deg); }
+          80% { transform:translateY(3px) rotate(1deg); }
+          100% { opacity:0.6; transform:translateY(0) rotate(0deg); }
+        }
+        @keyframes victoryGlow {
+          0%,100% { filter: drop-shadow(0 0 20px rgba(0,229,255,.3)); }
+          50% { filter: drop-shadow(0 0 50px rgba(255,213,79,.6)) drop-shadow(0 0 80px rgba(0,229,255,.4)); }
+        }
+        @keyframes defeatDesaturate {
+          0% { filter: saturate(1) brightness(1); }
+          100% { filter: saturate(0.3) brightness(0.6) drop-shadow(0 0 20px rgba(239,68,68,.4)); }
+        }
       `}</style>
       <ChromeNoise />
 
@@ -254,9 +275,40 @@ export default function TelaResultado({
           } as any} />
         ))}
 
+        {/* Monster Final Animation */}
+        {show && monsterImg && (
+          <div style={{
+            position: "relative",
+            width: 160, height: 160,
+            marginBottom: 8,
+          }}>
+            {/* Glow ring behind monster */}
+            <div style={{
+              position: "absolute", inset: -20,
+              borderRadius: "50%",
+              background: g
+                ? `radial-gradient(circle, ${monsterGlow}30, transparent 70%)`
+                : "radial-gradient(circle, rgba(239,68,68,.15), transparent 70%)",
+              animation: g ? "pulseGlow 2s ease-in-out infinite" : "none",
+              pointerEvents: "none",
+            }} />
+            <img
+              src={monsterImg}
+              alt="Monster"
+              style={{
+                width: "100%", height: "100%",
+                objectFit: "contain",
+                animation: g
+                  ? "victoryBounce .8s cubic-bezier(.34,1.56,.64,1) forwards, victoryGlow 2s ease-in-out 1s infinite"
+                  : "defeatFall 1s ease forwards, defeatDesaturate 1.2s ease .8s forwards",
+              }}
+            />
+          </div>
+        )}
+
         {/* Trophy / Skull */}
         <div style={{
-          fontSize: 80,
+          fontSize: 60,
           filter: `drop-shadow(0 0 40px ${g ? "#00e5ff" : "#ef4444"})`,
           animation: show ? "float 3s ease-in-out infinite" : "none",
         }}>
@@ -266,7 +318,7 @@ export default function TelaResultado({
         {/* Title */}
         <div style={{
           fontFamily: "Bangers, cursive",
-          fontSize: 52,
+          fontSize: 48,
           letterSpacing: 3,
           color: g ? "#ffd54f" : "#ff6b6b",
           textShadow: `0 0 30px ${g ? "#ffd54f88" : "#ff6b6b88"}`,
