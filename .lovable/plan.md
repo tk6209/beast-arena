@@ -1,145 +1,86 @@
 
 
-# Beast Arena — Plano de Atualização Comercial
+# Plano: Missões Automáticas, Conquistas, VFX por Monstro, Chat de Batalha e Lobby 360°
 
-## Visão Geral
+## Resumo
 
-Transformar o Beast Arena de um protótipo funcional em um jogo comercial completo, seguindo práticas de mercado de jogos de cartas digitais como Pokémon TCG Live, Hearthstone, e Marvel Snap.
-
----
-
-## Fase 1: Autenticação e Perfil do Jogador
-
-**O que muda para o usuário:** Login real com Google e email. Progresso salvo na nuvem. Avatar e perfil personalizável.
-
-**Detalhes técnicos:**
-- Implementar auth com email + Google OAuth via Lovable Cloud
-- Criar tabela `profiles` (avatar_url, display_name, level, xp, coins, created_at)
-- Criar tabela `user_stats` (total_wins, total_losses, win_streak, best_streak, favorite_monster)
-- Migrar ranking para referenciar `user_id` ao invés de `player_name`
-- Tela de perfil acessível da home
+5 blocos de trabalho: (1) progresso automático de missões durante batalha, (2) verificação automática de conquistas pós-batalha, (3) efeitos visuais específicos por monstro na cutscene, (4) chat rápido em batalha multiplayer, (5) lobby redesenhado com monstro 360° arrastável e menus em segundo plano.
 
 ---
 
-## Fase 2: Economia e Progressão
+## 1. Progresso Automático de Missões
 
-**O que muda para o usuário:** Sistema de moedas, XP, e desbloqueio gradual de conteúdo.
+Após cada batalha (em `TelaResultado.tsx` → `updateUserProgress`), adicionar chamada a uma nova função `updateMissionProgress` que:
+- Busca `user_missions` ativas do dia
+- Cruza com `daily_missions` pelo `mission_type`
+- Incrementa `progress` baseado no tipo: `win_battle` (+1 por vitória), `use_heal` (contagem passada via props), `evolve_monster` (idem), `play_cards` (total jogadas)
+- Marca `completed = true` quando `progress >= target_value`
+- Passa contadores de ações da batalha (`TelaBatalha` → `TelaResultado`) via novo objeto `battleStats`
 
-- **Moedas (Coins):** Ganhas ao vencer batalhas (10 fácil, 20 médio, 40 avançado)
-- **XP e Level:** XP por partida (win/loss), level up desbloqueia monstros, poderes e skins
-- **Loja de Packs:** Gastar moedas para comprar pacotes de cartas/swarms raros
-- **Monstros desbloqueáveis:** Começar com 2 monstros, desbloquear os outros por XP/moedas
-- **Daily Rewards:** Recompensa diária ao logar (streak de dias aumenta prêmio)
-- Tabelas: `user_inventory`, `shop_items`, `daily_rewards`
+**Arquivos:** `TelaBatalha.tsx` (contadores), `TelaResultado.tsx` (nova função), `Index.tsx` (passar props)
 
----
+## 2. Verificação Automática de Conquistas
 
-## Fase 3: Expansão de Conteúdo
+Na mesma `updateUserProgress` em `TelaResultado.tsx`:
+- Busca `achievements` e `user_achievements` do jogador
+- Busca `user_stats` atualizado (já salvo antes)
+- Para cada achievement não desbloqueado, checa `requirement_type` vs valor atual:
+  - `total_wins`, `win_streak`, `best_streak` → de `user_stats`
+  - `rating` → de `player_leagues`
+  - `total_battles` → `total_wins + total_losses`
+- Se `requirement_value` atingido, insere em `user_achievements`
+- Mostra toast/notificação de conquista desbloqueada
 
-**O que muda para o usuário:** Mais monstros, cartas, e variedade.
+**Arquivos:** `TelaResultado.tsx`
 
-- **5 novos monstros** com habilidades únicas (total: 10)
-- **Cartas combo:** Cartas que combinam com tipo do monstro para efeito bônus
-- **Cartas lendárias:** Pool separado com cartas raras e poderosas
-- **Mais swarms** com raridades e efeitos novos (drain, reflect, stun)
-- **Skins de monstros:** Variantes visuais desbloqueáveis
-- Atualizar data.ts + edge function com novo conteúdo
+## 3. Efeitos Visuais por Monstro na Cutscene
 
----
+Em `BattleIntro.tsx`, adicionar partículas temáticas por `monstroId`:
+- **Drako:** partículas de fogo (🔥, gradiente vermelho/laranja, trail de chamas)
+- **Crystal:** cristais brilhantes (💎, flashes brancos/roxos, reflexos)
+- **Volt:** raios elétricos (⚡, linhas zigzag amarelas, flashes)
+- **Tsunami:** ondas de água (🌊, bolhas azuis, ondulação)
+- **Panther/outros:** partículas genéricas de energia
 
-## Fase 4: UX e Polish Visual
+Implementado como mapa `MONSTER_FX` que define: emoji, cores, quantidade e animação CSS para cada monstro. Renderizado em phase >= 1 para P1 e phase >= 2 para P2.
 
-**O que muda para o usuário:** Experiência mais fluida e profissional.
+**Arquivos:** `BattleIntro.tsx`
 
-- **Tutorial interativo:** Primeira partida guiada com tooltips passo-a-passo
-- **Animações de combate:** Partículas, screen shake melhorado, transições de turno cinematográficas
-- **Animação de abertura de pack:** Efeito "reveal" ao abrir pacotes na loja
-- **Indicadores visuais de status:** Ícones de buff/debuff sobre o monstro (veneno, escudo, dobro)
-- **Histórico de partidas:** Tela com últimas 20 partidas (adversário, resultado, data)
-- **Responsividade tablet/desktop:** Layout adaptado para telas maiores
-- **Loading skeleton:** Substituir "Carregando..." por skeleton screens
-- **Haptic feedback:** Vibração ao jogar cartas (navigator.vibrate)
+## 4. Chat Rápido em Batalha Multiplayer
 
----
+Novo componente `BattleChat.tsx`:
+- 6 emojis pré-definidos: "GG 👏", "Wow 😮", "Boa jogada 🎯", "Haha 😂", "Ops 😅", "👀"
+- Botão flutuante no canto que abre painel de emojis
+- Envio via `game_events` (type: `chat`, payload: emoji escolhido)
+- Recepção via Realtime — emoji aparece flutuando sobre a tela do oponente por 2s
+- Limitado a 1 mensagem a cada 3 segundos (anti-spam)
 
-## Fase 5: Multiplayer Robusto
+Integrado em `TelaBatalha.tsx` apenas quando `modo === "multi"`.
 
-**O que muda para o usuário:** Multiplayer funcional e confiável.
+**Arquivos:** novo `BattleChat.tsx`, `TelaBatalha.tsx`
 
-- **Matchmaking automático:** Fila de espera por dificuldade ao invés de código manual
-- **Timer de turno:** 30 segundos por jogada, perde turno se expirar
-- **Chat rápido:** Emojis pré-definidos durante a batalha (GG, Wow, etc.)
-- **Spectator mode:** Assistir partidas em andamento
-- **Anti-cheat básico:** Toda lógica no edge function (já implementado), validar inputs
-- Tabelas: `matchmaking_queue`, atualizar `game_sessions` com timer
+## 5. Lobby com Monstro 360° e Layout Redistribuído
 
----
+Redesenhar `TelaLobbyPrincipal.tsx`:
+- **Monstro central com arraste 360°:** touch/mouse drag horizontal rotaciona o monstro (usando `rotateY` CSS transform). Imagem 2D com perspectiva simulada — ao arrastar, aplica `rotateY(Xdeg)` + leve `scale` para dar sensação de profundidade.
+- **Menus em segundo plano:** botões laterais ficam com `opacity: 0.6` e `blur(1px)` quando não focados, monstro sempre em primeiro plano com `z-index` superior.
+- **QR Code centralizado** na parte inferior, acima da bottom bar.
+- **Distribuição vertical:** menu esquerdo (Liga, Season, Loja) e direito (modos de jogo) distribuídos uniformemente com `justify-content: space-evenly`.
+- Bottom bar permanece como está.
 
-## Fase 6: Engajamento e Retenção
-
-**O que muda para o usuário:** Razões para voltar todo dia.
-
-- **Missões diárias:** "Vença 3 partidas", "Use 5 cartas de cura", "Evolua 2 vezes" — premiam moedas/XP
-- **Season Pass:** Trilha de recompensas por temporada (30 níveis, rewards por tier)
-- **Conquistas/Achievements:** Badges permanentes (ex: "Derrotou todos no avançado")
-- **Leaderboard semanal:** Ranking que reseta toda semana com prêmios
-- Tabelas: `missions`, `user_missions`, `achievements`, `user_achievements`, `seasons`
+**Arquivos:** `TelaLobbyPrincipal.tsx`
 
 ---
 
-## Fase 7: Monetização (Opcional)
+## Banco de Dados
 
-**O que muda para o usuário:** Opção de comprar conteúdo cosmético.
+Nenhuma alteração de schema necessária. Todas as tabelas já existem. Inserção de dados em `achievements` e `daily_missions` será feita via insert tool se as tabelas estiverem vazias.
 
-- **Moedas premium:** Compra com dinheiro real via Stripe/Paddle
-- **Skins exclusivas:** Apenas com moedas premium
-- **Battle Pass premium:** Trilha extra de recompensas
-- **Sem pay-to-win:** Apenas cosméticos e aceleradores de XP
+## Ordem de Implementação
 
----
-
-## Fase 8: Qualidade e Infraestrutura
-
-- **Testes E2E:** Vitest + Playwright para fluxos críticos
-- **Error tracking:** Sentry ou similar para bugs em produção
-- **Analytics:** Eventos de gameplay (cartas jogadas, monstros escolhidos, taxa de abandono)
-- **PWA:** Manifest + service worker para instalação no celular
-- **SEO e Open Graph:** Meta tags, preview de compartilhamento
-- **Rate limiting:** No edge function para prevenir abuso
-- **Backup de dados:** Políticas de retenção no banco
-
----
-
-## Ordem de Implementação Sugerida
-
-1. **Auth + Perfil** (base para tudo)
-2. **Economia básica** (moedas + XP)
-3. **Tutorial interativo**
-4. **Polish visual** (animações, status icons, responsividade)
-5. **Expansão de conteúdo** (novos monstros/cartas)
-6. **Missões diárias + conquistas**
-7. **Multiplayer robusto**
-8. **Loja + packs**
-9. **PWA + infraestrutura**
-10. **Monetização** (se desejado)
-
----
-
-## Resumo de Tabelas Novas
-
-```text
-profiles          — avatar, display_name, level, xp, coins
-user_stats        — wins, losses, streaks
-user_inventory    — owned monsters, skins, cards
-shop_items        — itens disponíveis na loja
-daily_rewards     — registro de login diário
-missions          — definição de missões
-user_missions     — progresso do jogador
-achievements      — definição de conquistas
-user_achievements — conquistas desbloqueadas
-seasons           — season pass data
-matchmaking_queue — fila de matchmaking
-```
-
-Posso começar implementando qualquer fase. Recomendo iniciar pela **Fase 1 (Auth + Perfil)** pois é a fundação de todo o resto.
+1. Contadores de batalha + progresso de missões
+2. Verificação de conquistas
+3. VFX por monstro na cutscene
+4. Chat de batalha
+5. Lobby 360°
 
