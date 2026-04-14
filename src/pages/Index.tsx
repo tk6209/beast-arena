@@ -178,23 +178,35 @@ export default function Index() {
       return <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />;
     case "perfil":
       return user ? (
-        <TelaPerfil user={user} onVoltar={() => setTela("home")} onLogout={() => { setUser(null); setTela("home"); }} />
+        <TelaPerfil user={user} onVoltar={() => setTela("home")} onLogout={() => { setUser(null); setDailyChecked(false); setTela("home"); }} />
+      ) : (
+        <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />
+      );
+    case "loja":
+      return user ? (
+        <TelaLoja user={user} onVoltar={() => setTela("home")} />
       ) : (
         <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />
       );
     case "home":
       return (
-        <TelaHome
-          onIniciar={handleIniciar}
-          user={user}
-          onLogin={() => setTela("auth")}
-          onPerfil={() => setTela("perfil")}
-        />
+        <>
+          {showDailyReward && user && (
+            <TelaDailyReward user={user} onClose={() => setShowDailyReward(false)} />
+          )}
+          <TelaHome
+            onIniciar={handleIniciar}
+            user={user}
+            onLogin={() => setTela("auth")}
+            onPerfil={() => setTela("perfil")}
+            onLoja={() => setTela("loja")}
+          />
+        </>
       );
     case "nome":
       return <TelaNome onConfirmar={handleNomeConfirm} />;
     case "monstro":
-      return <TelaMonstro onConfirmar={handleMonstroConfirm} />;
+      return <TelaMonstro onConfirmar={handleMonstroConfirm} userId={user?.id} />;
     case "lobby":
       return <TelaLobby monstroHost={monstroP1} onBatalha={handleBatalha} />;
     case "entrar":
@@ -238,6 +250,14 @@ export default function Index() {
       return (
         <TelaHome
           onIniciar={handleIniciar}
+          user={user}
+          onLogin={() => setTela("auth")}
+          onPerfil={() => setTela("perfil")}
+          onLoja={() => setTela("loja")}
+        />
+      );
+  }
+}
           user={user}
           onLogin={() => setTela("auth")}
           onPerfil={() => setTela("perfil")}
