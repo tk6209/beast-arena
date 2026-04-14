@@ -27,6 +27,7 @@ function playTone(
   volume = 0.25,
   ramp?: { freq: number; time: number },
 ) {
+  if (isMuted()) return;
   const c = getCtx();
   if (!c) return;
   const osc = c.createOscillator();
