@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_rewards: {
+        Row: {
+          created_at: string
+          id: string
+          last_claim_date: string
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_claim_date?: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_claim_date?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_events: {
         Row: {
           created_at: string
@@ -189,6 +216,75 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           wins?: number
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          item_key: string
+          item_type: string
+          level_required: number
+          name: string
+          price_coins: number
+          rarity: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          item_key: string
+          item_type: string
+          level_required?: number
+          name: string
+          price_coins?: number
+          rarity?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          item_key?: string
+          item_type?: string
+          level_required?: number
+          name?: string
+          price_coins?: number
+          rarity?: string
+        }
+        Relationships: []
+      }
+      user_inventory: {
+        Row: {
+          acquired_at: string
+          id: string
+          item_key: string
+          item_type: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          item_key: string
+          item_type: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          item_key?: string
+          item_type?: string
+          quantity?: number
+          user_id?: string
         }
         Relationships: []
       }
