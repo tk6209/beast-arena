@@ -254,11 +254,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           setTimeout(() => setEnemyCard(null), 2500);
 
           // SFX and effects for AI card
-          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
-          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
-          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
-          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
-          else if (evt.tipo === "swarm") { sfxSwarm(); }
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); triggerMonsterAction("evolucao", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); triggerMonsterAction("cura", "enemy"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); triggerMonsterAction("swarm", "enemy"); }
         }
       }
 
@@ -302,11 +302,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           setEnemyCard(evt.carta);
           setTimeout(() => setEnemyCard(null), 2500);
 
-          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); }
-          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); }
-          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); }
-          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); }
-          else if (evt.tipo === "swarm") { sfxSwarm(); }
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); setHitCount(c => c + 1); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerFx("defesa"); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "evolucao") { sfxEvolucao(); triggerFx("evolucao"); triggerMonsterAction("evolucao", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerFx("cura"); triggerMonsterAction("cura", "enemy"); }
+          else if (evt.tipo === "swarm") { sfxSwarm(); triggerMonsterAction("swarm", "enemy"); }
         }
       }
 
