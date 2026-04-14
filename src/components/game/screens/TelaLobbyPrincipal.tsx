@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { MONSTROS } from "@/game/data";
-import { MONSTER_IMAGES } from "@/game/monsterImages";
+import { MONSTER_IMAGES, getMonsterImageForAngle } from "@/game/monsterImages";
 import { pageBg } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
