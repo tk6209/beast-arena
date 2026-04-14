@@ -305,7 +305,6 @@ export default function TelaLobbyPrincipal({
             {(() => {
               const norm = (((rotation % 360) + 360) % 360);
               const isLeftSide = norm >= 225 && norm < 315;
-              const isFront = norm < 45 || norm >= 315;
               const activeImg = getMonsterImageForAngle(currentKey, rotation);
               return (
                 <div style={{ position: "relative" }}>
@@ -320,7 +319,6 @@ export default function TelaLobbyPrincipal({
                       transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
                       animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
                       transform: isLeftSide ? "scaleX(-1)" : "scaleX(1)",
-                      mixBlendMode: isFront ? "normal" : "screen",
                     }}
                   />
                 </div>
