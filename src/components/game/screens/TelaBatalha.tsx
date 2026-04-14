@@ -198,6 +198,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     try {
       const result = await playCard(sid, slotLocal, cartaSel.id);
       setServerState(result.state);
+
+      // Trigger monster action animation based on card type
+      const cardType = cartaSel.tipo || "ataque";
+      triggerMonsterAction(cardType);
+
       setCartaSel(null);
 
       // Narrate card played + results
