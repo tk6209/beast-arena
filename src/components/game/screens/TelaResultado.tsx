@@ -42,9 +42,9 @@ export default function TelaResultado({
 
     // Save to ranking only when campaign is finished (all beaten) or on loss
     if (campaignFinished && g) {
-      saveRanking(vencedor?.nome || "Jogador", campaignWins, 0);
+      saveRanking(nomeJogador, campaignWins, 0);
     } else if (!g) {
-      saveRanking("Jogador", campaignWins, 1);
+      saveRanking(nomeJogador, campaignWins, 1);
     }
   }, [g]);
 
