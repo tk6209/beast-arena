@@ -8,12 +8,14 @@ import TelaBatalha from "@/components/game/screens/TelaBatalha";
 import TelaResultado from "@/components/game/screens/TelaResultado";
 import TelaAuth from "@/components/game/screens/TelaAuth";
 import TelaPerfil from "@/components/game/screens/TelaPerfil";
+import TelaLoja from "@/components/game/screens/TelaLoja";
+import TelaDailyReward from "@/components/game/screens/TelaDailyReward";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "perfil" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado";
+type Tela = "home" | "auth" | "perfil" | "loja" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -41,6 +43,8 @@ export default function Index() {
   const [isCampaignContinue, setIsCampaignContinue] = useState(false);
 
   const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [showDailyReward, setShowDailyReward] = useState(false);
+  const [dailyChecked, setDailyChecked] = useState(false);
 
   // Auth listener
   useEffect(() => {
@@ -54,6 +58,24 @@ export default function Index() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Daily reward check on login
+  useEffect(() => {
+    if (user && !dailyChecked) {
+      setDailyChecked(true);
+      (async () => {
+        const { data } = await supabase
+          .from("daily_rewards")
+          .select("last_claim_date")
+          .eq("user_id", user.id)
+          .single();
+        const today = new Date().toISOString().split("T")[0];
+        if (!data || data.last_claim_date !== today) {
+          setShowDailyReward(true);
+        }
+      })();
+    }
+  }, [user, dailyChecked]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
