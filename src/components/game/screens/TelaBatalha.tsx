@@ -48,6 +48,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
   const [enemyCard, setEnemyCard] = useState<CartaData | null>(null);
   const [cardAnimState, setCardAnimState] = useState<"idle" | "entering" | "exiting">("idle");
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
+  const [screenFx, setScreenFx] = useState<string | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
