@@ -230,6 +230,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       // Trigger monster action animation based on card type
       const cardType = cartaSel.tipo || "ataque";
       triggerMonsterAction(cardType);
+      hapticMedium();
 
       setCartaSel(null);
 
