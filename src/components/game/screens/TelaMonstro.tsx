@@ -73,7 +73,10 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
     goTo(idx === monsters.length - 1 ? 0 : idx + 1);
   }
 
+  const isUnlocked = !userId || unlockedMonsters.has(m.id);
+
   function handleConfirm() {
+    if (!isUnlocked) return;
     markGesture();
     falar(`${m.nome} selecionado! Prepare-se para a batalha.`, true);
     onConfirmar(m.id);
@@ -336,9 +339,16 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
 
         {/* Confirm button */}
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
-          <BtnMain variant="gold" onClick={handleConfirm}>
-            ✅ CONFIRMAR {m.nome.toUpperCase()}
-          </BtnMain>
+          {isUnlocked ? (
+            <BtnMain variant="gold" onClick={handleConfirm}>
+              ✅ CONFIRMAR {m.nome.toUpperCase()}
+            </BtnMain>
+          ) : (
+            <BtnMain variant="dark" onClick={() => {}}>
+              🔒 DESBLOQUEIE NA LOJA
+            </BtnMain>
+          )}
+        </div>
         </div>
       </div>
     </div>
