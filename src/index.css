@@ -99,7 +99,13 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    height: -webkit-fill-available;
+  }
+
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    min-height: 100dvh;
   }
 }
