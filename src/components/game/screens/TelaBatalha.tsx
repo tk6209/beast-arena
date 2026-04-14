@@ -14,6 +14,7 @@ import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTa
 import { pageBg } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
 import { isMuted, toggleMuted } from "@/game/audioState";
+import { hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticError, hapticExplosion } from "@/game/haptic";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -21,6 +22,9 @@ import BtnMain from "@/components/game/BtnMain";
 import ModalPoder from "@/components/game/ModalPoder";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
+import CombatParticles from "@/components/game/CombatParticles";
+import BuffIndicators from "@/components/game/BuffIndicators";
+import TutorialOverlay from "@/components/game/TutorialOverlay";
 
 interface ServerState {
   players: any[];
@@ -66,8 +70,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
   const [monsterAction, setMonsterAction] = useState<MonsterActionState>({ type: "", active: false, who: "player" });
   const [enemyAction, setEnemyAction] = useState<MonsterActionState>({ type: "", active: false, who: "enemy" });
+  const [particleTrigger, setParticleTrigger] = useState(0);
+  const [particleType, setParticleType] = useState("ataque");
+  const [showTutorial, setShowTutorial] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
+
+  // Check if first battle ever — show tutorial
+  useEffect(() => {
+    const tutDone = localStorage.getItem("beast_tutorial_done");
+    if (!tutDone && !skipPowerSelect) {
+      setShowTutorial(true);
+    }
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -165,6 +180,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
   function triggerFx(type: string) {
     setScreenFx(type);
+    setParticleType(type);
+    setParticleTrigger(t => t + 1);
     setTimeout(() => setScreenFx(null), 600);
   }
 
@@ -195,6 +212,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     setCartaSel(isDeselecting ? null : carta);
     if (!isDeselecting) {
       sfxTap();
+      hapticLight();
       falar(`${carta.nome || carta.id}. ${carta.desc || ""}`, false);
     }
   }
@@ -212,6 +230,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       // Trigger monster action animation based on card type
       const cardType = cartaSel.tipo || "ataque";
       triggerMonsterAction(cardType);
+      hapticMedium();
 
       setCartaSel(null);
 
@@ -223,7 +242,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
-          if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
+          if (cartaNome === "EXPLODE") { sfxExplode(); hapticExplosion(); } else { sfxAtaque(); hapticHeavy(); }
           triggerFx("ataque");
           setHitCount(c => c + 1);
         } else if (entry.t === "def" || entry.t === "efeito") {
@@ -267,7 +286,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
-          if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
+          if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
           gameEnded = true;
           stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
@@ -557,6 +576,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           <div key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
             <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
+          <BuffIndicators
+            defAtiva={enemyDisplay.defAtiva}
+            imune={enemyDisplay.imune}
+            dobra={enemyDisplay.dobra}
+            dodgeOnce={enemyDisplay.dodgeOnce}
+            swarms={enemyDisplay.swarms}
+          />
         </div>
 
         {/* ═══ BEAST ARENA — Octagon center ═══ */}
@@ -564,6 +590,9 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
           minHeight: 0, padding: "4px 0", position: "relative", overflow: "hidden",
         }}>
+          {/* Combat particles */}
+          <CombatParticles type={particleType} trigger={particleTrigger} />
+
           {/* Octagon arena background */}
           <div style={{
             position: "absolute",
@@ -846,13 +875,26 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           </div>
         )}
 
-        {/* Player HP bar */}
+        {/* Player buff indicators + HP bar */}
+        <BuffIndicators
+          defAtiva={p1Display.defAtiva}
+          imune={p1Display.imune}
+          dobra={p1Display.dobra}
+          dodgeOnce={p1Display.dodgeOnce}
+          swarms={p1Display.swarms}
+        />
         <div style={{ flexShrink: 0, paddingTop: 2, paddingBottom: 2 }}>
           <HpBar jog={p1Display} />
         </div>
       </div>
 
       {mostraPoder && <ModalPoder onEscolha={escolherPoder} />}
+      {showTutorial && (
+        <TutorialOverlay onComplete={() => {
+          setShowTutorial(false);
+          localStorage.setItem("beast_tutorial_done", "1");
+        }} />
+      )}
     </div>
   );
 }

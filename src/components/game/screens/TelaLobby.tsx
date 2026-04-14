@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MONSTROS } from "@/game/data";
 import { falar } from "@/game/voice";
 import { pageBg, glassPanel } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import QRCode from "@/components/game/QRCode";
+import { toast } from "@/hooks/use-toast";
 import {
   criarSessao,
   entrarComoJogador,
@@ -155,6 +156,65 @@ export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
           >
             Ou acesse: <span style={{ color: "#8ddfff" }}>{urlConvidado}</span>
           </div>
+
+          {/* Share buttons */}
+          <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "center" }}>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(urlConvidado).then(() => {
+                  toast({ title: "✅ Link copiado!", description: "Cole no WhatsApp ou onde quiser." });
+                }).catch(() => {
+                  toast({ title: "❌ Erro ao copiar", variant: "destructive" });
+                });
+              }}
+              style={{
+                background: "rgba(0,229,255,.12)", border: "1px solid rgba(0,229,255,.3)",
+                borderRadius: 10, padding: "8px 14px", color: "#00e5ff",
+                fontFamily: "Bangers, cursive", fontSize: 13, cursor: "pointer",
+                letterSpacing: 1, display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              📋 COPIAR LINK
+            </button>
+            <button
+              onClick={() => {
+                const msg = `⚔️ Vem jogar Beast Arena comigo!\n🎮 Entre na sala: ${sessao?.join_code}\n👉 ${urlConvidado}`;
+                const whatsUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                window.open(whatsUrl, "_blank");
+              }}
+              style={{
+                background: "linear-gradient(135deg, #25d366, #128c7e)", border: "none",
+                borderRadius: 10, padding: "8px 14px", color: "#fff",
+                fontFamily: "Bangers, cursive", fontSize: 13, cursor: "pointer",
+                letterSpacing: 1, display: "flex", alignItems: "center", gap: 6,
+                boxShadow: "0 4px 16px rgba(37,211,102,.3)",
+              }}
+            >
+              💬 WHATSAPP
+            </button>
+          </div>
+
+          {/* Native share */}
+          {typeof navigator.share === "function" && (
+            <button
+              onClick={() => {
+                navigator.share({
+                  title: "Beast Arena — Desafio!",
+                  text: `⚔️ Entre na minha sala Beast Arena! Código: ${sessao?.join_code}`,
+                  url: urlConvidado,
+                }).catch(() => {});
+              }}
+              style={{
+                marginTop: 8,
+                background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)",
+                borderRadius: 10, padding: "8px 14px", color: "#8fa0bc",
+                fontFamily: "Nunito, sans-serif", fontSize: 11, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6, margin: "8px auto 0",
+              }}
+            >
+              📤 Compartilhar...
+            </button>
+          )}
         </div>
 
         <div
