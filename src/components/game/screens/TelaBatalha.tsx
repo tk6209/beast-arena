@@ -113,6 +113,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     setTimeout(() => setScreenFx(null), 600);
   }
 
+  // Start battle music when power is chosen
   async function escolherPoder(pid: string) {
     if (!sid) return;
     markGesture();
@@ -123,6 +124,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await choosePower(sid, slotLocal, pid);
       setServerState(result.state);
       sfxPoder();
+      startBattleMusic();
       const p = PODERES[pid];
       speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
     } catch (err) {
