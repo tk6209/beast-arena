@@ -64,19 +64,51 @@ function playIntroSFX() {
   } catch {}
 }
 
+/* ── Tap-to-Start Gate ── */
+function TapGate({ onReady }: { onReady: () => void }) {
+  return (
+    <div
+      onClick={onReady}
+      onTouchStart={onReady}
+      style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "#030810",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexDirection: "column", gap: 16, cursor: "pointer",
+      }}
+    >
+      <style>{`
+        @keyframes tapPulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.05)} }
+      `}</style>
+      <div style={{
+        fontFamily: "Bangers, cursive", fontSize: 42,
+        background: "linear-gradient(180deg, #fff, #00e5ff)",
+        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+      }}>BEAST ARENA</div>
+      <div style={{
+        fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#00e5ff",
+        animation: "tapPulse 1.5s ease-in-out infinite",
+        letterSpacing: 2,
+      }}>
+        ▶ TOQUE PARA INICIAR
+      </div>
+    </div>
+  );
+}
+
 /* ── Intro Overlay ── */
 function IntroOverlay({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState(0); // 0=black, 1=logo, 2=flash, 3=monsters, 4=fade-out
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     playIntroSFX();
 
     const timers = [
-      setTimeout(() => setPhase(1), 300),   // logo appears
-      setTimeout(() => setPhase(2), 1100),  // impact flash
-      setTimeout(() => setPhase(3), 1400),  // monsters fan
-      setTimeout(() => setPhase(4), 2800),  // fade out
-      setTimeout(() => onDone(), 3400),     // done
+      setTimeout(() => setPhase(1), 300),
+      setTimeout(() => setPhase(2), 1100),
+      setTimeout(() => setPhase(3), 1400),
+      setTimeout(() => setPhase(4), 2800),
+      setTimeout(() => onDone(), 3400),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onDone]);
@@ -290,10 +322,15 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 
 /* ── Main Home Screen ── */
 export default function TelaHome({ onIniciar }: TelaHomeProps) {
+  const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [contentReady, setContentReady] = useState(false);
+
+  const handleTap = useCallback(() => {
+    setTapReady(true);
+  }, []);
 
   const handleIntroDone = useCallback(() => {
     setShowIntro(false);
