@@ -13,6 +13,7 @@ import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
+import { isMuted, toggleMuted } from "@/game/audioState";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -53,6 +54,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [cardAnimState, setCardAnimState] = useState<"idle" | "entering" | "exiting">("idle");
   const [displayCard, setDisplayCard] = useState<CartaData | null>(null);
   const [screenFx, setScreenFx] = useState<string | null>(null);
+  const [muted, setMuted] = useState(isMuted());
   const sessionIdRef = useRef<string | null>(salaId || null);
 
   useEffect(() => {
