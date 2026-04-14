@@ -2,7 +2,7 @@
  * SFX Engine — procedural sounds via Web Audio API
  * No external files needed; all sounds are synthesized.
  */
-import { isMuted } from "./audioState";
+import { shouldPlaySfx } from "./audioState";
 
 let ctx: AudioContext | null = null;
 
@@ -28,7 +28,7 @@ function playTone(
   volume = 0.25,
   ramp?: { freq: number; time: number },
 ) {
-  if (isMuted()) return;
+  if (!shouldPlaySfx()) return;
   const c = getCtx();
   if (!c) return;
   const osc = c.createOscillator();

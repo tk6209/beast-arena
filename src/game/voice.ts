@@ -1,4 +1,5 @@
-import { isMuted } from "./audioState";
+import { shouldPlayVoice } from "./audioState";
+import { getBattleId } from "./battleContext";
 
 let vozesCarregadas = false;
 let vozesReady: SpeechSynthesisVoice[] = [];
@@ -17,13 +18,14 @@ if (typeof window !== "undefined" && window.speechSynthesis) {
 let pendingTexts: { texto: string; prio: boolean }[] = [];
 let gestureActive = false;
 
-export function falar(texto: string, prio = false) {
-  if (typeof window === "undefined" || !window.speechSynthesis || isMuted()) return;
+export function falar(texto: string, prio = false, battleId?: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis || !shouldPlayVoice()) return;
+  // If battleId provided, verify it's still active
+  if (battleId && getBattleId() !== battleId) return;
 
   if (gestureActive) {
     speakNow(texto, prio);
   } else {
-    // Queue it — will be spoken on next interaction
     pendingTexts.push({ texto, prio });
   }
 }
@@ -64,9 +66,11 @@ export function markGesture() {
 /** 
  * Speak synchronously within a gesture context. 
  * Creates the utterance NOW, fills text later via returned setter.
+ * Now accepts optional battleId for context safety.
  */
-export function criarFalaGesture(): (texto: string) => void {
+export function criarFalaGesture(battleId?: string): (texto: string) => void {
   if (typeof window === "undefined" || !window.speechSynthesis) return () => {};
+  if (!shouldPlayVoice()) return () => {};
   
   const u = new SpeechSynthesisUtterance("");
   u.lang = "pt-BR";
@@ -79,6 +83,9 @@ export function criarFalaGesture(): (texto: string) => void {
   if (ptVoz) u.voice = ptVoz;
 
   return (texto: string) => {
+    // Guard: don't speak if battle context changed
+    if (battleId && getBattleId() !== battleId) return;
+    if (!shouldPlayVoice()) return;
     u.text = texto;
     window.speechSynthesis.speak(u);
   };
