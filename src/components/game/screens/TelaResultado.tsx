@@ -11,49 +11,65 @@ interface TelaResultadoProps {
   vencedor: Jogador | null;
   onRecomecar: () => void;
   onSair: () => void;
+  onContinuar?: () => void;
+  campaignFinished?: boolean;
+  campaignWins?: number;
+  campaignTotal?: number;
+  campaignIndex?: number;
 }
 
-export default function TelaResultado({ vencedor, onRecomecar, onSair }: TelaResultadoProps) {
+export default function TelaResultado({
+  vencedor, onRecomecar, onSair, onContinuar,
+  campaignFinished, campaignWins = 0, campaignTotal = 0, campaignIndex = 0,
+}: TelaResultadoProps) {
   const g = !!vencedor;
   const [show, setShow] = useState(false);
+  const canContinue = g && !campaignFinished && campaignIndex < campaignTotal - 1;
 
   useEffect(() => {
     if (g) sfxVitoria(); else sfxDerrota();
-    falar(
-      g
-        ? "Parabéns. Você venceu a batalha. Seu monstro é o mais poderoso."
-        : "Que pena. Você foi derrotado. Tente novamente.",
-      true
-    );
+
+    if (campaignFinished && g) {
+      falar("Incrível! Você derrotou todos os monstros. Seu nome será registrado no ranking.", true);
+    } else if (g) {
+      falar("Vitória! Prepare-se para o próximo adversário.", true);
+    } else {
+      falar("Que pena. Você foi derrotado. Tente novamente.", true);
+    }
+
     setTimeout(() => setShow(true), 600);
 
-    // Save to ranking
-    const playerName = vencedor?.nome || "Jogador";
-    (async () => {
-      try {
-        // Try to find existing ranking for this player name
-        const { data } = await supabase
-          .from("rankings")
-          .select("id, wins, losses")
-          .eq("player_name", g ? playerName : "Jogador")
-          .limit(1);
-
-        if (data && data.length > 0) {
-          const row = data[0];
-          await supabase.from("rankings").update({
-            wins: g ? row.wins + 1 : row.wins,
-            losses: g ? row.losses : row.losses + 1,
-          }).eq("id", row.id);
-        } else {
-          await supabase.from("rankings").insert({
-            player_name: g ? playerName : "Jogador",
-            wins: g ? 1 : 0,
-            losses: g ? 0 : 1,
-          });
-        }
-      } catch (e) { console.error("Ranking save error:", e); }
-    })();
+    // Save to ranking only when campaign is finished (all beaten) or on loss
+    if (campaignFinished && g) {
+      saveRanking(vencedor?.nome || "Jogador", campaignWins, 0);
+    } else if (!g) {
+      saveRanking("Jogador", campaignWins, 1);
+    }
   }, [g]);
+
+  async function saveRanking(name: string, wins: number, losses: number) {
+    try {
+      const { data } = await supabase
+        .from("rankings")
+        .select("id, wins, losses")
+        .eq("player_name", name)
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const row = data[0];
+        await supabase.from("rankings").update({
+          wins: row.wins + wins,
+          losses: row.losses + losses,
+        }).eq("id", row.id);
+      } else {
+        await supabase.from("rankings").insert({
+          player_name: name,
+          wins,
+          losses,
+        });
+      }
+    } catch (e) { console.error("Ranking save error:", e); }
+  }
 
   return (
     <div
@@ -107,7 +123,7 @@ export default function TelaResultado({ vencedor, onRecomecar, onSair }: TelaRes
           filter: `drop-shadow(0 0 40px ${g ? "#00e5ff" : "#ef4444"})`,
           animation: show ? "float 3s ease-in-out infinite" : "none",
         }}>
-          {g ? "🏆" : "💀"}
+          {campaignFinished && g ? "👑" : g ? "🏆" : "💀"}
         </div>
 
         {/* Title */}
@@ -120,12 +136,38 @@ export default function TelaResultado({ vencedor, onRecomecar, onSair }: TelaRes
           animation: show ? "popIn .5s ease forwards" : "none",
           opacity: show ? 1 : 0,
         }}>
-          {g ? "VITÓRIA!" : "DERROTA!"}
+          {campaignFinished && g ? "CAMPEÃO!" : g ? "VITÓRIA!" : "DERROTA!"}
         </div>
 
-        <div style={{ color: "#8a95aa", fontSize: 14, marginTop: 4, marginBottom: 24 }}>
-          {g ? `${vencedor?.nome || "Você"} venceu a batalha!` : "Você foi derrotado. Tente novamente!"}
+        {/* Subtitle */}
+        <div style={{ color: "#8a95aa", fontSize: 14, marginTop: 4, marginBottom: 8, textAlign: "center" }}>
+          {campaignFinished && g
+            ? `Você derrotou todos os ${campaignTotal} monstros!`
+            : g
+            ? `${vencedor?.nome || "Você"} venceu! (${campaignWins}/${campaignTotal})`
+            : "Você foi derrotado. Tente novamente!"}
         </div>
+
+        {/* Campaign progress */}
+        {campaignTotal > 0 && (
+          <div style={{
+            display: "flex",
+            gap: 4,
+            marginBottom: 16,
+            alignItems: "center",
+          }}>
+            {Array.from({ length: campaignTotal }).map((_, i) => (
+              <div key={i} style={{
+                width: 12, height: 12,
+                borderRadius: "50%",
+                background: i < campaignWins ? "#69f0ae" : i === campaignIndex && !g ? "#ef4444" : "rgba(255,255,255,.15)",
+                border: i === campaignIndex ? "2px solid #fff" : "1px solid rgba(255,255,255,.1)",
+                boxShadow: i < campaignWins ? "0 0 6px #69f0ae" : "none",
+                transition: "all .3s",
+              }} />
+            ))}
+          </div>
+        )}
 
         {/* Popup card */}
         {show && (
@@ -142,6 +184,23 @@ export default function TelaResultado({ vencedor, onRecomecar, onSair }: TelaRes
             animation: "popIn .5s cubic-bezier(.34,1.56,.64,1) forwards",
             boxShadow: `0 0 40px ${g ? "#00e5ff22" : "#ef444422"}`,
           }}>
+            {canContinue && onContinuar && (
+              <BtnMain variant="gold" onClick={onContinuar}>
+                ⚔️ PRÓXIMO ADVERSÁRIO
+              </BtnMain>
+            )}
+            {campaignFinished && g && (
+              <div style={{
+                textAlign: "center",
+                fontFamily: "Bangers, cursive",
+                fontSize: 16,
+                color: "#69f0ae",
+                letterSpacing: 2,
+                marginBottom: 4,
+              }}>
+                🏆 RANKING ATUALIZADO!
+              </div>
+            )}
             <BtnMain variant="blue" onClick={onRecomecar}>
               🔄 RECOMEÇAR
             </BtnMain>
