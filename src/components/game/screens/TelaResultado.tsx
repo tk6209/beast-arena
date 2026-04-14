@@ -9,6 +9,7 @@ import type { Jogador } from "@/game/engine";
 
 interface TelaResultadoProps {
   vencedor: Jogador | null;
+  nomeJogador?: string;
   onRecomecar: () => void;
   onSair: () => void;
   onContinuar?: () => void;
@@ -19,7 +20,7 @@ interface TelaResultadoProps {
 }
 
 export default function TelaResultado({
-  vencedor, onRecomecar, onSair, onContinuar,
+  vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0, campaignIndex = 0,
 }: TelaResultadoProps) {
   const g = !!vencedor;
