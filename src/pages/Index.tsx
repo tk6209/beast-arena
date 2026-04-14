@@ -3,6 +3,7 @@ import TelaHome from "@/components/game/screens/TelaHome";
 import TelaNome from "@/components/game/screens/TelaNome";
 import TelaMonstro from "@/components/game/screens/TelaMonstro";
 import TelaLobby from "@/components/game/screens/TelaLobby";
+import TelaLobbyPrincipal from "@/components/game/screens/TelaLobbyPrincipal";
 import TelaEntrar from "@/components/game/screens/TelaEntrar";
 import TelaBatalha from "@/components/game/screens/TelaBatalha";
 import TelaResultado from "@/components/game/screens/TelaResultado";
@@ -10,17 +11,18 @@ import TelaAuth from "@/components/game/screens/TelaAuth";
 import TelaPerfil from "@/components/game/screens/TelaPerfil";
 import TelaLoja from "@/components/game/screens/TelaLoja";
 import TelaDailyReward from "@/components/game/screens/TelaDailyReward";
+import TelaRanking from "@/components/game/screens/TelaRanking";
+import TelaMatchmaking from "@/components/game/screens/TelaMatchmaking";
+import TelaSeasonPass from "@/components/game/screens/TelaSeasonPass";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "perfil" | "loja" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
-
-// Track power across campaign continues
 
 export default function Index() {
   const [tela, setTela] = useState<Tela>("home");
@@ -49,12 +51,18 @@ export default function Index() {
   // Auth listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
       setAuthChecked(true);
+      // If user just logged in and on home, go to lobby
+      if (u && tela === "home") setTela("lobby_principal");
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
       setAuthChecked(true);
+      // Redirect logged-in users to lobby
+      if (u) setTela("lobby_principal");
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -95,7 +103,6 @@ export default function Index() {
 
   const handleNomeConfirm = (nome: string) => {
     setNomeJogador(nome);
-    // Also update profile display_name if logged in
     if (user) {
       supabase.from("profiles").update({ display_name: nome }).eq("user_id", user.id).then(() => {});
     }
@@ -116,6 +123,8 @@ export default function Index() {
       setTela("entrar");
     } else if (modo === "multi") {
       setTela("lobby");
+    } else if (modo === "matchmaking") {
+      setTela("matchmaking");
     } else {
       setTela("batalha");
     }
@@ -169,31 +178,65 @@ export default function Index() {
   };
 
   const handleRecomecar = () => { resetAll(); setTela("monstro"); };
-  const handleSair = () => { resetAll(); setTela("home"); };
+  const handleSair = () => { resetAll(); setTela(user ? "lobby_principal" : "home"); };
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setDailyChecked(false);
+    setTela("home");
+  };
 
   const currentOpponent = campaignQueue[campaignIndex] || undefined;
 
+  // Daily reward overlay
+  const dailyOverlay = showDailyReward && user ? (
+    <TelaDailyReward user={user} onClose={() => setShowDailyReward(false)} />
+  ) : null;
+
   switch (tela) {
     case "auth":
-      return <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />;
+      return <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "lobby_principal":
+      return user ? (
+        <>
+          {dailyOverlay}
+          <TelaLobbyPrincipal
+            user={user}
+            onIniciar={handleIniciar}
+            onPerfil={() => setTela("perfil")}
+            onLoja={() => setTela("loja")}
+            onMulti={() => { setModo("multi"); setTela("nome"); }}
+            onMatchmaking={() => { setModo("matchmaking"); setTela("nome"); }}
+            onRanking={() => setTela("ranking")}
+            onSeasonPass={() => setTela("season_pass")}
+            onLogout={handleLogout}
+          />
+        </>
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "perfil":
       return user ? (
-        <TelaPerfil user={user} onVoltar={() => setTela("home")} onLogout={() => { setUser(null); setDailyChecked(false); setTela("home"); }} />
-      ) : (
-        <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />
-      );
+        <TelaPerfil user={user} onVoltar={() => setTela(user ? "lobby_principal" : "home")} onLogout={handleLogout} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "loja":
       return user ? (
-        <TelaLoja user={user} onVoltar={() => setTela("home")} />
-      ) : (
-        <TelaAuth onAuth={() => setTela("home")} onSkip={() => setTela("home")} />
-      );
+        <TelaLoja user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "ranking":
+      return <TelaRanking userId={user?.id} onVoltar={() => setTela(user ? "lobby_principal" : "home")} />;
+
+    case "season_pass":
+      return user ? (
+        <TelaSeasonPass user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "home":
       return (
         <>
-          {showDailyReward && user && (
-            <TelaDailyReward user={user} onClose={() => setShowDailyReward(false)} />
-          )}
+          {dailyOverlay}
           <TelaHome
             onIniciar={handleIniciar}
             user={user}
@@ -203,6 +246,7 @@ export default function Index() {
           />
         </>
       );
+
     case "nome":
       return <TelaNome onConfirmar={handleNomeConfirm} />;
     case "monstro":
@@ -210,9 +254,19 @@ export default function Index() {
     case "lobby":
       return <TelaLobby monstroHost={monstroP1} onBatalha={handleBatalha} />;
     case "entrar":
-      return salaId ? (
-        <TelaEntrar salaId={salaId} monstroConv={monstroP1} onEntrar={handleEntrar} />
+      return salaId ? <TelaEntrar salaId={salaId} monstroConv={monstroP1} onEntrar={handleEntrar} /> : null;
+
+    case "matchmaking":
+      return user ? (
+        <TelaMatchmaking
+          user={user}
+          monstroId={monstroP1}
+          nomeJogador={nomeJogador}
+          onMatch={handleBatalha}
+          onVoltar={() => setTela("lobby_principal")}
+        />
       ) : null;
+
     case "batalha":
       return (
         <TelaBatalha
@@ -230,6 +284,7 @@ export default function Index() {
           onPowerChosen={(pid) => setLastPowerId(pid)}
         />
       );
+
     case "resultado":
       return (
         <TelaResultado
@@ -246,6 +301,7 @@ export default function Index() {
           dificuldade={dificuldade}
         />
       );
+
     default:
       return (
         <TelaHome
