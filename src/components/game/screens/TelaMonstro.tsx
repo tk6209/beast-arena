@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MONSTROS } from "@/game/data";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
+import { falar, markGesture } from "@/game/voice";
+import { sfxTap } from "@/game/sfx";
 
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
@@ -12,6 +14,26 @@ interface TelaMonstroProps {
 
 export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO" }: TelaMonstroProps) {
   const [pick, setPick] = useState<string | null>(null);
+
+  useEffect(() => {
+    falar("Escolha seu monstro. Cada um tem uma habilidade única.", true);
+  }, []);
+
+  function handlePick(id: string) {
+    markGesture();
+    setPick(id);
+    sfxTap();
+    const m = MONSTROS[id];
+    falar(`${m.nome}. Ataque ${m.atk}, defesa ${m.def}, vida ${m.hp}. ${m.hab}.`);
+  }
+
+  function handleConfirm() {
+    if (!pick) return;
+    markGesture();
+    const m = MONSTROS[pick];
+    falar(`${m.nome} selecionado! Prepare-se para a batalha.`, true);
+    onConfirmar(pick);
+  }
 
   return (
     <div style={pageBg()}>
@@ -57,7 +79,7 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
             return (
               <div
                 key={m.id}
-                onClick={() => setPick(m.id)}
+                onClick={() => handlePick(m.id)}
                 style={{
                   width: 145,
                   borderRadius: 18,
@@ -123,7 +145,7 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
           <BtnMain
             variant={pick ? "blue" : "dark"}
             disabled={!pick}
-            onClick={() => pick && onConfirmar(pick)}
+            onClick={handleConfirm}
           >
             {pick ? "✅ CONFIRMAR" : "Selecione um monstro"}
           </BtnMain>
