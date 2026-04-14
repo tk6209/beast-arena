@@ -107,6 +107,11 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
   const sid = sessionIdRef.current;
 
+  function triggerFx(type: string) {
+    setScreenFx(type);
+    setTimeout(() => setScreenFx(null), 600);
+  }
+
   async function escolherPoder(pid: string) {
     if (!sid) return;
     markGesture();
