@@ -64,7 +64,8 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [screenFx, setScreenFx] = useState<string | null>(null);
   const [muted, setMuted] = useState(isMuted());
   const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
-  const [monsterAction, setMonsterAction] = useState<{ type: string; active: boolean }>({ type: "", active: false });
+  const [monsterAction, setMonsterAction] = useState<MonsterActionState>({ type: "", active: false, who: "player" });
+  const [enemyAction, setEnemyAction] = useState<MonsterActionState>({ type: "", active: false, who: "enemy" });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
