@@ -13,9 +13,9 @@ interface TelaMonstroProps {
   userId?: string;
 }
 
-const monsters = Object.values(MONSTROS);
+const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO" }: TelaMonstroProps) {
+export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState<"left" | "right" | null>(null);
   const [animating, setAnimating] = useState(false);
