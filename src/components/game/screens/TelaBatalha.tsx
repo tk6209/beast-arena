@@ -235,8 +235,31 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
   function selCarta(carta: any) {
     if (serverState?.fase !== "acao" || loading) return;
+    
+    // Check if this card is already in combo selection
+    const inCombo = comboSel.find(c => c.id === carta.id);
+    if (inCombo) {
+      setComboSel(comboSel.filter(c => c.id !== carta.id));
+      if (comboSel.length === 1) setCartaSel(null);
+      sfxTap();
+      return;
+    }
+    
+    // If we have a card selected and this new card is same type (ataque/defesa/cura), start combo
+    const comboTypes = ["ataque", "defesa", "cura"];
+    if (cartaSel && cartaSel.id !== carta.id && cartaSel.tipo === carta.tipo && comboTypes.includes(carta.tipo)) {
+      setComboSel([cartaSel, carta]);
+      setCartaSel(null);
+      sfxTap();
+      hapticLight();
+      falar(`Combo! ${cartaSel.nome} mais ${carta.nome}`, false, battleIdRef.current);
+      return;
+    }
+    
+    // Normal selection
     const isDeselecting = cartaSel?.id === carta.id;
     setCartaSel(isDeselecting ? null : carta);
+    setComboSel([]);
     if (!isDeselecting) {
       sfxTap();
       hapticLight();
