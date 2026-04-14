@@ -13,6 +13,7 @@ interface TelaMonstroProps {
   userId?: string;
 }
 
+const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
 export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
@@ -20,6 +21,21 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
   const [dir, setDir] = useState<"left" | "right" | null>(null);
   const [animating, setAnimating] = useState(false);
   const touchStart = useRef<number | null>(null);
+  const [unlockedMonsters, setUnlockedMonsters] = useState<Set<string>>(new Set(STARTER_MONSTERS));
+
+  // Load unlocked monsters from inventory
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase.from("user_inventory")
+        .select("item_key")
+        .eq("user_id", userId)
+        .eq("item_type", "monster");
+      if (data) {
+        setUnlockedMonsters(new Set([...STARTER_MONSTERS, ...data.map((d: any) => d.item_key)]));
+      }
+    })();
+  }, [userId]);
 
   const m = monsters[idx];
 
