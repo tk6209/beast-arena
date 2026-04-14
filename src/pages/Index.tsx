@@ -244,6 +244,7 @@ export default function Index() {
             onSeasonPass={() => setTela("season_pass")}
             onMissoes={() => setTela("missoes")}
             onConquistas={() => setTela("conquistas")}
+            onAmigos={() => setTela("amigos")}
             onLogout={handleLogout}
           />
         </>
