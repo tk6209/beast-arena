@@ -24,6 +24,7 @@ interface TelaResultadoProps {
 export default function TelaResultado({
   vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0, campaignIndex = 0,
+  userId, dificuldade = "medio",
 }: TelaResultadoProps) {
   const g = !!vencedor;
   const [show, setShow] = useState(false);
@@ -47,6 +48,13 @@ export default function TelaResultado({
       saveRanking(nomeJogador, campaignWins, 0);
     } else if (!g) {
       saveRanking(nomeJogador, campaignWins, 1);
+    }
+
+    // Award XP and coins if logged in
+    if (userId) {
+      const coinReward = g ? (dificuldade === "facil" ? 10 : dificuldade === "avancado" ? 40 : 20) : 5;
+      const xpReward = g ? 30 : 10;
+      updateUserProgress(userId, g, coinReward, xpReward);
     }
   }, [g]);
 
