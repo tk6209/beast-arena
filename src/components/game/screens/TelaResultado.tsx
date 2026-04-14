@@ -11,7 +11,7 @@ interface TelaResultadoProps {
 }
 
 export default function TelaResultado({ vencedor, onRejogo }: TelaResultadoProps) {
-  const g = vencedor?.humano;
+  const g = !!vencedor;
 
   useEffect(() => {
     falar(
@@ -67,7 +67,7 @@ export default function TelaResultado({ vencedor, onRejogo }: TelaResultadoProps
         </div>
 
         <div style={{ color: "#8a95aa", fontSize: 13 }}>
-          {vencedor?.nome} venceu a batalha!
+          {g ? `${vencedor?.nome || "Você"} venceu a batalha!` : "Você foi derrotado. Tente novamente!"}
         </div>
 
         <div style={{ width: "100%", maxWidth: 280 }}>

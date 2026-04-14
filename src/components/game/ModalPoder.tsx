@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { PODERES } from "@/game/data";
-import { falar } from "@/game/voice";
+import { falar, markGesture } from "@/game/voice";
+import { sfxTap, sfxPoder } from "@/game/sfx";
 import { glassPanel } from "@/game/styles";
 
 interface ModalPoderProps {
@@ -91,7 +92,12 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
           {Object.values(PODERES).map((p) => (
             <button
               key={p.id}
-              onClick={() => onEscolha(p.id)}
+              onClick={() => {
+                markGesture();
+                sfxTap();
+                falar(`Poder ${p.nome} selecionado. Ataque mais ${p.atkB}, defesa mais ${p.defB}, vida mais ${p.hpB}.`, true);
+                onEscolha(p.id);
+              }}
               style={{
                 background: `linear-gradient(135deg, ${p.bg1}, ${p.bg2})`,
                 border: `1px solid ${p.cor}`,
