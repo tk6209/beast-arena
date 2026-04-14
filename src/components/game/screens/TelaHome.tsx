@@ -397,8 +397,11 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
         }
       `}</style>
 
+      {/* Tap to start gate */}
+      {!tapReady && <TapGate onReady={handleTap} />}
+
       {/* Intro overlay */}
-      {showIntro && <IntroOverlay onDone={handleIntroDone} />}
+      {tapReady && showIntro && <IntroOverlay onDone={handleIntroDone} />}
 
       <ChromeNoise />
 
