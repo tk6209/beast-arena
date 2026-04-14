@@ -305,6 +305,12 @@ function handlePlayCard(state: any, payload: any): any {
       player.dobra = true;
       log.push({ msg: `❌ Próximo ataque com dano dobrado!`, t: "combo" });
     }
+  } else if (carta.tipo === "cura") {
+    const curaVal = carta.valor || 20;
+    const hpAntes = player.hp;
+    player.hp = Math.min(player.maxHp, player.hp + curaVal);
+    const curado = player.hp - hpAntes;
+    log.push({ msg: `💖 ${player.monstro.nome} recupera ${curado} HP com ${carta.nome}!`, t: "cura", hp: curado });
   }
 
   // Remove card from hand
