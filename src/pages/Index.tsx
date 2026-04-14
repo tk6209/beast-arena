@@ -188,9 +188,12 @@ export default function Index() {
           nomeJogador={nomeJogador}
           salaId={salaId}
           slotLocal={slotLocal}
-          onFim={handleFim}
+          onFim={(v) => { handleFim(v); setIsCampaignContinue(false); }}
           dificuldade={dificuldade}
           aiMonstroId={currentOpponent}
+          skipPowerSelect={isCampaignContinue && !!lastPowerId}
+          lastPowerId={lastPowerId || undefined}
+          onPowerChosen={(pid) => setLastPowerId(pid)}
         />
       );
     case "resultado":
