@@ -244,6 +244,16 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       triggerMonsterAction(cardType);
       hapticMedium();
 
+      // Track battle stats
+      const cardType = cartaSel.tipo || "ataque";
+      setBStats(s => ({
+        ...s,
+        cardsPlayed: s.cardsPlayed + 1,
+        healsUsed: s.healsUsed + (cardType === "cura" ? 1 : 0),
+        evolutions: s.evolutions + (cardType === "evolucao" ? 1 : 0),
+        defenseCards: s.defenseCards + (cardType === "defesa" ? 1 : 0),
+      }));
+
       setCartaSel(null);
 
       // Narrate card played + results
@@ -256,6 +266,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           narration += `${entry.dmg || ""} de dano! `;
           if (cartaNome === "EXPLODE") { sfxExplode(); hapticExplosion(); } else { sfxAtaque(); hapticHeavy(); }
           triggerFx("ataque");
+          setBStats(s => ({ ...s, damageDealt: s.damageDealt + (entry.dmg || 0) }));
           setHitCount(c => c + 1);
         } else if (entry.t === "def" || entry.t === "efeito") {
           if (entry.msg?.includes("defende") || entry.msg?.includes("escudo") || entry.msg?.includes("esquiva")) {
@@ -301,7 +312,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
           gameEnded = true;
           stopBattleMusic();
-          onFim(winner === slotLocal ? { id: "p1" } as any : null);
+           onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
         }
       }
 
