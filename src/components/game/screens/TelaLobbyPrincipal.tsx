@@ -4,6 +4,7 @@ import { MONSTER_IMAGES, getMonsterImageForAngle } from "@/game/monsterImages";
 import { pageBg } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
+import LobbyParticles from "@/components/game/LobbyParticles";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Dificuldade } from "@/pages/Index";
@@ -97,6 +98,7 @@ export default function TelaLobbyPrincipal({
       }}
     >
       <ChromeNoise />
+      <LobbyParticles />
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes monsterFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -303,7 +305,6 @@ export default function TelaLobbyPrincipal({
             {(() => {
               const norm = (((rotation % 360) + 360) % 360);
               const isLeftSide = norm >= 225 && norm < 315;
-              const isFront = norm < 45 || norm >= 315;
               const activeImg = getMonsterImageForAngle(currentKey, rotation);
               return (
                 <div style={{ position: "relative" }}>
@@ -318,7 +319,6 @@ export default function TelaLobbyPrincipal({
                       transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
                       animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
                       transform: isLeftSide ? "scaleX(-1)" : "scaleX(1)",
-                      mixBlendMode: isFront ? "normal" : "screen",
                     }}
                   />
                 </div>
