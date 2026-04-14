@@ -70,8 +70,19 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [turnTimer, setTurnTimer] = useState(TURN_TIMER_SECONDS);
   const [monsterAction, setMonsterAction] = useState<MonsterActionState>({ type: "", active: false, who: "player" });
   const [enemyAction, setEnemyAction] = useState<MonsterActionState>({ type: "", active: false, who: "enemy" });
+  const [particleTrigger, setParticleTrigger] = useState(0);
+  const [particleType, setParticleType] = useState("ataque");
+  const [showTutorial, setShowTutorial] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
+
+  // Check if first battle ever — show tutorial
+  useEffect(() => {
+    const tutDone = localStorage.getItem("beast_tutorial_done");
+    if (!tutDone && !skipPowerSelect) {
+      setShowTutorial(true);
+    }
+  }, []);
 
   useEffect(() => {
     async function init() {
