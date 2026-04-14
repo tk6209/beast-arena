@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MONSTROS } from "@/game/data";
+import { supabase } from "@/integrations/supabase/client";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
