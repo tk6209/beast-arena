@@ -334,19 +334,20 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         style={{
           position: "relative",
           zIndex: 1,
-          height: "100vh",
+          height: "100dvh",
           display: "flex",
           flexDirection: "column",
-          padding: "8px 10px",
+          padding: "6px 8px",
           fontFamily: "Nunito, sans-serif",
           overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         {/* Top: Turn + Enemy HP */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
           {/* Turn indicator */}
-          <div style={{ textAlign: "center", height: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <span style={{ fontFamily: "Bangers, cursive", fontSize: 13, color: "#00e5ff", letterSpacing: 2 }}>
+          <div style={{ textAlign: "center", height: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <span style={{ fontFamily: "Bangers, cursive", fontSize: 12, color: "#00e5ff", letterSpacing: 1.5 }}>
               ⚔️ TURNO {(serverState.turno || 0) + 1}
             </span>
             <span
@@ -375,8 +376,9 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
             alignItems: "center",
             justifyContent: "center",
             minHeight: 0,
-            padding: "8px 0",
+            padding: "4px 0",
             position: "relative",
+            overflow: "hidden",
           }}
         >
           {/* Enemy played card overlay */}
@@ -432,7 +434,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
 
         {/* Action buttons */}
         {!gameOver && (
-          <div style={{ display: "flex", gap: 8, flexShrink: 0, marginBottom: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>
             <BtnMain
               variant={cartaSel ? "gold" : "dark"}
               disabled={!cartaSel || !isMyTurn || loading}
@@ -469,10 +471,10 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           <div
             style={{
               display: "flex",
-              gap: 8,
+              gap: 6,
               overflowX: "auto",
               overflowY: "hidden",
-              padding: "6px 0",
+              padding: "4px 0",
               flexShrink: 0,
               justifyContent: handCards.length <= 4 ? "center" : "flex-start",
               WebkitOverflowScrolling: "touch",
@@ -493,7 +495,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
         )}
 
         {/* Player HP bar */}
-        <div style={{ flexShrink: 0, paddingTop: 4 }}>
+        <div style={{ flexShrink: 0, paddingTop: 2, paddingBottom: 2 }}>
           <HpBar jog={p1Display} />
         </div>
       </div>
