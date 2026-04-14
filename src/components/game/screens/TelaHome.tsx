@@ -14,6 +14,7 @@ interface TelaHomeProps {
   user?: any;
   onLogin?: () => void;
   onPerfil?: () => void;
+  onLoja?: () => void;
 }
 
 const monsterKeys = Object.keys(MONSTROS);
@@ -327,7 +328,7 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 }
 
 /* ── Main Home Screen ── */
-export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHomeProps) {
+export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showDiffSelect, setShowDiffSelect] = useState(false);

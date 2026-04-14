@@ -10,6 +10,7 @@ import { sfxTap } from "@/game/sfx";
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
   titulo?: string;
+  userId?: string;
 }
 
 const monsters = Object.values(MONSTROS);
