@@ -258,10 +258,3 @@ export default function Index() {
       );
   }
 }
-          user={user}
-          onLogin={() => setTela("auth")}
-          onPerfil={() => setTela("perfil")}
-        />
-      );
-  }
-}
