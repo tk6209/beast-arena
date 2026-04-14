@@ -9,6 +9,7 @@ import type { Jogador } from "@/game/engine";
 
 interface TelaResultadoProps {
   vencedor: Jogador | null;
+  nomeJogador?: string;
   onRecomecar: () => void;
   onSair: () => void;
   onContinuar?: () => void;
@@ -19,7 +20,7 @@ interface TelaResultadoProps {
 }
 
 export default function TelaResultado({
-  vencedor, onRecomecar, onSair, onContinuar,
+  vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0, campaignIndex = 0,
 }: TelaResultadoProps) {
   const g = !!vencedor;
@@ -41,9 +42,9 @@ export default function TelaResultado({
 
     // Save to ranking only when campaign is finished (all beaten) or on loss
     if (campaignFinished && g) {
-      saveRanking(vencedor?.nome || "Jogador", campaignWins, 0);
+      saveRanking(nomeJogador, campaignWins, 0);
     } else if (!g) {
-      saveRanking("Jogador", campaignWins, 1);
+      saveRanking(nomeJogador, campaignWins, 1);
     }
   }, [g]);
 

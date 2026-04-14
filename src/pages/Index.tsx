@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import TelaHome from "@/components/game/screens/TelaHome";
+import TelaNome from "@/components/game/screens/TelaNome";
 import TelaMonstro from "@/components/game/screens/TelaMonstro";
 import TelaLobby from "@/components/game/screens/TelaLobby";
 import TelaEntrar from "@/components/game/screens/TelaEntrar";
@@ -8,7 +9,7 @@ import TelaResultado from "@/components/game/screens/TelaResultado";
 import { MONSTROS } from "@/game/data";
 import type { Jogador } from "@/game/engine";
 
-type Tela = "home" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado";
+type Tela = "home" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -16,6 +17,7 @@ const ALL_MONSTERS = Object.keys(MONSTROS);
 export default function Index() {
   const [tela, setTela] = useState<Tela>("home");
   const [modo, setModo] = useState<string>("duel");
+  const [nomeJogador, setNomeJogador] = useState<string>("Jogador");
   const [monstroP1, setMonstroP1] = useState<string>("");
   const [salaId, setSalaId] = useState<string | null>(null);
   const [slotLocal, setSlotLocal] = useState<number>(0);
@@ -28,7 +30,6 @@ export default function Index() {
   const [campaignWins, setCampaignWins] = useState(0);
   const [campaignFinished, setCampaignFinished] = useState(false);
 
-  // Join code for multiplayer
   const [joinCode, setJoinCode] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -37,20 +38,23 @@ export default function Index() {
     if (sala) {
       setJoinCode(sala);
       setModo("multi");
-      setTela("monstro");
+      setTela("nome");
     }
   }, []);
 
   const handleIniciar = (m: string, diff?: Dificuldade) => {
     setModo(m);
     if (diff) setDificuldade(diff);
+    setTela("nome");
+  };
+
+  const handleNomeConfirm = (nome: string) => {
+    setNomeJogador(nome);
     setTela("monstro");
   };
 
   const handleMonstroConfirm = (mId: string) => {
     setMonstroP1(mId);
-
-    // Build campaign queue (all monsters except chosen)
     const opponents = ALL_MONSTERS.filter(k => k !== mId).sort(() => Math.random() - 0.5);
     setCampaignQueue(opponents);
     setCampaignIndex(0);
@@ -83,9 +87,8 @@ export default function Index() {
   const handleFim = (v: Jogador | null) => {
     setVencedor(v);
     if (v) {
-      // Won — check if more opponents
-      const nextIdx = campaignIndex + 1;
       setCampaignWins(w => w + 1);
+      const nextIdx = campaignIndex + 1;
       if (nextIdx >= campaignQueue.length) {
         setCampaignFinished(true);
       }
@@ -94,14 +97,13 @@ export default function Index() {
   };
 
   const handleContinuar = () => {
-    // Move to next opponent
     const nextIdx = campaignIndex + 1;
     setCampaignIndex(nextIdx);
     setSalaId(null);
     setTela("batalha");
   };
 
-  const handleRecomecar = () => {
+  const resetAll = () => {
     window.history.replaceState({}, "", window.location.pathname);
     setSalaId(null);
     setJoinCode(null);
@@ -112,29 +114,18 @@ export default function Index() {
     setCampaignIndex(0);
     setCampaignWins(0);
     setCampaignFinished(false);
-    setTela("monstro");
   };
 
-  const handleSair = () => {
-    window.history.replaceState({}, "", window.location.pathname);
-    setSalaId(null);
-    setJoinCode(null);
-    setSlotLocal(0);
-    setVencedor(null);
-    setMonstroP1("");
-    setCampaignQueue([]);
-    setCampaignIndex(0);
-    setCampaignWins(0);
-    setCampaignFinished(false);
-    setTela("home");
-  };
+  const handleRecomecar = () => { resetAll(); setTela("monstro"); };
+  const handleSair = () => { resetAll(); setTela("home"); };
 
-  // Current AI opponent from campaign queue
   const currentOpponent = campaignQueue[campaignIndex] || undefined;
 
   switch (tela) {
     case "home":
       return <TelaHome onIniciar={handleIniciar} />;
+    case "nome":
+      return <TelaNome onConfirmar={handleNomeConfirm} />;
     case "monstro":
       return <TelaMonstro onConfirmar={handleMonstroConfirm} />;
     case "lobby":
@@ -149,6 +140,7 @@ export default function Index() {
           key={`battle-${campaignIndex}`}
           modo={modo}
           monstroP1={monstroP1}
+          nomeJogador={nomeJogador}
           salaId={salaId}
           slotLocal={slotLocal}
           onFim={handleFim}
@@ -160,6 +152,7 @@ export default function Index() {
       return (
         <TelaResultado
           vencedor={vencedor}
+          nomeJogador={nomeJogador}
           onRecomecar={handleRecomecar}
           onSair={handleSair}
           onContinuar={handleContinuar}

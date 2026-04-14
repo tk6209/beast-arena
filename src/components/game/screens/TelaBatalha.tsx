@@ -35,6 +35,7 @@ interface ServerState {
 interface TelaBatalhaProps {
   modo: string;
   monstroP1: string;
+  nomeJogador?: string;
   salaId?: string | null;
   slotLocal?: number;
   onFim: (vencedor: Jogador | null) => void;
@@ -42,7 +43,7 @@ interface TelaBatalhaProps {
   aiMonstroId?: string;
 }
 
-export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId }: TelaBatalhaProps) {
+export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId }: TelaBatalhaProps) {
   const [mostraPoder, setMostraPoder] = useState(true);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
@@ -66,7 +67,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           sessionIdRef.current = sid;
         }
         const result = await initGame(sid!, modo === "multi" ? "multi" : "ai", [
-          { slot: slotLocal, nome: "Você", monstroId: monstroP1 },
+          { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1 },
         ], dificuldade, aiMonstroId);
         setServerState(result.state);
       } catch (err) {
