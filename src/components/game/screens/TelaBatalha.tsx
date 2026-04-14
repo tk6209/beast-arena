@@ -9,7 +9,7 @@ import {
   criarSessao, ouvirSessao, fecharCanal,
   type GameSession,
 } from "@/game/multiplayer";
-import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
+import { initGame, choosePower, playCard, passTurn, comboCards } from "@/game/serverApi";
 import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
@@ -71,6 +71,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
+  const [comboSel, setComboSel] = useState<any[]>([]);
   const [hitCount, setHitCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [enemyCard, setEnemyCard] = useState<CartaData | null>(null);
@@ -234,8 +235,31 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
   function selCarta(carta: any) {
     if (serverState?.fase !== "acao" || loading) return;
+    
+    // Check if this card is already in combo selection
+    const inCombo = comboSel.find(c => c.id === carta.id);
+    if (inCombo) {
+      setComboSel(comboSel.filter(c => c.id !== carta.id));
+      if (comboSel.length === 1) setCartaSel(null);
+      sfxTap();
+      return;
+    }
+    
+    // If we have a card selected and this new card is same type (ataque/defesa/cura), start combo
+    const comboTypes = ["ataque", "defesa", "cura"];
+    if (cartaSel && cartaSel.id !== carta.id && cartaSel.tipo === carta.tipo && comboTypes.includes(carta.tipo)) {
+      setComboSel([cartaSel, carta]);
+      setCartaSel(null);
+      sfxTap();
+      hapticLight();
+      falar(`Combo! ${cartaSel.nome} mais ${carta.nome}`, false, battleIdRef.current);
+      return;
+    }
+    
+    // Normal selection
     const isDeselecting = cartaSel?.id === carta.id;
     setCartaSel(isDeselecting ? null : carta);
+    setComboSel([]);
     if (!isDeselecting) {
       sfxTap();
       hapticLight();
@@ -267,7 +291,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       }));
 
       setCartaSel(null);
-
+      setComboSel([]);
       const logs = result.state.log || [];
       const recentLogs = logs.slice(-6);
       let narration = `Você jogou ${cartaNome}. `;
@@ -331,6 +355,74 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       speak(narration.trim());
     } catch (err) {
       console.error("Play error:", err);
+    }
+    setLoading(false);
+  }
+
+  async function jogarCombo() {
+    if (comboSel.length !== 2 || !sid || loading) return;
+    markGesture();
+    const bid = battleIdRef.current;
+    const speak = criarFalaGesture(bid);
+    setLoading(true);
+    try {
+      const result = await comboCards(sid, slotLocal, comboSel[0].id, comboSel[1].id);
+      setServerState(result.state);
+
+      const comboType = comboSel[0].tipo;
+      triggerMonsterAction(comboType);
+      hapticHeavy();
+      triggerFx(comboType);
+
+      setBStats(s => ({
+        ...s,
+        cardsPlayed: s.cardsPlayed + 2,
+        healsUsed: s.healsUsed + (comboType === "cura" ? 2 : 0),
+        defenseCards: s.defenseCards + (comboType === "defesa" ? 2 : 0),
+      }));
+
+      setComboSel([]);
+      setCartaSel(null);
+
+      const logs = result.state.log || [];
+      const recentLogs = logs.slice(-6);
+      let narration = `Combo! ${comboSel[0].nome} mais ${comboSel[1].nome}. `;
+
+      for (const entry of recentLogs) {
+        if (entry.t === "dano") {
+          narration += `${entry.dmg || ""} de dano! `;
+          sfxAtaque(); sfxAtaque();
+          setBStats(s => ({ ...s, damageDealt: s.damageDealt + (entry.dmg || 0) }));
+          setHitCount(c => c + 1);
+        } else if (entry.t === "cura") {
+          narration += `Curou ${entry.hp || ""} HP! `;
+          sfxCura();
+        }
+      }
+
+      for (const evt of (result.events || [])) {
+        if (evt.type === "ai_played" && evt.carta) {
+          narration += `O adversário jogou ${evt.carta.nome || evt.tipo}. `;
+          setEnemyCard(evt.carta);
+          battleTimeout(() => ifBattleActive(bid, () => setEnemyCard(null)), 2500, bid);
+          if (evt.tipo === "ataque") { sfxAtaque(); triggerFx("ataque"); triggerMonsterAction("ataque", "enemy"); }
+          else if (evt.tipo === "defesa") { sfxDefesa(); triggerMonsterAction("defesa", "enemy"); }
+          else if (evt.tipo === "cura") { sfxCura(); triggerMonsterAction("cura", "enemy"); }
+        }
+        if (evt.type === "game_over") {
+          const winner = result.state.vencedor;
+          narration += winner === slotLocal ? "Você venceu!" : "Você foi derrotado.";
+          ifBattleActive(bid, () => {
+            if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          });
+          stopBattleMusic();
+          onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats);
+        }
+      }
+
+      speak(narration.trim());
+    } catch (err) {
+      console.error("Combo error:", err);
     }
     setLoading(false);
   }
@@ -864,14 +956,25 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         {/* Action buttons */}
         {!gameOver && (
           <div data-tutorial-actions style={{ display: "flex", gap: 6, flexShrink: 0, marginBottom: 4 }}>
-            <BtnMain
-              variant={cartaSel ? "gold" : "dark"}
-              disabled={!cartaSel || !isMyTurn || loading}
-              onClick={jogarCarta}
-              style={{ flex: 2 }}
-            >
-              {cartaSel ? `⚡ JOGAR` : "Selecione"}
-            </BtnMain>
+            {comboSel.length === 2 ? (
+              <BtnMain
+                variant="gold"
+                disabled={!isMyTurn || loading}
+                onClick={jogarCombo}
+                style={{ flex: 2 }}
+              >
+                ⚡ COMBO!
+              </BtnMain>
+            ) : (
+              <BtnMain
+                variant={cartaSel ? "gold" : "dark"}
+                disabled={!cartaSel || !isMyTurn || loading}
+                onClick={jogarCarta}
+                style={{ flex: 2 }}
+              >
+                {cartaSel ? `⚡ JOGAR` : "Selecione"}
+              </BtnMain>
+            )}
             <BtnMain
               variant="dark"
               disabled={!isMyTurn || loading}
@@ -915,7 +1018,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               <Carta
                 key={c.id}
                 carta={c}
-                sel={cartaSel?.id === c.id}
+                sel={cartaSel?.id === c.id || comboSel.some(cs => cs.id === c.id)}
                 onClick={() => selCarta(c)}
                 disabled={!isMyTurn || loading}
                 mini

@@ -41,3 +41,7 @@ export async function playCard(sessionId: string, slot: number, cardId: number) 
 export async function passTurn(sessionId: string, slot: number) {
   return callEngine("pass_turn", sessionId, { slot });
 }
+
+export async function comboCards(sessionId: string, slot: number, cardId1: number, cardId2: number) {
+  return callEngine("combo_cards", sessionId, { slot, cardId1, cardId2 });
+}

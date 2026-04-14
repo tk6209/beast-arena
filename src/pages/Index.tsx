@@ -58,22 +58,36 @@ export default function Index() {
 
   // Auth listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       setAuthChecked(true);
       if (u) {
+        // Invalidate other sessions (prevent simultaneous logins)
+        try { await supabase.auth.signOut({ scope: 'others' }); } catch (_) {}
         setTela("lobby_principal");
         loadPrefsFromDB(u.id);
+        // Cache display name so we can skip TelaNome
+        const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", u.id).single();
+        if (profile?.display_name) {
+          setNomeJogador(profile.display_name);
+          localStorage.setItem("beast_arena_nome", profile.display_name);
+        }
       }
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
       setAuthChecked(true);
       if (u) {
+        try { await supabase.auth.signOut({ scope: 'others' }); } catch (_) {}
         setTela("lobby_principal");
         loadPrefsFromDB(u.id);
+        const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", u.id).single();
+        if (profile?.display_name) {
+          setNomeJogador(profile.display_name);
+          localStorage.setItem("beast_arena_nome", profile.display_name);
+        }
       }
     });
     return () => subscription.unsubscribe();
@@ -110,7 +124,12 @@ export default function Index() {
   const handleIniciar = (m: string, diff?: Dificuldade) => {
     setModo(m);
     if (diff) setDificuldade(diff);
-    setTela("nome");
+    // Skip name screen for logged-in users who already have a display name
+    if (user && nomeJogador && nomeJogador !== "Jogador") {
+      setTela("monstro");
+    } else {
+      setTela("nome");
+    }
   };
 
   const handleNomeConfirm = (nome: string) => {
