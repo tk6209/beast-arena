@@ -5,6 +5,7 @@ import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { MONSTROS } from "@/game/data";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TelaHomeProps {
   onIniciar: (modo: string) => void;
@@ -64,19 +65,51 @@ function playIntroSFX() {
   } catch {}
 }
 
+/* ── Tap-to-Start Gate ── */
+function TapGate({ onReady }: { onReady: () => void }) {
+  return (
+    <div
+      onClick={onReady}
+      onTouchStart={onReady}
+      style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "#030810",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexDirection: "column", gap: 16, cursor: "pointer",
+      }}
+    >
+      <style>{`
+        @keyframes tapPulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.05)} }
+      `}</style>
+      <div style={{
+        fontFamily: "Bangers, cursive", fontSize: 42,
+        background: "linear-gradient(180deg, #fff, #00e5ff)",
+        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+      }}>BEAST ARENA</div>
+      <div style={{
+        fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#00e5ff",
+        animation: "tapPulse 1.5s ease-in-out infinite",
+        letterSpacing: 2,
+      }}>
+        ▶ TOQUE PARA INICIAR
+      </div>
+    </div>
+  );
+}
+
 /* ── Intro Overlay ── */
 function IntroOverlay({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState(0); // 0=black, 1=logo, 2=flash, 3=monsters, 4=fade-out
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     playIntroSFX();
 
     const timers = [
-      setTimeout(() => setPhase(1), 300),   // logo appears
-      setTimeout(() => setPhase(2), 1100),  // impact flash
-      setTimeout(() => setPhase(3), 1400),  // monsters fan
-      setTimeout(() => setPhase(4), 2800),  // fade out
-      setTimeout(() => onDone(), 3400),     // done
+      setTimeout(() => setPhase(1), 300),
+      setTimeout(() => setPhase(2), 1100),
+      setTimeout(() => setPhase(3), 1400),
+      setTimeout(() => setPhase(4), 2800),
+      setTimeout(() => onDone(), 3400),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onDone]);
@@ -290,10 +323,30 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 
 /* ── Main Home Screen ── */
 export default function TelaHome({ onIniciar }: TelaHomeProps) {
+  const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [contentReady, setContentReady] = useState(false);
+  const [rankings, setRankings] = useState<any[]>([]);
+
+  const handleTap = useCallback(() => {
+    setTapReady(true);
+  }, []);
+
+  // Load rankings
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("rankings")
+          .select("player_name, wins, losses")
+          .order("wins", { ascending: false })
+          .limit(5);
+        if (data) setRankings(data);
+      } catch {}
+    })();
+  }, []);
 
   const handleIntroDone = useCallback(() => {
     setShowIntro(false);
@@ -360,8 +413,11 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
         }
       `}</style>
 
+      {/* Tap to start gate */}
+      {!tapReady && <TapGate onReady={handleTap} />}
+
       {/* Intro overlay */}
-      {showIntro && <IntroOverlay onDone={handleIntroDone} />}
+      {tapReady && showIntro && <IntroOverlay onDone={handleIntroDone} />}
 
       <ChromeNoise />
 
@@ -550,10 +606,56 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
             </BtnMain>
           </div>
 
+          {/* Ranking */}
+          {rankings.length > 0 && (
+            <div style={{
+              marginTop: 20,
+              background: "rgba(0,229,255,.04)",
+              border: "1px solid rgba(0,229,255,.1)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              textAlign: "left",
+            }}>
+              <div style={{
+                fontFamily: "Bangers, cursive",
+                fontSize: 14,
+                color: "#00e5ff",
+                letterSpacing: 2,
+                marginBottom: 6,
+                textAlign: "center",
+              }}>🏆 RANKING</div>
+              {rankings.map((r, i) => (
+                <div key={i} style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "3px 0",
+                  borderBottom: i < rankings.length - 1 ? "1px solid rgba(255,255,255,.05)" : "none",
+                }}>
+                  <span style={{
+                    fontFamily: "Nunito, sans-serif",
+                    fontSize: 11,
+                    color: i === 0 ? "#ffd54f" : i === 1 ? "#c0c0c0" : i === 2 ? "#cd7f32" : "#8a95aa",
+                  }}>
+                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`} {r.player_name}
+                  </span>
+                  <span style={{
+                    fontFamily: "Oswald, sans-serif",
+                    fontSize: 10,
+                    color: "#69f0ae",
+                    letterSpacing: 1,
+                  }}>
+                    {r.wins}W / {r.losses}L
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Footer */}
           <div
             style={{
-              marginTop: 28,
+              marginTop: 16,
               fontFamily: "Oswald, sans-serif",
               color: "rgba(255,255,255,.15)",
               fontSize: 9,

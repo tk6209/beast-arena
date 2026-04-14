@@ -12,6 +12,7 @@ import { initGame, choosePower, playCard, passTurn } from "@/game/serverApi";
 import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
+import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
 import Carta from "@/components/game/Carta";
 import HpBar from "@/components/game/HpBar";
 import GameLog from "@/components/game/GameLog";
@@ -71,6 +72,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       }
     }
     init();
+    return () => { stopBattleMusic(); };
   }, []);
 
   useEffect(() => {
@@ -112,6 +114,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
     setTimeout(() => setScreenFx(null), 600);
   }
 
+  // Start battle music when power is chosen
   async function escolherPoder(pid: string) {
     if (!sid) return;
     markGesture();
@@ -122,6 +125,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       const result = await choosePower(sid, slotLocal, pid);
       setServerState(result.state);
       sfxPoder();
+      startBattleMusic();
       const p = PODERES[pid];
       speak(`Poder ${p.nome} escolhido. ${MONSTROS[monstroP1].nome} evolui. Que comece a batalha.`);
     } catch (err) {
@@ -205,6 +209,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
           gameEnded = true;
+          stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
@@ -250,6 +255,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
           if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
+          stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
         }
       }
