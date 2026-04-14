@@ -349,7 +349,6 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
             </BtnMain>
           )}
         </div>
-        </div>
       </div>
     </div>
   );
