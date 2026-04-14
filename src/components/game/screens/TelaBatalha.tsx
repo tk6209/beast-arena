@@ -450,6 +450,46 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
         }
+        @keyframes arenaGlow {
+          0%, 100% { box-shadow: inset 0 0 30px rgba(0,229,255,.08), 0 0 20px rgba(0,229,255,.05); }
+          50% { box-shadow: inset 0 0 50px rgba(0,229,255,.12), 0 0 40px rgba(0,229,255,.08); }
+        }
+        @keyframes vsFlash {
+          0%, 100% { text-shadow: 0 0 8px rgba(255,213,79,.4); }
+          50% { text-shadow: 0 0 20px rgba(255,213,79,.8), 0 0 40px rgba(255,213,79,.3); }
+        }
+        @keyframes enemyAttack {
+          0% { transform: scale(1) translateY(0) scaleX(-1); }
+          20% { transform: scale(1.15) translateY(-10px) scaleX(-1); }
+          40% { transform: scale(1.2) translateX(-20px) translateY(-5px) scaleX(-1); }
+          60% { transform: scale(1.2) translateX(20px) translateY(-5px) scaleX(-1); }
+          80% { transform: scale(1.1) translateY(-8px) scaleX(-1); }
+          100% { transform: scale(1) translateY(0) scaleX(-1); }
+        }
+        @keyframes enemyDefend {
+          0% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+          30% { transform: scale(1.05) scaleX(-1); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          70% { transform: scale(1.05) scaleX(-1); filter: brightness(1.3) drop-shadow(0 0 20px #3b82f6); }
+          100% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemyHeal {
+          0% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+          50% { transform: scale(1.1) scaleX(-1); filter: brightness(1.4) drop-shadow(0 0 24px #34d399); }
+          100% { transform: scale(1) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemyEvolve {
+          0% { transform: scale(1) rotate(0deg) scaleX(-1); filter: brightness(1); }
+          25% { transform: scale(0.9) rotate(5deg) scaleX(-1); filter: brightness(0.8); }
+          50% { transform: scale(1.3) rotate(-5deg) scaleX(-1); filter: brightness(1.8) drop-shadow(0 0 30px #ffd54f); }
+          75% { transform: scale(1.15) rotate(2deg) scaleX(-1); filter: brightness(1.3); }
+          100% { transform: scale(1) rotate(0deg) scaleX(-1); filter: brightness(1); }
+        }
+        @keyframes enemySwarm {
+          0% { transform: scale(1) scaleX(-1); }
+          30% { transform: scale(1.1) translateY(-8px) scaleX(-1); }
+          60% { transform: scale(1.05) translateY(-4px) scaleX(-1); }
+          100% { transform: scale(1) translateY(0) scaleX(-1); }
+        }
       `}</style>
 
       {/* Screen effect overlay */}
