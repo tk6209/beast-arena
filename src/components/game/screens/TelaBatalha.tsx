@@ -1018,7 +1018,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
               <Carta
                 key={c.id}
                 carta={c}
-                sel={cartaSel?.id === c.id}
+                sel={cartaSel?.id === c.id || comboSel.some(cs => cs.id === c.id)}
                 onClick={() => selCarta(c)}
                 disabled={!isMyTurn || loading}
                 mini
