@@ -334,7 +334,7 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
   const [showDiffSelect, setShowDiffSelect] = useState(false);
   const [bgIdx, setBgIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const [contentReady, setContentReady] = useState(false);
+  const [contentReady, setContentReady] = useState(() => !!localStorage.getItem("beast_intro_seen"));
   const [rankings, setRankings] = useState<any[]>([]);
 
   const handleTap = useCallback(() => {
