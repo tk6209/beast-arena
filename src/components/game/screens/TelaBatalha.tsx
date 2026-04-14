@@ -363,7 +363,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           </div>
 
           {/* Enemy HP bar */}
-          <div style={hitCount ? { animation: "shakeHit .3s ease", animationIterationCount: 1 } : {}}>
+          <div key={`shake-${hitCount}`} style={hitCount ? { animation: "shakeHit .3s ease" } : {}}>
             <HpBar jog={enemyDisplay} inimigo hit={hitCount > 0} />
           </div>
         </div>
