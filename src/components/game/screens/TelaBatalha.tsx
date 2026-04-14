@@ -150,9 +150,15 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [serverState?.fase, serverState?.turno, mostraPoder]);
 
-  function triggerMonsterAction(type: string) {
-    setMonsterAction({ type, active: true });
-    setTimeout(() => setMonsterAction({ type: "", active: false }), 1200);
+  function triggerMonsterAction(type: string, who: "player" | "enemy" | "both" = "player") {
+    if (who === "player" || who === "both") {
+      setMonsterAction({ type, active: true, who: "player" });
+      setTimeout(() => setMonsterAction({ type: "", active: false, who: "player" }), 1200);
+    }
+    if (who === "enemy" || who === "both") {
+      setEnemyAction({ type, active: true, who: "enemy" });
+      setTimeout(() => setEnemyAction({ type: "", active: false, who: "enemy" }), 1200);
+    }
   }
 
   const sid = sessionIdRef.current;
