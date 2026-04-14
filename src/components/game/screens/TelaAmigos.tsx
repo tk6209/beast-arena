@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 interface Props {
   user: User;
   onVoltar: () => void;
+  onConvidar?: (friendUserId: string) => void;
 }
 
 interface FriendProfile {
@@ -34,7 +35,7 @@ interface Friendship {
   friend_profile?: FriendProfile;
 }
 
-export default function TelaAmigos({ user, onVoltar }: Props) {
+export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
   const [friends, setFriends] = useState<Friendship[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
