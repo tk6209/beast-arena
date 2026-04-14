@@ -5,6 +5,7 @@ import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { MONSTROS } from "@/game/data";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TelaHomeProps {
   onIniciar: (modo: string) => void;
