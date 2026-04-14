@@ -237,6 +237,16 @@ export default function Index() {
         <TelaSeasonPass user={user} onVoltar={() => setTela("lobby_principal")} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
+    case "missoes":
+      return user ? (
+        <TelaMissoes user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "conquistas":
+      return user ? (
+        <TelaConquistas user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "home":
       return (
         <>
