@@ -53,6 +53,13 @@ const POOL_DEF = [
   { nome: "Barreira", emoji: "💎", valor: 25 },
 ];
 
+const POOL_CURA = [
+  { nome: "Poção Vital", emoji: "🧪", valor: 25 },
+  { nome: "Cura Divina", emoji: "💖", valor: 40 },
+  { nome: "Ervas Místicas", emoji: "🌿", valor: 15 },
+  { nome: "Banho de Luz", emoji: "✨", valor: 30 },
+];
+
 /* ─── Helpers ─── */
 let _cid = 0;
 function nid() { return ++_cid; }
@@ -61,6 +68,7 @@ function rndItem<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.len
 
 function mkAtk(): any { return { id: nid(), tipo: "ataque", desc: "", ...rndItem(POOL_ATK) }; }
 function mkDef(): any { return { id: nid(), tipo: "defesa", desc: "", ...rndItem(POOL_DEF) }; }
+function mkCura(): any { return { id: nid(), tipo: "cura", desc: "", ...rndItem(POOL_CURA) }; }
 function mkPod(pt: string): any {
   const p = PODERES[pt];
   return { id: nid(), tipo: "poderzinho", sub: pt, nome: `Poderzinho ${p.nome}`, emoji: p.emoji, desc: "" };
@@ -85,11 +93,12 @@ function novaMao(n: number, poder: string | null): any[] {
   const cs = [mkAtk(), mkDef()];
   for (let i = 2; i < n; i++) {
     const r = Math.random();
-    if (r < 0.26) cs.push(mkAtk());
-    else if (r < 0.44) cs.push(mkDef());
-    else if (r < 0.56 && poder) cs.push(mkPod(poder));
-    else if (r < 0.67) cs.push(mkDes());
-    else if (r < 0.79) cs.push(mkSwarmCard());
+    if (r < 0.22) cs.push(mkAtk());
+    else if (r < 0.38) cs.push(mkDef());
+    else if (r < 0.50) cs.push(mkCura());
+    else if (r < 0.60 && poder) cs.push(mkPod(poder));
+    else if (r < 0.70) cs.push(mkDes());
+    else if (r < 0.82) cs.push(mkSwarmCard());
     else cs.push(mkEvo(Math.ceil(Math.random() * 3)));
   }
   return cs.sort(() => Math.random() - 0.5);
