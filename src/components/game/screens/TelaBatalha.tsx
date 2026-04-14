@@ -26,6 +26,7 @@ import MonsterAvatar from "@/components/game/MonsterAvatar";
 import CombatParticles from "@/components/game/CombatParticles";
 import BuffIndicators from "@/components/game/BuffIndicators";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
+import BattleChat from "@/components/game/BattleChat";
 
 interface ServerState {
   players: any[];
@@ -41,13 +42,21 @@ interface ServerState {
 
 type MonsterActionState = { type: string; active: boolean; who: "player" | "enemy" | "both" };
 
+export interface BattleStats {
+  cardsPlayed: number;
+  healsUsed: number;
+  evolutions: number;
+  damageDealt: number;
+  defenseCards: number;
+}
+
 interface TelaBatalhaProps {
   modo: string;
   monstroP1: string;
   nomeJogador?: string;
   salaId?: string | null;
   slotLocal?: number;
-  onFim: (vencedor: Jogador | null) => void;
+  onFim: (vencedor: Jogador | null, stats: BattleStats) => void;
   dificuldade?: string;
   aiMonstroId?: string;
   skipPowerSelect?: boolean;
@@ -75,6 +84,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [particleType, setParticleType] = useState("ataque");
   const [showTutorial, setShowTutorial] = useState(false);
   const [showBattleIntro, setShowBattleIntro] = useState(true);
+  const [bStats, setBStats] = useState<BattleStats>({ cardsPlayed: 0, healsUsed: 0, evolutions: 0, damageDealt: 0, defenseCards: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
 
