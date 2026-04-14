@@ -491,14 +491,117 @@ function advanceTurn(state: any): any {
 
   state.turno = (state.turno || 0) + 1;
   for (let i = 0; i < state.players.length; i++) {
-    state.players[i].mao = novaMao(5, state.players[i].monstro.poder);
+    // Combo penalty: only 1 card next turn if combo was used
+    const handSize = state.players[i].comboUsed ? 1 : 5;
+    state.players[i].mao = novaMao(handSize, state.players[i].monstro.poder);
     state.players[i].defAtiva = 0;
+    if (state.players[i].comboUsed) {
+      log.push({ msg: `⚡ ${state.players[i].monstro.nome} recebe apenas 1 carta (penalidade combo)!`, t: "sistema" });
+      state.players[i].comboUsed = false;
+    }
   }
   state.fase = "acao";
   state.currentTurn = 0;
   log.push({ msg: `🔄 Turno ${state.turno + 1} — Novas cartas!`, t: "sistema" });
   state.log = log;
   return state;
+}
+
+function handleComboCards(state: any, payload: any): any {
+  const { slot, cardId1, cardId2 } = payload;
+  const player = state.players[slot];
+  if (!player) return { error: "Jogador não encontrado" };
+
+  const idx1 = player.mao.findIndex((c: any) => c.id === cardId1);
+  const idx2 = player.mao.findIndex((c: any) => c.id === cardId2);
+  if (idx1 < 0 || idx2 < 0) return { error: "Cartas não encontradas na mão" };
+
+  const carta1 = player.mao[idx1];
+  const carta2 = player.mao[idx2];
+
+  // Both cards must be same type and one of: ataque, defesa, cura
+  const validTypes = ["ataque", "defesa", "cura"];
+  if (carta1.tipo !== carta2.tipo || !validTypes.includes(carta1.tipo)) {
+    return { error: "Combo requer duas cartas do mesmo tipo (ataque, defesa ou cura)" };
+  }
+
+  let log = [...(state.log || [])];
+  const opSlot = slot === 0 ? 1 : 0;
+  let opponent = state.players[opSlot];
+  const dificuldade = state.dificuldade || "medio";
+  const turno = state.turno || 0;
+  const events: any[] = [];
+
+  const comboType = carta1.tipo;
+  const combinedVal = Math.floor(((carta1.valor || 0) + (carta2.valor || 0)) * 1.5);
+
+  if (comboType === "ataque" && opponent && opponent.hp > 0) {
+    const fxAtk = swarmBonus(player.swarms || []);
+    let dmg = player.monstro.atk + fxAtk.atkBonus + combinedVal;
+    if (player.dobra) { dmg *= 2; player.dobra = false; log.push({ msg: `✖️ Dano dobrado!`, t: "combo" }); }
+    dmg = applyEasyDamageScaling(dmg, dificuldade, turno);
+
+    if (opponent.imune) {
+      opponent.imune = false;
+      log.push({ msg: `💎 ${opponent.monstro.nome} estava imune!`, t: "efeito" });
+    } else if (opponent.dodgeOnce) {
+      opponent.dodgeOnce = false;
+      log.push({ msg: `🌪️ ${opponent.monstro.nome} esquivou!`, t: "efeito" });
+    } else {
+      const fxDef = swarmBonus(opponent.swarms || []);
+      const def = opponent.monstro.def + (opponent.defAtiva || 0) + fxDef.defBonus;
+      const fin = Math.max(0, dmg - def);
+      opponent.hp = Math.max(0, opponent.hp - fin);
+      log.push({ msg: `⚡ COMBO! ${player.monstro.nome} causa ${fin} de dano com ${carta1.nome} + ${carta2.nome}!`, t: "dano", dmg: fin });
+    }
+    state.players[opSlot] = opponent;
+  } else if (comboType === "defesa") {
+    player.defAtiva = (player.defAtiva || 0) + combinedVal;
+    log.push({ msg: `⚡ COMBO! ${player.monstro.nome} se defende com ${combinedVal}!`, t: "efeito" });
+  } else if (comboType === "cura") {
+    const hpAntes = player.hp;
+    player.hp = Math.min(player.maxHp, player.hp + combinedVal);
+    const curado = player.hp - hpAntes;
+    log.push({ msg: `⚡ COMBO! ${player.monstro.nome} recupera ${curado} HP!`, t: "cura", hp: curado });
+  }
+
+  // Remove both cards, mark combo penalty
+  player.mao = player.mao.filter((c: any) => c.id !== cardId1 && c.id !== cardId2);
+  player.comboUsed = true;
+  state.players[slot] = player;
+  state.log = log;
+
+  events.push({ type: "combo_played", slot, cards: [carta1, carta2], comboType });
+
+  // Check victory
+  if (opponent && opponent.hp <= 0) {
+    state.fase = "resultado";
+    state.vencedor = slot;
+    events.push({ type: "game_over", winner: slot });
+    return { state, events };
+  }
+
+  // For AI mode, run AI turn
+  if (state.modo === "ai") {
+    const aiResult = runAITurn(state, opSlot);
+    state = aiResult.state;
+    events.push(...aiResult.events);
+
+    if (state.players[slot].hp <= 0) {
+      state.fase = "resultado";
+      state.vencedor = opSlot;
+      events.push({ type: "game_over", winner: opSlot });
+      return { state, events };
+    }
+
+    state = advanceTurn(state);
+    events.push({ type: "new_turn", turno: state.turno });
+  } else {
+    state.currentTurn = opSlot;
+    events.push({ type: "turn_changed", currentTurn: opSlot });
+  }
+
+  return { state, events };
 }
 
 function handlePassTurn(state: any, payload: any): any {
