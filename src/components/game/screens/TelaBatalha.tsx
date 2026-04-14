@@ -342,7 +342,23 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
           80% { opacity: 1; transform: translateY(0) scale(0.75); }
           100% { opacity: 0; transform: translateY(20px) scale(0.5); }
         }
+        @keyframes fxFlash { 0%{opacity:.6;} 100%{opacity:0;} }
+        @keyframes fxPulse { 0%{transform:scale(1);opacity:.5;} 100%{transform:scale(2.5);opacity:0;} }
       `}</style>
+
+      {/* Screen effect overlay */}
+      {screenFx && (
+        <div key={screenFx + Date.now()} style={{
+          position: "fixed", inset: 0, zIndex: 100, pointerEvents: "none",
+          background:
+            screenFx === "ataque" ? "radial-gradient(circle, #ef444466 0%, transparent 70%)" :
+            screenFx === "defesa" ? "radial-gradient(circle, #3b82f666 0%, transparent 70%)" :
+            screenFx === "evolucao" ? "radial-gradient(circle, #ffd54f66 0%, transparent 70%)" :
+            screenFx === "cura" ? "radial-gradient(circle, #34d39966 0%, transparent 70%)" :
+            "transparent",
+          animation: "fxFlash .6s ease forwards",
+        }} />
+      )}
       <ChromeNoise />
       <GameLog ents={serverState.log || []} />
 
