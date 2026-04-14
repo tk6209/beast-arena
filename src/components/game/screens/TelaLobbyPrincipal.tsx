@@ -301,26 +301,35 @@ export default function TelaLobbyPrincipal({
               filter: "blur(6px)", pointerEvents: "none",
             }} />
 
-            {/* Main monster image — swaps between front/side/back based on drag angle */}
+            {/* Main monster image — crossfade between front/side/back based on drag angle */}
             {(() => {
               const norm = (((rotation % 360) + 360) % 360);
               const isLeftSide = norm >= 225 && norm < 315;
-              const activeImg = getMonsterImageForAngle(currentKey, rotation);
+              const isFront = norm < 45 || norm >= 315;
+              const isSide = (norm >= 45 && norm < 135) || (norm >= 225 && norm < 315);
+              const isBack = norm >= 135 && norm < 225;
+
+              const frontImg = MONSTER_IMAGES[currentKey];
+              const sideImg = MONSTER_IMAGES_SIDE[currentKey];
+              const backImg = MONSTER_IMAGES_BACK[currentKey];
+
+              const imgStyle = (visible: boolean, flip: boolean): React.CSSProperties => ({
+                position: "absolute" as const,
+                top: 0, left: 0,
+                maxWidth: 220, maxHeight: 220, objectFit: "contain" as const,
+                opacity: visible && fade ? 1 : 0,
+                filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
+                transition: "opacity .35s ease, filter .3s, transform .35s ease",
+                animation: !dragging && fade && visible ? "monsterFloat 3s ease-in-out infinite" : "none",
+                transform: flip ? "scaleX(-1)" : "scaleX(1)",
+                pointerEvents: "none" as const,
+              });
+
               return (
-                <div style={{ position: "relative" }}>
-                  <img
-                    src={activeImg}
-                    alt={currentMonster.nome}
-                    draggable={false}
-                    style={{
-                      maxWidth: 220, maxHeight: 220, objectFit: "contain",
-                      opacity: fade ? 1 : 0,
-                      filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
-                      transition: dragging ? "filter .3s" : "opacity .2s ease, filter .3s",
-                      animation: !dragging && fade ? "monsterFloat 3s ease-in-out infinite" : "none",
-                      transform: isLeftSide ? "scaleX(-1)" : "scaleX(1)",
-                    }}
-                  />
+                <div style={{ position: "relative", width: 220, height: 220 }}>
+                  <img src={frontImg} alt="" draggable={false} style={imgStyle(isFront, false)} />
+                  <img src={sideImg} alt="" draggable={false} style={imgStyle(isSide, isLeftSide)} />
+                  <img src={backImg} alt="" draggable={false} style={imgStyle(isBack, false)} />
                 </div>
               );
             })()}

@@ -6,6 +6,8 @@ import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { supabase } from "@/integrations/supabase/client";
+import { MONSTER_IMAGES } from "@/game/monsterImages";
+import { MONSTROS } from "@/game/data";
 import type { Jogador } from "@/game/engine";
 
 interface BattleStats {
