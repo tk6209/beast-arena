@@ -14,12 +14,14 @@ import TelaDailyReward from "@/components/game/screens/TelaDailyReward";
 import TelaRanking from "@/components/game/screens/TelaRanking";
 import TelaMatchmaking from "@/components/game/screens/TelaMatchmaking";
 import TelaSeasonPass from "@/components/game/screens/TelaSeasonPass";
+import TelaMissoes from "@/components/game/screens/TelaMissoes";
+import TelaConquistas from "@/components/game/screens/TelaConquistas";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Jogador } from "@/game/engine";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -210,6 +212,8 @@ export default function Index() {
             onMatchmaking={() => { setModo("matchmaking"); setTela("nome"); }}
             onRanking={() => setTela("ranking")}
             onSeasonPass={() => setTela("season_pass")}
+            onMissoes={() => setTela("missoes")}
+            onConquistas={() => setTela("conquistas")}
             onLogout={handleLogout}
           />
         </>
@@ -231,6 +235,16 @@ export default function Index() {
     case "season_pass":
       return user ? (
         <TelaSeasonPass user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "missoes":
+      return user ? (
+        <TelaMissoes user={user} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "conquistas":
+      return user ? (
+        <TelaConquistas user={user} onVoltar={() => setTela("lobby_principal")} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
     case "home":

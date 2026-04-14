@@ -17,6 +17,8 @@ interface Props {
   onMatchmaking: () => void;
   onRanking: () => void;
   onSeasonPass: () => void;
+  onMissoes: () => void;
+  onConquistas: () => void;
   onLogout: () => void;
 }
 
@@ -31,7 +33,7 @@ const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string 
 const monsterKeys = Object.keys(MONSTROS);
 
 export default function TelaLobbyPrincipal({
-  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onLogout,
+  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onMissoes, onConquistas, onLogout,
 }: Props) {
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
@@ -216,6 +218,34 @@ export default function TelaLobbyPrincipal({
           >
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#00e5ff", letterSpacing: 1 }}>
               🏪 LOJA
+            </div>
+          </div>
+
+          {/* Missions */}
+          <div
+            onClick={onMissoes}
+            style={{
+              background: "rgba(105,240,174,.06)", border: "1px solid rgba(105,240,174,.15)",
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
+              width: 130,
+            }}
+          >
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
+              🎯 MISSÕES
+            </div>
+          </div>
+
+          {/* Achievements */}
+          <div
+            onClick={onConquistas}
+            style={{
+              background: "rgba(179,136,255,.06)", border: "1px solid rgba(179,136,255,.15)",
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer",
+              width: 130,
+            }}
+          >
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#b388ff", letterSpacing: 1 }}>
+              🏅 CONQUISTAS
             </div>
           </div>
         </div>

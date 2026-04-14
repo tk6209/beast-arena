@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          rarity: string
+          requirement_type: string
+          requirement_value: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          rarity?: string
+          requirement_type: string
+          requirement_value?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      daily_missions: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          mission_type: string
+          reward_coins: number
+          reward_xp: number
+          target_value: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          mission_type: string
+          reward_coins?: number
+          reward_xp?: number
+          target_value?: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          mission_type?: string
+          reward_coins?: number
+          reward_xp?: number
+          target_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
       daily_rewards: {
         Row: {
           created_at: string
@@ -383,6 +455,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_inventory: {
         Row: {
           acquired_at: string
@@ -409,6 +510,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_missions: {
+        Row: {
+          assigned_date: string
+          claimed: boolean
+          completed: boolean
+          created_at: string
+          id: string
+          mission_id: string
+          progress: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_date?: string
+          claimed?: boolean
+          completed?: boolean
+          created_at?: string
+          id?: string
+          mission_id: string
+          progress?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_date?: string
+          claimed?: boolean
+          completed?: boolean
+          created_at?: string
+          id?: string
+          mission_id?: string
+          progress?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "daily_missions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_stats: {
         Row: {
@@ -443,6 +588,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           win_streak?: number
+        }
+        Relationships: []
+      }
+      weekly_leaderboard: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          losses: number
+          rating_gained: number
+          updated_at: string
+          user_id: string
+          week_key: string
+          wins: number
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          losses?: number
+          rating_gained?: number
+          updated_at?: string
+          user_id: string
+          week_key: string
+          wins?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          losses?: number
+          rating_gained?: number
+          updated_at?: string
+          user_id?: string
+          week_key?: string
+          wins?: number
         }
         Relationships: []
       }
