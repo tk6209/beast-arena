@@ -11,6 +11,9 @@ import type { Dificuldade } from "@/pages/Index";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
+  user?: any;
+  onLogin?: () => void;
+  onPerfil?: () => void;
 }
 
 const monsterKeys = Object.keys(MONSTROS);
@@ -324,7 +327,7 @@ function IntroOverlay({ onDone }: { onDone: () => void }) {
 }
 
 /* ── Main Home Screen ── */
-export default function TelaHome({ onIniciar }: TelaHomeProps) {
+export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHomeProps) {
   const [tapReady, setTapReady] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showDiffSelect, setShowDiffSelect] = useState(false);
@@ -597,6 +600,39 @@ export default function TelaHome({ onIniciar }: TelaHomeProps) {
             }}
           >
             ▸ {currentMonster.nome}
+          </div>
+
+          {/* Auth buttons */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            {user ? (
+              <div
+                onClick={onPerfil}
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "rgba(0,229,255,.06)",
+                  border: "1px solid rgba(0,229,255,.15)",
+                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
+                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
+                }}
+              >
+                👤 {user.email?.split("@")[0] || "Perfil"}
+              </div>
+            ) : (
+              <div
+                onClick={onLogin}
+                style={{
+                  flex: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "rgba(0,229,255,.06)",
+                  border: "1px solid rgba(0,229,255,.15)",
+                  borderRadius: 6, padding: "8px 12px", cursor: "pointer",
+                  fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#00e5ff",
+                }}
+              >
+                🔑 LOGIN / CADASTRO
+              </div>
+            )}
           </div>
 
           {/* Buttons */}
