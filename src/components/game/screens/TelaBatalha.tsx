@@ -72,6 +72,7 @@ export default function TelaBatalha({ modo, monstroP1, salaId, slotLocal = 0, on
       }
     }
     init();
+    return () => { stopBattleMusic(); };
   }, []);
 
   useEffect(() => {
