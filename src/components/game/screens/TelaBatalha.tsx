@@ -242,7 +242,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       for (const entry of recentLogs) {
         if (entry.t === "dano") {
           narration += `${entry.dmg || ""} de dano! `;
-          if (cartaNome === "EXPLODE") sfxExplode(); else sfxAtaque();
+          if (cartaNome === "EXPLODE") { sfxExplode(); hapticExplosion(); } else { sfxAtaque(); hapticHeavy(); }
           triggerFx("ataque");
           setHitCount(c => c + 1);
         } else if (entry.t === "def" || entry.t === "efeito") {
