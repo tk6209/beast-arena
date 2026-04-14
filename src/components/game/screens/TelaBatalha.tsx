@@ -286,7 +286,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
-          if (winner === slotLocal) sfxVitoria(); else sfxDerrota();
+          if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
           gameEnded = true;
           stopBattleMusic();
           onFim(winner === slotLocal ? { id: "p1" } as any : null);
