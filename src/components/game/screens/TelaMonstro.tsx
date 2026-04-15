@@ -10,6 +10,7 @@ import { sfxTap } from "@/game/sfx";
 
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
+  onVoltar?: () => void;
   titulo?: string;
   userId?: string;
 }
@@ -17,7 +18,7 @@ interface TelaMonstroProps {
 const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
+export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
