@@ -290,8 +290,8 @@ export default function Index() {
             onIniciar={handleIniciar}
             onPerfil={() => setTela("perfil")}
             onLoja={() => setTela("loja")}
-            onMulti={() => { setModo("multi"); setTela("nome"); }}
-            onMatchmaking={() => { setModo("matchmaking"); setTela("nome"); }}
+            onMulti={() => { setModo("multi"); handleIniciar("multi"); }}
+            onMatchmaking={() => { setModo("matchmaking"); handleIniciar("matchmaking"); }}
             onRanking={() => setTela("ranking")}
             onSeasonPass={() => setTela("season_pass")}
             onMissoes={() => setTela("missoes")}
