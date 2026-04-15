@@ -604,20 +604,7 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil, onLoja }:
             ▸ {currentMonster.nome}
           </div>
 
-          {/* Shop button */}
-          {user && (
-            <div
-              onClick={onLoja}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                background: "rgba(255,213,79,.06)", border: "1px solid rgba(255,213,79,.15)",
-                borderRadius: 6, padding: "8px 12px", cursor: "pointer", marginBottom: 12,
-                fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#ffd54f",
-              }}
-            >
-              🏪 LOJA
-            </div>
-          )}
+          {/* Shop button removed from home screen */}
 
           {/* Ranking */}
           {rankings.length > 0 && (

@@ -421,8 +421,12 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
       }
 
       speak(narration.trim());
-    } catch (err) {
+    } catch (err: any) {
       console.error("Combo error:", err);
+      setComboSel([]);
+      setCartaSel(null);
+      // Fallback: play first card as normal card if combo fails
+      falar("Combo falhou!", false, battleIdRef.current);
     }
     setLoading(false);
   }
