@@ -92,7 +92,7 @@ const POOL_CURA = [
 ];
 
 /* ─── Helpers ─── */
-let _cid = 0;
+let _cid = Math.floor(Math.random() * 100000);
 function nid() { return ++_cid; }
 
 function rndItem<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -121,6 +121,14 @@ function mkDes(): any {
 }
 
 function novaMao(n: number, poder: string | null): any[] {
+  if (n <= 0) return [];
+  if (n === 1) {
+    // Combo penalty: single random card
+    const r = Math.random();
+    if (r < 0.5) return [mkAtk()];
+    if (r < 0.8) return [mkDef()];
+    return [mkCura()];
+  }
   const cs = [mkAtk(), mkDef()];
   for (let i = 2; i < n; i++) {
     const r = Math.random();
