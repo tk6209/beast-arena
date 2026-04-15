@@ -10,6 +10,7 @@ import { sfxTap } from "@/game/sfx";
 
 interface TelaMonstroProps {
   onConfirmar: (monstroId: string) => void;
+  onVoltar?: () => void;
   titulo?: string;
   userId?: string;
 }
@@ -17,7 +18,7 @@ interface TelaMonstroProps {
 const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
+export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
@@ -147,8 +148,29 @@ export default function TelaMonstro({ onConfirmar, titulo = "ESCOLHA SEU MONSTRO
           overflow: "hidden",
         }}
       >
-        {/* Title */}
-        <div style={{ textAlign: "center", flexShrink: 0 }}>
+        {/* Header with back button */}
+        <div style={{ textAlign: "center", flexShrink: 0, position: "relative" }}>
+          {onVoltar && (
+            <button
+              onClick={onVoltar}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                background: "rgba(255,255,255,.08)",
+                border: "1px solid rgba(255,255,255,.12)",
+                borderRadius: 8,
+                padding: "6px 12px",
+                color: "#8a95aa",
+                fontSize: 13,
+                fontFamily: "Nunito, sans-serif",
+                cursor: "pointer",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              ← Voltar
+            </button>
+          )}
           <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#00e5ff", letterSpacing: 2 }}>
             ⚗️ {titulo}
           </div>
