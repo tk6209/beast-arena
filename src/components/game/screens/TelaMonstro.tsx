@@ -148,8 +148,29 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
           overflow: "hidden",
         }}
       >
-        {/* Title */}
-        <div style={{ textAlign: "center", flexShrink: 0 }}>
+        {/* Header with back button */}
+        <div style={{ textAlign: "center", flexShrink: 0, position: "relative" }}>
+          {onVoltar && (
+            <button
+              onClick={onVoltar}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                background: "rgba(255,255,255,.08)",
+                border: "1px solid rgba(255,255,255,.12)",
+                borderRadius: 8,
+                padding: "6px 12px",
+                color: "#8a95aa",
+                fontSize: 13,
+                fontFamily: "Nunito, sans-serif",
+                cursor: "pointer",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              ← Voltar
+            </button>
+          )}
           <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#00e5ff", letterSpacing: 2 }}>
             ⚗️ {titulo}
           </div>
