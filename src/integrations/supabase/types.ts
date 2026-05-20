@@ -364,6 +364,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gem_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       matchmaking_queue: {
         Row: {
           created_at: string
@@ -490,6 +517,7 @@ export type Database = {
           created_at: string
           display_name: string
           display_name_normalized: string | null
+          gems: number
           id: string
           level: number
           name_changed_at: string | null
@@ -504,6 +532,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           display_name_normalized?: string | null
+          gems?: number
           id?: string
           level?: number
           name_changed_at?: string | null
@@ -518,6 +547,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           display_name_normalized?: string | null
+          gems?: number
           id?: string
           level?: number
           name_changed_at?: string | null
