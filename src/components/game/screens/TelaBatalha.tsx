@@ -9,7 +9,7 @@ import {
   criarSessao, ouvirSessao, fecharCanal,
   type GameSession,
 } from "@/game/multiplayer";
-import { initGame, choosePower, playCard, passTurn, comboCards } from "@/game/serverApi";
+import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
 import { falar, markGesture, criarFalaGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg } from "@/game/styles";
@@ -28,6 +28,7 @@ import CombatParticles from "@/components/game/CombatParticles";
 import BuffIndicators from "@/components/game/BuffIndicators";
 import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
+import EnergyBar from "@/components/game/EnergyBar";
 
 interface ServerState {
   players: any[];
@@ -63,11 +64,12 @@ interface TelaBatalhaProps {
   skipPowerSelect?: boolean;
   lastPowerId?: string;
   onPowerChosen?: (powerId: string) => void;
+  userId?: string;
 }
 
 const TURN_TIMER_SECONDS = 30;
 
-export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId, onPowerChosen }: TelaBatalhaProps) {
+export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", salaId, slotLocal = 0, onFim, dificuldade = "medio", aiMonstroId, skipPowerSelect, lastPowerId, onPowerChosen, userId }: TelaBatalhaProps) {
   const [mostraPoder, setMostraPoder] = useState(!skipPowerSelect);
   const [serverState, setServerState] = useState<ServerState | null>(null);
   const [cartaSel, setCartaSel] = useState<any | null>(null);
@@ -87,6 +89,7 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
   const [showTutorial, setShowTutorial] = useState(false);
   const [showBattleIntro, setShowBattleIntro] = useState(true);
   const [bStats, setBStats] = useState<BattleStats>({ cardsPlayed: 0, healsUsed: 0, evolutions: 0, damageDealt: 0, defenseCards: 0 });
+  const [cardDropped, setCardDropped] = useState<any | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string | null>(salaId || null);
   const battleIdRef = useRef<string>("");
@@ -341,6 +344,11 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
 
       let gameEnded = false;
       for (const evt of (result.events || [])) {
+        if (evt.type === "card_drop" && evt.card && evt.slot === slotLocal) {
+          setCardDropped(evt.card);
+          if (userId) saveCardDrop(userId, evt.card).catch(console.error);
+          narration += `Você ganhou uma carta: ${evt.card.nome}! `;
+        }
         if (evt.type === "game_over") {
           const winner = result.state.vencedor;
           narration += winner === slotLocal ? "Você venceu a batalha!" : "Você foi derrotado.";
@@ -974,11 +982,13 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
             ) : (
               <BtnMain
                 variant={cartaSel ? "gold" : "dark"}
-                disabled={!cartaSel || !isMyTurn || loading}
+                disabled={!cartaSel || !isMyTurn || loading || (cartaSel && (cartaSel.custo || 1) > (myPlayer?.energia ?? 0))}
                 onClick={jogarCarta}
                 style={{ flex: 2 }}
               >
-                {cartaSel ? `⚡ JOGAR` : "Selecione"}
+                {cartaSel
+                  ? `⚡ JOGAR ${cartaSel.custo ? `(${cartaSel.custo}⚡)` : ""}`
+                  : "Selecione"}
               </BtnMain>
             )}
             <BtnMain
@@ -993,6 +1003,28 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         )}
 
         {/* Game over */}
+        {/* Card drop notification */}
+        {cardDropped && (
+          <div style={{
+            position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
+            zIndex: 200, animation: "cardEnter .5s cubic-bezier(.34,1.56,.64,1) forwards",
+            background: "linear-gradient(135deg, rgba(18,20,40,.98), rgba(8,9,18,.99))",
+            border: "2px solid rgba(255,213,79,.4)", borderRadius: 14,
+            padding: "10px 16px", textAlign: "center", minWidth: 180,
+          }}>
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 11, color: "#ffd54f", letterSpacing: 2, marginBottom: 4 }}>
+              🎴 CARTA CONQUISTADA!
+            </div>
+            <div style={{ fontSize: 24 }}>{cardDropped.emoji}</div>
+            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#e8f0ff", marginTop: 2 }}>
+              {cardDropped.nome}
+            </div>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#8a95aa", marginTop: 2 }}>
+              {(cardDropped.raridade || "comum").toUpperCase()}
+            </div>
+          </div>
+        )}
+
         {gameOver && (
           <div style={{ textAlign: "center", padding: 12, flexShrink: 0 }}>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 28, color: serverState.vencedor === slotLocal ? "#69f0ae" : "#ef5350", textShadow: "0 0 20px currentColor" }}>
@@ -1043,6 +1075,10 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
         />
         <div style={{ flexShrink: 0, paddingTop: 2, paddingBottom: 2 }}>
           <HpBar jog={p1Display} />
+        </div>
+        {/* Energy bar */}
+        <div style={{ flexShrink: 0, paddingBottom: 2, paddingTop: 0 }}>
+          <EnergyBar energia={myPlayer?.energia ?? 3} max={6} isMyTurn={isMyTurn} />
         </div>
       </div>
 

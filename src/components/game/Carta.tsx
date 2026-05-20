@@ -69,26 +69,30 @@ function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
           fontFamily: "Nunito, sans-serif",
         }}
       >
-        {/* Type badge */}
+        {/* Type badge + energy cost */}
         <div
           style={{
             background: `linear-gradient(135deg, ${p.t}, ${p.m})`,
             padding: "2px 4px 1px",
             borderBottom: `1px solid ${p.bc}44`,
-            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          <span
-            style={{
-              fontSize: 6,
-              fontWeight: 900,
-              color: "#fff",
-              letterSpacing: 0.5,
-              textTransform: "uppercase" as const,
-            }}
-          >
+          <span style={{ fontSize: 6, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase" as const }}>
             {p.badge}
           </span>
+          {carta.custo != null && (
+            <span style={{
+              fontSize: 8, fontWeight: 900, color: "#ffd54f",
+              background: "rgba(0,0,0,.3)", borderRadius: 3,
+              padding: "0px 3px", letterSpacing: 0.5,
+              textShadow: "0 0 4px rgba(255,213,79,.5)",
+            }}>
+              {carta.custo}⚡
+            </span>
+          )}
         </div>
 
         {/* Art */}

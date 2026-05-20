@@ -399,6 +399,7 @@ export default function Index() {
           skipPowerSelect={isCampaignContinue && !!lastPowerId}
           lastPowerId={lastPowerId || undefined}
           onPowerChosen={(pid) => setLastPowerId(pid)}
+        userId={user?.id}
         />
       );
 

@@ -26,8 +26,53 @@ async function callEngine(action: string, sessionId: string | null, payload: any
   return res.json();
 }
 
-export async function initGame(sessionId: string | null, modo: string, players: { slot: number; nome: string; monstroId: string }[], dificuldade?: string, aiMonstroId?: string) {
-  return callEngine("init_game", sessionId, { modo, players, dificuldade, aiMonstroId });
+export async function initGame(
+  sessionId: string | null,
+  modo: string,
+  players: { slot: number; nome: string; monstroId: string }[],
+  dificuldade?: string,
+  aiMonstroId?: string,
+  playerDeck?: any[]
+) {
+  return callEngine("init_game", sessionId, { modo, players, dificuldade, aiMonstroId, playerDeck });
+}
+
+/** Save a card earned in battle to user collection */
+export async function saveCardDrop(userId: string, card: any): Promise<void> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const cardKey = `${card.nome}_${card.tipo}`.toLowerCase().replace(/\s/g, "_");
+  await supabase.from("user_cards").upsert({
+    user_id: userId,
+    card_key: cardKey,
+    card_data: card,
+    raridade: card.raridade || "comum",
+    quantity: 1,
+  }, {
+    onConflict: "user_id,card_key",
+    ignoreDuplicates: false,
+  });
+}
+
+/** Load player deck for a monster */
+export async function loadPlayerDeck(userId: string, monstroId: string): Promise<any[] | null> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data } = await supabase
+    .from("player_decks")
+    .select("cards")
+    .eq("user_id", userId)
+    .eq("monster_id", monstroId)
+    .single();
+  return data?.cards || null;
+}
+
+/** Save player deck */
+export async function savePlayerDeck(userId: string, monstroId: string, cards: any[]): Promise<void> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  await supabase.from("player_decks").upsert({
+    user_id: userId,
+    monster_id: monstroId,
+    cards,
+  }, { onConflict: "user_id,monster_id" });
 }
 
 export async function choosePower(sessionId: string, slot: number, powerId: string) {

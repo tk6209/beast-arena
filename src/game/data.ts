@@ -19,9 +19,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   panther: {
     id: "panther",
     nome: "Panther",
-    hp: 100,
-    atk: 35,
-    def: 15,
+    hp: 70,
+    atk: 28,
+    def: 12,
     emoji: "🐆",
     bg1: "#2b1600",
     bg2: "#f5c842",
@@ -32,9 +32,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   banana: {
     id: "banana",
     nome: "Banana",
-    hp: 120,
-    atk: 20,
-    def: 30,
+    hp: 80,
+    atk: 16,
+    def: 24,
     emoji: "🍌",
     bg1: "#5b2300",
     bg2: "#ffb347",
@@ -45,9 +45,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   macaco: {
     id: "macaco",
     nome: "Macaco",
-    hp: 90,
-    atk: 28,
-    def: 22,
+    hp: 65,
+    atk: 22,
+    def: 18,
     emoji: "🐒",
     bg1: "#4d0d0d",
     bg2: "#e74c3c",
@@ -58,9 +58,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   morcego: {
     id: "morcego",
     nome: "Morcego",
-    hp: 85,
-    atk: 32,
-    def: 18,
+    hp: 60,
+    atk: 26,
+    def: 14,
     emoji: "🦇",
     bg1: "#0f1f48",
     bg2: "#2979ff",
@@ -71,9 +71,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   sprouts: {
     id: "sprouts",
     nome: "Sprouts",
-    hp: 95,
-    atk: 18,
-    def: 35,
+    hp: 68,
+    atk: 14,
+    def: 28,
     emoji: "🌱",
     bg1: "#113300",
     bg2: "#43a047",
@@ -85,9 +85,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   drako: {
     id: "drako",
     nome: "Drako",
-    hp: 110,
-    atk: 40,
-    def: 12,
+    hp: 75,
+    atk: 32,
+    def: 10,
     emoji: "🐉",
     bg1: "#3a0a0a",
     bg2: "#b71c1c",
@@ -98,9 +98,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   crystal: {
     id: "crystal",
     nome: "Crystal",
-    hp: 80,
-    atk: 22,
-    def: 40,
+    hp: 58,
+    atk: 18,
+    def: 32,
     emoji: "💎",
     bg1: "#1a0033",
     bg2: "#7c4dff",
@@ -111,9 +111,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   phantom: {
     id: "phantom",
     nome: "Phantom",
-    hp: 75,
-    atk: 38,
-    def: 10,
+    hp: 55,
+    atk: 30,
+    def: 8,
     emoji: "👻",
     bg1: "#1a1a2e",
     bg2: "#4a148c",
@@ -124,9 +124,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   tsunami: {
     id: "tsunami",
     nome: "Tsunami",
-    hp: 105,
-    atk: 25,
-    def: 28,
+    hp: 72,
+    atk: 20,
+    def: 22,
     emoji: "🌊",
     bg1: "#002244",
     bg2: "#0277bd",
@@ -137,9 +137,9 @@ export const MONSTROS: Record<string, MonstroData> = {
   volt: {
     id: "volt",
     nome: "Volt",
-    hp: 70,
-    atk: 45,
-    def: 8,
+    hp: 50,
+    atk: 36,
+    def: 6,
     emoji: "⚡",
     bg1: "#332200",
     bg2: "#f9a825",
@@ -408,6 +408,7 @@ export interface CartaData {
   tipo: string;
   nome: string;
   emoji: string;
+  custo?: number;       // energy cost (1-3)
   valor?: number;
   desc: string;
   esp?: string;
@@ -425,27 +426,29 @@ let _id = 0;
 const nid = () => ++_id;
 
 const POOL_ATK = [
-  { nome: "Garra de Aço", emoji: "⚔️", valor: 25, desc: "Ataque poderoso das garras metálicas!" },
-  { nome: "Pancada", emoji: "👊", valor: 15, desc: "Golpe direto com força bruta." },
-  { nome: "Pulo Rápido", emoji: "💨", valor: 20, desc: "Ataque ágil e imprevisível." },
-  { nome: "Sopro Congelante", emoji: "❄️", valor: 20, desc: "Congela o oponente no lugar." },
-  { nome: "Raiz Explosiva", emoji: "🌿", valor: 18, desc: "Raízes saem do chão com força!" },
-  { nome: "EXPLODE", emoji: "💥", valor: 50, autoDano: 20, desc: "50 de dano. Você recebe 20.", esp: "explode" },
-  { nome: "Tudo ou Nada", emoji: "🎲", valor: 0, desc: "80 de dano ou zero. A sorte decide!", esp: "tudoOuNada" },
+  { nome: "Garra de Aço",     emoji: "⚔️", valor: 22, custo: 2, desc: "Ataque poderoso das garras metálicas!" },
+  { nome: "Pancada",          emoji: "👊", valor: 14, custo: 1, desc: "Golpe direto e rápido." },
+  { nome: "Pulo Rápido",      emoji: "💨", valor: 18, custo: 1, desc: "Ataque ágil e imprevisível." },
+  { nome: "Sopro Congelante", emoji: "❄️", valor: 18, custo: 2, desc: "Congela o oponente no lugar." },
+  { nome: "Raiz Explosiva",   emoji: "🌿", valor: 16, custo: 1, desc: "Raízes saem do chão com força!" },
+  { nome: "EXPLODE",          emoji: "💥", valor: 45, custo: 3, autoDano: 15, desc: "45 de dano. Você recebe 15.", esp: "explode" },
+  { nome: "Tudo ou Nada",     emoji: "🎲", valor: 0,  custo: 2, desc: "70 de dano ou zero. A sorte decide!", esp: "tudoOuNada" },
+  { nome: "Fúria Final",      emoji: "💀", valor: 0,  custo: 3, desc: "Quanto menos HP, mais dano (até 65).", esp: "furiaFinal" },
 ];
 
 const POOL_DEF = [
-  { nome: "Escudo Rápido", emoji: "🛡️", valor: 20, desc: "Bloqueia 20 de dano neste turno." },
-  { nome: "Carapaça", emoji: "🐢", valor: 30, desc: "Defesa máxima por 1 turno." },
-  { nome: "Esquiva", emoji: "✨", valor: 15, esp: "esquiva", desc: "Esquiva total do próximo ataque." },
-  { nome: "Barreira", emoji: "💎", valor: 25, desc: "Barreira energética absorve dano." },
+  { nome: "Escudo Rápido",  emoji: "🛡️", valor: 18, custo: 1, desc: "Bloqueia 18 de dano neste turno." },
+  { nome: "Carapaça",       emoji: "🐢", valor: 26, custo: 2, desc: "Defesa máxima por 1 turno." },
+  { nome: "Esquiva",        emoji: "✨", valor: 14, custo: 1, esp: "esquiva", desc: "Esquiva total do próximo ataque." },
+  { nome: "Barreira",       emoji: "💎", valor: 22, custo: 2, desc: "Barreira energética absorve dano." },
+  { nome: "Contra-Ataque",  emoji: "🔄", valor: 12, custo: 2, esp: "counter", desc: "Defende e reflete 50% do próximo ataque." },
 ];
 
 const POOL_CURA = [
-  { nome: "Poção Vital", emoji: "🧪", valor: 25, desc: "Recupera 25 pontos de vida." },
-  { nome: "Cura Divina", emoji: "💖", valor: 40, desc: "Cura poderosa de 40 HP." },
-  { nome: "Ervas Místicas", emoji: "🌿", valor: 15, desc: "Cura leve de 15 HP com essência natural." },
-  { nome: "Banho de Luz", emoji: "✨", valor: 30, desc: "Luz restauradora cura 30 HP." },
+  { nome: "Poção Vital",   emoji: "🧪", valor: 20, custo: 2, desc: "Recupera 20 pontos de vida." },
+  { nome: "Cura Divina",   emoji: "💖", valor: 32, custo: 3, desc: "Cura poderosa de 32 HP." },
+  { nome: "Ervas Místicas",emoji: "🌿", valor: 12, custo: 1, desc: "Cura leve de 12 HP." },
+  { nome: "Banho de Luz",  emoji: "✨", valor: 24, custo: 2, desc: "Luz restauradora cura 24 HP." },
 ];
 
 export const mkAtk = (): CartaData => ({
