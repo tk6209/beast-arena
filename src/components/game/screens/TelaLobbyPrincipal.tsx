@@ -55,7 +55,7 @@ export default function TelaLobbyPrincipal({
     if (!user) return;
     (async () => {
       const [{ data: p }, { data: s }, { data: l }] = await Promise.all([
-        supabase.from("profiles").select("display_name,level,xp,coins,avatar_url").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("display_name,level,xp,coins,gems,avatar_url").eq("user_id", user.id).single(),
         supabase.from("user_stats").select("total_wins,total_losses,win_streak,best_streak,favorite_monster").eq("user_id", user.id).single(),
         supabase.from("player_leagues").select("*").eq("user_id", user.id).single(),
       ]);
@@ -161,15 +161,27 @@ export default function TelaLobbyPrincipal({
             </div>
           </div>
 
-          {/* Coins */}
-          <div onClick={onLoja} style={{ flexShrink:0,cursor:"pointer",
-            display:"flex",alignItems:"center",gap:5,
-            background:"rgba(255,213,79,.07)",border:"1.5px solid rgba(255,213,79,.2)",
-            borderRadius:12,padding:"6px 10px" }}>
-            <span style={{ fontSize:15 }}>💰</span>
-            <span style={{ fontFamily:"Bangers,cursive",fontSize:16,color:"#ffd54f" }}>
-              {(profile?.coins || 0).toLocaleString()}
-            </span>
+          {/* Coins + Gems */}
+          <div style={{ display:"flex",flexDirection:"column",gap:4,flexShrink:0 }}>
+            <div onClick={onLoja} style={{ cursor:"pointer",
+              display:"flex",alignItems:"center",gap:4,
+              background:"rgba(255,213,79,.07)",border:"1.5px solid rgba(255,213,79,.2)",
+              borderRadius:10,padding:"3px 8px" }}>
+              <span style={{ fontSize:12 }}>💰</span>
+              <span style={{ fontFamily:"Bangers,cursive",fontSize:13,color:"#ffd54f" }}>
+                {(profile?.coins || 0).toLocaleString()}
+              </span>
+            </div>
+            <div onClick={onLoja} style={{ cursor:"pointer",
+              display:"flex",alignItems:"center",gap:4,
+              background:"rgba(0,229,255,.08)",border:"1.5px solid rgba(0,229,255,.25)",
+              borderRadius:10,padding:"3px 8px",
+              boxShadow:"0 0 10px rgba(0,229,255,.15)" }}>
+              <span style={{ fontSize:12 }}>💎</span>
+              <span style={{ fontFamily:"Bangers,cursive",fontSize:13,color:"#00e5ff" }}>
+                {(profile?.gems || 0).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
 
