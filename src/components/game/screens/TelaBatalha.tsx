@@ -485,9 +485,8 @@ export default function TelaBatalha({
   /* ─── RENDER ─── */
   return (
     <div style={{
-      minHeight:"100dvh",
-      background:`radial-gradient(ellipse at 50% 0%,#1a0a06 0%,#0d0704 35%,${DS.bg0} 100%)`,
-      position:"relative",
+      position:"fixed", top:0, left:0, right:0, bottom:0,
+      background:`radial-gradient(ellipse at 50% 0%,#1e0c06 0%,#0e0704 40%,${DS.bg0} 100%)`,
     }}>
       <style>{CSS}</style>
 
@@ -500,7 +499,9 @@ export default function TelaBatalha({
       <ChromeNoise />
       <CombatParticles type={particleType} trigger={particleTrigger} />
 
-      <div style={{ position:"relative",zIndex:1,height:"100dvh",display:"flex",flexDirection:"column",padding:"8px 10px 6px",overflow:"hidden",boxSizing:"border-box",fontFamily:DS.fontUI }}>
+      <div style={{ position:"absolute",inset:0,zIndex:1,display:"flex",flexDirection:"column",
+        padding:"max(env(safe-area-inset-top),8px) 10px max(env(safe-area-inset-bottom),6px)",
+        overflow:"hidden",boxSizing:"border-box",fontFamily:DS.fontUI }}>
 
         {/* ══ TOP BAR ══ */}
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,marginBottom:5 }}>

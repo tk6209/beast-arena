@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { falar } from "@/game/voice";
-import { pageBg } from "@/game/styles";
+import { pageBg, DS } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
@@ -256,19 +256,21 @@ export default function TelaResultado({
 
   return (
     <div style={{
-      ...pageBg(),
+      position:"fixed", top:0, left:0, right:0, bottom:0,
       background: g
-        ? "radial-gradient(ellipse at 50% -10%, #1a3a5c 0%, #09111f 55%, #020207 100%)"
-        : "radial-gradient(ellipse at 50% -10%, #3a1218 0%, #130810 55%, #020207 100%)",
-      minHeight:"100dvh",
+        ? `radial-gradient(ellipse at 50% -10%,#1a2a0e 0%,#0a1408 55%,${DS.bg0} 100%)`
+        : `radial-gradient(ellipse at 50% -10%,#2a0e0a 0%,#140806 55%,${DS.bg0} 100%)`,
+      overflowY:"auto",
     }}>
       <style>{CSS}</style>
       <ChromeNoise />
       {g && phase >= 2 && <Confetti />}
       {showLvlUp && <LevelUpBanner to={newLevel} />}
 
-      <div style={{ minHeight:"100dvh",display:"flex",flexDirection:"column",alignItems:"center",
-        justifyContent:"center",padding:"20px 16px",gap:0,position:"relative",zIndex:1 }}>
+      <div style={{ minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",
+        justifyContent:"center",
+        padding:"max(env(safe-area-inset-top),24px) 16px max(env(safe-area-inset-bottom),24px)",
+        gap:0,position:"relative",zIndex:1 }}>
 
         {/* Monster */}
         {phase >= 1 && (

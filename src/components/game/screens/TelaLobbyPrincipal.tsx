@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
 import { MONSTROS } from "@/game/data";
+import { DS } from "@/game/styles";
 import type { Dificuldade } from "@/pages/Index";
 
 const MONSTER_KEYS = Object.keys(MONSTROS);
@@ -82,8 +83,9 @@ export default function TelaLobbyPrincipal({
   const bgColor = MONSTROS[bgM]?.glow || "#00e5ff";
 
   return (
-    <div style={{ minHeight:"100dvh", background:"linear-gradient(160deg,#060b14 0%,#080d18 50%,#050810 100%)",
-      position:"relative", overflow:"hidden", fontFamily:"Nunito, sans-serif" }}>
+    <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0,
+      background:"linear-gradient(160deg,#0c0804 0%,#100a06 50%,#080503 100%)",
+      overflow:"hidden", fontFamily:`${DS.fontUI}` }}>
       <style>{CSS}</style>
       <ChromeNoise />
 
@@ -97,10 +99,12 @@ export default function TelaLobbyPrincipal({
           background:"radial-gradient(circle,rgba(30,136,229,.08),transparent 70%)" }} />
       </div>
 
-      <div style={{ position:"relative",zIndex:1,display:"flex",flexDirection:"column",
-        minHeight:"100dvh",
-        paddingTop:"env(safe-area-inset-top,0px)",
-        paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 68px)" }}>
+      <div style={{ position:"absolute", inset:0, zIndex:1,
+        display:"flex", flexDirection:"column",
+        overflowY:"auto", overflowX:"hidden",
+        WebkitOverflowScrolling:"touch" as any,
+        paddingTop:"max(env(safe-area-inset-top),12px)",
+        paddingBottom:"calc(max(env(safe-area-inset-bottom),0px) + 72px)" }}>
 
         {/* ══ HEADER ══ */}
         <div style={{ display:"flex",alignItems:"center",gap:12,padding:"14px 16px 10px" }}>
