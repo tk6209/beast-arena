@@ -36,11 +36,13 @@ export default function GameLog({ ents }: LogProps) {
       }));
       setVisible((prev) => [...prev, ...floats].slice(-3));
 
-      // Auto dismiss after 3s
-      const keys = floats.map((f) => f.key);
-      setTimeout(() => {
-        setVisible((prev) => prev.filter((f) => !keys.includes(f.key)));
-      }, 3000);
+      // Auto dismiss — critical events last longer (Norman: important feedback visible longer)
+      floats.forEach(f => {
+        const duration = ["dano", "grande", "combo", "evolucao"].includes(f.entry.t) ? 4000 : 2500;
+        setTimeout(() => {
+          setVisible((prev) => prev.filter((v) => v.key !== f.key));
+        }, duration);
+      });
     }
     prevLen.current = ents.length;
   }, [ents]);
@@ -68,12 +70,13 @@ export default function GameLog({ ents }: LogProps) {
           key={f.key}
           style={{
             fontFamily: "Nunito, sans-serif",
-            fontSize: 11,
+            fontSize: ["dano", "grande", "combo"].includes(f.entry.t) ? 13 : 11,
+            fontWeight: ["dano", "grande", "combo"].includes(f.entry.t) ? 700 : 400,
             color: LOG_COLORS[f.entry.t] || "#e2e8f0",
-            background: "rgba(10,17,34,.88)",
-            border: "1px solid rgba(255,255,255,.08)",
+            background: f.entry.t === "dano" ? "rgba(30,10,10,.92)" : f.entry.t === "cura" ? "rgba(10,25,18,.92)" : "rgba(10,17,34,.88)",
+            border: `1px solid ${(LOG_COLORS[f.entry.t] || "#ffffff")}22`,
             borderRadius: 10,
-            padding: "6px 12px",
+            padding: ["dano", "grande", "combo"].includes(f.entry.t) ? "8px 14px" : "6px 12px",
             backdropFilter: "blur(8px)",
             boxShadow: "0 4px 16px rgba(0,0,0,.4)",
             textAlign: "center",

@@ -172,10 +172,13 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
             </button>
           )}
           <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#00e5ff", letterSpacing: 2 }}>
-            ⚗️ {titulo}
+            {titulo}
+          </div>
+          <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 10, color: "#4a5568", marginTop: 1 }}>
+            {idx + 1} de {monsters.length}
           </div>
           <div style={{ fontSize: 11, color: "#8a95aa", marginTop: 2 }}>
-            Deslize ou toque nas setas para navegar
+            ← Deslize para navegar · {monsters.length} monstros disponíveis
           </div>
         </div>
 
@@ -353,15 +356,19 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
             <button
               key={mon.id}
               onClick={() => i !== idx && goTo(i)}
+              aria-label={`${mon.nome} ${i === idx ? "(selecionado)" : ""}`}
               style={{
-                width: i === idx ? 20 : 8,
-                height: 8,
+                width: i === idx ? 24 : 10,
+                height: 10,
                 borderRadius: 999,
                 background: i === idx ? m.glow : "rgba(255,255,255,.15)",
                 border: "none",
                 cursor: "pointer",
                 transition: "all .3s ease",
                 boxShadow: i === idx ? `0 0 8px ${m.glow}` : "none",
+                // Larger tap target via padding
+                padding: "10px 4px",
+                margin: "-10px -4px",
               }}
             />
           ))}
@@ -371,12 +378,20 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
           {isUnlocked ? (
             <BtnMain variant="gold" onClick={handleConfirm}>
-              ✅ CONFIRMAR {m.nome.toUpperCase()}
+              ✅ BATALHAR COM {m.nome.toUpperCase()}
             </BtnMain>
           ) : (
-            <BtnMain variant="dark" onClick={() => {}}>
-              🔒 DESBLOQUEIE NA LOJA
-            </BtnMain>
+            <div>
+              <BtnMain variant="dark" onClick={() => {}}>
+                🔒 BLOQUEADO
+              </BtnMain>
+              <div style={{
+                textAlign: "center", marginTop: 6,
+                fontFamily: "Nunito, sans-serif", fontSize: 10, color: "#8a95aa",
+              }}>
+                Desbloqueie na Loja com moedas 💰
+              </div>
+            </div>
           )}
         </div>
       </div>

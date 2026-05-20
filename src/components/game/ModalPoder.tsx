@@ -115,8 +115,11 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
         <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#ffd54f", letterSpacing: 2 }}>
           ⚡ ESCOLHA SEU PODER
         </div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "#8b94a8", marginTop: 4 }}>
-          Deslize ou toque nas setas
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 10, color: "#8b94a8", marginTop: 2 }}>
+          Esta escolha define os bônus do seu monstro
+        </div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: "#4a5568", marginTop: 2 }}>
+          ← Deslize para ver opções →
         </div>
       </div>
 
@@ -274,7 +277,7 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
       </div>
 
       {/* Choose button */}
-      <div style={{ marginTop: 18, width: "min(260px, 70vw)" }}>
+      <div style={{ marginTop: 16, width: "min(260px, 70vw)", textAlign: "center" }}>
         <button
           onClick={handleChoose}
           style={{
@@ -294,6 +297,9 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
         >
           ⚡ ESCOLHER {p.nome.toUpperCase()}
         </button>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: "#4a5568", marginTop: 6 }}>
+          Você pode trocar de poder em batalhas futuras
+        </div>
       </div>
     </div>
   );

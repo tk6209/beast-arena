@@ -451,10 +451,10 @@ export default function TelaResultado({
               </div>
             )}
             <BtnMain variant="blue" onClick={onRecomecar}>
-              🔄 RECOMEÇAR
+              🔄 JOGAR DE NOVO
             </BtnMain>
             <BtnMain variant="dark" onClick={onSair}>
-              🚪 SAIR
+              🏠 VOLTAR AO INÍCIO
             </BtnMain>
           </div>
         )}

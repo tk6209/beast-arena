@@ -274,21 +274,12 @@ export default function TelaLobbyPrincipal({
             maxHeight: "80%",
             justifyContent: "center",
           }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.85"; }}>
-            {!showDiff ? (
-              <>
-                <ModeButton label="⚔️ DUELO IA" color="#00e5ff" desc="vs CPU" onClick={() => setShowDiff(true)} delay={0} />
-                <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} delay={1} />
-                <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} delay={2} />
-                <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} delay={3} />
-              </>
-            ) : (
-              <>
-                <ModeButton label="😊 FÁCIL" color="#69f0ae" onClick={() => { setShowDiff(false); onIniciar("duel", "facil"); }} />
-                <ModeButton label="⚔️ MÉDIO" color="#00e5ff" onClick={() => { setShowDiff(false); onIniciar("duel", "medio"); }} />
-                <ModeButton label="💀 HARD" color="#ffd54f" onClick={() => { setShowDiff(false); onIniciar("duel", "avancado"); }} />
-                <ModeButton label="← VOLTAR" color="#8a95aa" onClick={() => setShowDiff(false)} />
-              </>
-            )}
+            <>
+              <ModeButton label="⚔️ BATALHAR" color="#00e5ff" desc="vs IA" onClick={() => onIniciar("duel", "medio")} delay={0} />
+              <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} delay={1} />
+              <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} delay={2} />
+              <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} delay={3} />
+            </>
           </div>
 
           {/* ── CENTER — MONSTER DISPLAY ── */}

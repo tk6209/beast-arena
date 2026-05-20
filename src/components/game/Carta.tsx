@@ -67,6 +67,9 @@ function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
           flexDirection: "column" as const,
           overflow: "hidden",
           fontFamily: "Nunito, sans-serif",
+          // Energy-disabled: dimmed but still legible (Norman: distinguish disabled clearly)
+          opacity: disabled && !sel ? 0.45 : 1,
+          filter: disabled && !sel ? "grayscale(0.4)" : "none",
         }}
       >
         {/* Type badge + energy cost */}
@@ -94,6 +97,38 @@ function CartaMini({ carta, sel, onClick, disabled }: CartaProps) {
             </span>
           )}
         </div>
+
+        {/* Long-press hint — shows briefly on first interaction (Norman: recognition over recall) */}
+        {showPreview && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,.85)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }} onClick={() => setShowPreview(false)}>
+            <div style={{
+              background: "linear-gradient(145deg, #111827, #1f2937)",
+              border: `2px solid ${p.bc}`,
+              borderRadius: 20, padding: "20px 16px", maxWidth: 240, textAlign: "center",
+              boxShadow: `0 0 40px ${p.bc}44`,
+            }}>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>{carta.emoji}</div>
+              <div style={{ fontFamily: "Bangers, cursive", fontSize: 18, color: "#e8f0ff", letterSpacing: 1, marginBottom: 4 }}>{carta.nome}</div>
+              <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#8a95aa", lineHeight: 1.5, marginBottom: 8 }}>{carta.desc}</div>
+              {carta.custo != null && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,213,79,.1)", border: "1px solid rgba(255,213,79,.3)", borderRadius: 8, padding: "3px 10px" }}>
+                  <span style={{ fontSize: 14 }}>⚡</span>
+                  <span style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#ffd54f" }}>{carta.custo} de energia</span>
+                </div>
+              )}
+              {carta.valor != null && carta.valor > 0 && (
+                <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 11, color: p.bc, marginTop: 6 }}>
+                  {carta.tipo === "ataque" ? `⚔️ ${carta.valor} de dano` : carta.tipo === "defesa" ? `🛡️ ${carta.valor} de defesa` : carta.tipo === "cura" ? `💖 +${carta.valor} HP` : ""}
+                </div>
+              )}
+              <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: "#4a5568", marginTop: 10 }}>Toque para fechar</div>
+            </div>
+          </div>
+        )}
 
         {/* Art */}
         <div

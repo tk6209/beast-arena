@@ -109,3 +109,57 @@ All colors MUST be HSL.
     min-height: 100dvh;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   NORMAN/NIELSEN UX RULES — Applied globally
+═══════════════════════════════════════════════════════════ */
+
+/* 1. Minimum tap target 44px (Apple HIG + WCAG) */
+button, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 2. Focus visible — keyboard/screen reader users */
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 3. Disabled states are clearly distinct */
+button:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+/* 4. Active/pressed feedback */
+button:active:not(:disabled) {
+  transform: scale(0.97) translateY(1px) !important;
+  transition: transform 0.08s ease !important;
+}
+
+/* 5. Smooth transitions everywhere */
+* {
+  -webkit-tap-highlight-color: rgba(0, 229, 255, 0.15);
+}
+
+/* 6. Prevent accidental double-tap zoom on buttons */
+button, a {
+  touch-action: manipulation;
+}
+
+/* 7. Text stays legible — minimum sizes */
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 8. Scrollable areas — scroll snap for carousels */
+.carousel-snap {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel-snap > * {
+  scroll-snap-align: center;
+}

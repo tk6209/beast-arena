@@ -106,20 +106,29 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
             style={{
               width: `${pct}%`,
               height: "100%",
-              background: `linear-gradient(90deg, ${hpC}aa, ${hpC})`,
-              transition: "width .45s ease",
+              background: pct <= 25
+                ? `linear-gradient(90deg, #b71c1c, #ef4444)`
+                : pct <= 50
+                ? `linear-gradient(90deg, ${hpC}aa, ${hpC})`
+                : `linear-gradient(90deg, ${hpC}aa, ${hpC})`,
+              transition: "width .45s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
               borderRadius: 999,
-              boxShadow: `0 0 6px ${hpC}`,
+              boxShadow: pct <= 25 ? "0 0 10px #ef4444, 0 0 20px #ef444466" : `0 0 6px ${hpC}`,
+              // Pulse animation when critical
+              animation: pct <= 20 ? "hpCritical 1s ease-in-out infinite" : "none",
             }}
           />
         </div>
         <span
           style={{
-            fontSize: 9,
+            fontSize: pct <= 25 ? 10 : 9,
             fontFamily: "Oswald, sans-serif",
-            color: "#e8eefc",
+            color: pct <= 25 ? "#ef4444" : "#e8eefc",
             whiteSpace: "nowrap",
             flexShrink: 0,
+            fontWeight: pct <= 25 ? 700 : 400,
+            textShadow: pct <= 25 ? "0 0 8px #ef4444" : "none",
+            transition: "color .3s, font-size .3s",
           }}
         >
           {jog.hp}/{jog.maxHp}
@@ -147,14 +156,15 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
           <div
             key={i}
             style={{
-              width: 8,
-              height: 8,
+              width: s ? 10 : 8,
+              height: s ? 10 : 8,
               borderRadius: 999,
               background: s ? (SWARM_COLORS[i % SWARM_COLORS.length]) : "rgba(255,255,255,.1)",
               border: s ? `1px solid ${SWARM_COLORS[i % SWARM_COLORS.length]}` : "1px solid rgba(255,255,255,.06)",
-              boxShadow: s ? `0 0 4px ${SWARM_COLORS[i % SWARM_COLORS.length]}88` : "none",
+              boxShadow: s ? `0 0 6px ${SWARM_COLORS[i % SWARM_COLORS.length]}` : "none",
+              transition: "all .3s ease",
             }}
-            title={s ? s.nome : "Vazio"}
+            title={s ? `${s.emoji} ${s.nome}: ${s.desc || s.efeito}` : "Slot Swarm vazio"}
           />
         ))}
       </div>
@@ -182,6 +192,10 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
       ))}
 
       <style>{`
+        @keyframes hpCritical {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
         @keyframes hitFlash {
           0% { opacity: 1; }
           100% { opacity: 0; }
