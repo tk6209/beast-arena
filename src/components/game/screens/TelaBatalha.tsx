@@ -21,6 +21,7 @@ import CombatParticles from "@/components/game/CombatParticles";
 import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
 import EnergyBar from "@/components/game/EnergyBar";
+import { screenShake, particleBurst } from "@/game/juice";
 
 /* ─── Types ─── */
 interface ServerState {
@@ -265,6 +266,15 @@ export default function TelaBatalha({
         const who = isEnemy ? "player" : "enemy";
         setDmgPopup({ val: evt.dmg, who });
         if (who === "player") setHitPlayer(true); else setHitEnemy(true);
+        // Juice: shake harder for big hits, light shake for normal
+        screenShake(evt.dmg >= 25 ? "md" : "sm");
+        // Burst sparks at the impacted side
+        const burstY = who === "player" ? window.innerHeight * 0.72 : window.innerHeight * 0.28;
+        particleBurst(window.innerWidth / 2, burstY, {
+          count: evt.dmg >= 25 ? 18 : 10,
+          color: evt.type === "cura" ? "#27ae60" : "#ff6b2b",
+          spread: evt.dmg >= 25 ? 120 : 80,
+        });
         battleTimeout(() => ifBattleActive(bid, () => {
           setDmgPopup(null); setHitPlayer(false); setHitEnemy(false);
         }), 850, bid);
