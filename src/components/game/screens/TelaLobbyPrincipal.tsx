@@ -29,6 +29,7 @@ interface Props {
   onMissoes: () => void;
   onConquistas: () => void;
   onAmigos: () => void;
+  onColecao: () => void;
   onLogout: () => void;
 }
 
@@ -42,7 +43,7 @@ const CSS = `
 
 export default function TelaLobbyPrincipal({
   user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking,
-  onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onLogout,
+  onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onColecao, onLogout,
 }: Props) {
   const [profile, setProfile]           = useState<any>(null);
   const [stats, setStats]               = useState<any>(null);
@@ -193,6 +194,7 @@ export default function TelaLobbyPrincipal({
             <DailyChip emoji="🎯" label="MISSÕES"    color="#69f0ae" badge={missaoClaimable} onClick={onMissoes} />
             <DailyChip emoji="🏅" label="CONQUISTAS" color="#ffd54f" onClick={onConquistas} />
             <DailyChip emoji="🌟" label="SEASON"     color="#ce93d8" onClick={onSeasonPass} />
+            <DailyChip emoji="🃏" label="COLEÇÃO"   color="#f0b429" onClick={onColecao} />
             <DailyChip emoji="👾" label="AMIGOS"     color="#4fc3f7" onClick={onAmigos} />
           </div>
         </div>
