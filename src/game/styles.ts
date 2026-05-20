@@ -23,9 +23,9 @@ export const DS = {
   violet:  "#8b5cf6",   // special/magic
 
   // Typography
-  fontDisplay: "'Bebas Neue', 'Barlow Condensed', cursive",
-  fontUI:      "'Rajdhani', 'Barlow Condensed', sans-serif",
-  fontBody:    "'Barlow Condensed', sans-serif",
+  fontDisplay: "'Black Han Sans', 'Bangers', cursive",
+  fontUI:      "'Oswald', sans-serif",
+  fontBody:    "'Nunito', sans-serif",
 
   // Shadows
   shadowGold: "0 0 20px rgba(240,180,41,.35), 0 0 60px rgba(240,180,41,.12)",

@@ -22,6 +22,7 @@ import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import { loadPrefsFromDB } from "@/game/audioPreferences";
 import { postBattleProgression } from "@/game/postBattle";
+import AccountPrompt from "@/components/game/AccountPrompt";
 import ScreenTransition from "@/components/game/ScreenTransition";
 import type { Jogador } from "@/game/engine";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
@@ -62,6 +63,7 @@ export default function Index() {
   const [lastPowerId, setLastPowerId] = useState<string | null>(null);
   const [isCampaignContinue, setIsCampaignContinue] = useState(false);
   const [lastBattleStats, setLastBattleStats] = useState<BattleStats | undefined>(undefined);
+  const [showAccountPrompt, setShowAccountPrompt] = useState(false);
 
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [showDailyReward, setShowDailyReward] = useState(false);
@@ -135,14 +137,9 @@ export default function Index() {
   const handleIniciar = (m: string, diff?: Dificuldade) => {
     setModo(m);
     if (diff) setDificuldade(diff);
-    // Logged-in users always skip name screen
-    if (user) {
-      setTela("monstro");
-    } else if (nomeJogador && nomeJogador !== "Jogador") {
-      setTela("monstro");
-    } else {
-      setTela("nome");
-    }
+    // Always skip name screen — guest gets "Jogador" as default, logged-in uses profile name
+    if (!user) setNomeJogador(localStorage.getItem("beast_arena_nome") || "Jogador");
+    setTela("monstro");
   };
 
   const handleNomeConfirm = (nome: string) => {
@@ -200,6 +197,17 @@ export default function Index() {
     // Season Pass XP (TelaResultado handles stats/missions/achievements)
     if (user && stats) {
       postBattleProgression(user.id, ganhou, stats, monstroP1 || "panther").catch(console.error);
+    }
+    // Acquisition funnel: after 1st win as guest, show account prompt
+    if (!user && ganhou) {
+      const wins = parseInt(localStorage.getItem("beast_guest_wins") || "0") + 1;
+      localStorage.setItem("beast_guest_wins", String(wins));
+      if (wins >= 1 && !localStorage.getItem("beast_prompt_shown")) {
+        localStorage.setItem("beast_prompt_shown", "1");
+        setShowAccountPrompt(true);
+        setTela("resultado");
+        return;
+      }
     }
     setTela("resultado");
   };
@@ -445,8 +453,17 @@ export default function Index() {
   } }; // end renderScreen
 
   return (
-    <ScreenTransition screenKey={tela} type={transitionType(tela)}>
-      {renderScreen()}
-    </ScreenTransition>
+    <>
+      <ScreenTransition screenKey={tela} type={transitionType(tela)}>
+        {renderScreen()}
+      </ScreenTransition>
+      {showAccountPrompt && (
+        <AccountPrompt
+          wins={parseInt(localStorage.getItem("beast_guest_wins") || "1")}
+          onCriarConta={() => { setShowAccountPrompt(false); setTela("auth"); }}
+          onAgora_Nao={() => { setShowAccountPrompt(false); }}
+        />
+      )}
+    </>
   );
 }
