@@ -21,6 +21,7 @@ import CombatParticles from "@/components/game/CombatParticles";
 import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
 import EnergyBar from "@/components/game/EnergyBar";
+import { screenShake, particleBurst } from "@/game/juice";
 
 /* ─── Types ─── */
 interface ServerState {
@@ -265,6 +266,15 @@ export default function TelaBatalha({
         const who = isEnemy ? "player" : "enemy";
         setDmgPopup({ val: evt.dmg, who });
         if (who === "player") setHitPlayer(true); else setHitEnemy(true);
+        // Juice: shake harder for big hits, light shake for normal
+        screenShake(evt.dmg >= 25 ? "md" : "sm");
+        // Burst sparks at the impacted side
+        const burstY = who === "player" ? window.innerHeight * 0.72 : window.innerHeight * 0.28;
+        particleBurst(window.innerWidth / 2, burstY, {
+          count: evt.dmg >= 25 ? 18 : 10,
+          color: evt.type === "cura" ? "#27ae60" : "#ff6b2b",
+          spread: evt.dmg >= 25 ? 120 : 80,
+        });
         battleTimeout(() => ifBattleActive(bid, () => {
           setDmgPopup(null); setHitPlayer(false); setHitEnemy(false);
         }), 850, bid);
@@ -326,7 +336,14 @@ export default function TelaBatalha({
       if (evt.type === "game_over") {
         const winner = evt.winner ?? evt.winner;
         setTimeout(() => ifBattleActive(bid, () => {
-          if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          if (winner === slotLocal) {
+            sfxVitoria(); hapticSuccess();
+            const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+            particleBurst(cx, cy,     { count: 32, color: "#ffd166", spread: 220, size: 10 });
+            setTimeout(() => particleBurst(cx, cy - 60, { count: 24, color: "#f0b429", spread: 180 }), 180);
+            setTimeout(() => particleBurst(cx, cy + 60, { count: 24, color: "#ff6b2b", spread: 180 }), 360);
+            screenShake("md");
+          } else { sfxDerrota(); hapticError(); screenShake("md"); }
         }), 1400);
         stopBattleMusic();
         setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats), 2000);
@@ -411,6 +428,11 @@ export default function TelaBatalha({
     setComboSel([]); setCartaSel(null); setLoading(true);
     enqueue({ who: "player", type: c1.tipo, card: c1 });
     setBStats(s => ({ ...s, cardsPlayed: s.cardsPlayed+2 }));
+    // Juice: golden burst for combo
+    particleBurst(window.innerWidth / 2, window.innerHeight / 2, {
+      count: 22, color: "#f0b429", spread: 140, size: 9,
+    });
+    screenShake("sm");
     try {
       const r = await comboCards(sid, slotLocal, c1.id, c2.id);
       setServerState(r.state);
