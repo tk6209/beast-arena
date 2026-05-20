@@ -1,56 +1,81 @@
-## Plan: 4 Changes to Improve Game Flow & Add Card Combos
+# Roadmap Visual: Beast Arena → Qualidade Brawl Stars / Clash Royale
 
-### 1. Skip name screen for logged-in users
+## Diagnóstico atual
 
-**What:** When `user` is logged in, `handleIniciar` should fetch the display name from the profile and skip `TelaNome`, going directly to `TelaMonstro`.
-**Files:** `src/pages/Index.tsx`
-**Risk:** Low
+O jogo já tem uma boa base (Dark Fantasy Arcade, paleta âmbar/obsidiana, Bangers/Oswald), mas o que separa dele dos top mobile games é:
 
-&nbsp;
+- **Personagens são emojis** (🐆🍌🐵...) — Brawl/Clash usam ilustrações 3D-renderizadas
+- **Cartas são gradientes CSS** sem arte ilustrada
+- **Lobby estático** — falta cenário/parallax/personagem "vivo" no centro
+- **Sem feedback "juicy"** — faltam squash & stretch, partículas em cada ação, screen shake, números flutuantes grandes
+- **Tipografia funcional**, mas sem o "chunky cartoon" outline grosso característico do gênero
+- **UI plana** — botões precisam de profundidade 3D (bevel, sombra inferior espessa, brilho superior)
 
-A) Revamp the lobby layout using the Mr beast labs reference for layout
+## Fase 1 — Identidade Visual dos Personagens (impacto máximo)
 
-### 2. Prevent simultaneous logins
+O salto de qualidade nº 1. Substituir todos os emojis por ilustrações próprias.
 
-**What:** On auth state change, call `supabase.auth.signOut({ scope: 'others' })` to invalidate all other sessions. This ensures only one active session per account.
-**Files:** `src/pages/Index.tsx` (in the auth listener useEffect)
-**Risk:** Low
+- Gerar 10 ilustrações de mascotes em **estilo cartoon 3D-rendered** (Brawl Stars vibe): contorno preto grosso, sombreamento cell-shaded, cores saturadas, pose dinâmica de "idle hero"
+- Variações por raridade: aura/glow ao fundo (comum cinza → lendário dourado animado)
+- Aplicar em: TelaMonstro (cards de seleção), Lobby (hero central), TelaBatalha (avatar), Carta (quando carta de monstro)
+- Bônus: 2-3 frames de animação por monstro (idle breathing, ataque, dano) — pode ser CSS keyframes simples sobre PNG
 
-### 3. Remove the 5-round minimum win restriction
+## Fase 2 — Cartas Ilustradas (segundo maior impacto)
 
-**What:** Currently there's no explicit 5-round check in the engine — the "can't win early" feel comes from easy mode damage scaling (`easyDamageMultiplier` returns 0.6 for rounds ≤2, 0.8 for ≤4) and the damage cap of 30 for rounds ≤3. Fix: raise the early-round multipliers and remove the damage cap so games can end naturally in any number of rounds.
-**Files:** `supabase/functions/game-engine/index.ts` (lines 48-62), `src/game/easyModeBalance.ts`
-**Changes:**
+Hoje cartas são caixas coloridas com texto. Clash Royale tem moldura ornada + arte + custo destacado.
 
-- Rounds 1-2: multiplier 0.6 → 0.85
-- Rounds 3-4: multiplier 0.8 → 0.95
-- Remove damage cap entirely (return Infinity for all rounds)
+- Template de moldura por raridade (comum → lendário): borda metálica com gemas, brilho animado em lendários
+- Ilustração central por arquetipo de carta (ataque, defesa, cura, swarm, evolução, poder)
+- Badge de custo de energia no canto (círculo gota d'água estilo Clash)
+- Hover/seleção: lift 3D + brilho holográfico passando
 
-### 4. Card combination system (new mechanic)
+## Fase 3 — Lobby Cinemático
 
-**What:** Allow players to combine two cards of the same type in one turn for a stronger effect, but receive only 1 card (instead of a full hand) on the next round replenish.
+Transformar o lobby principal em uma "vitrine" do jogo.
 
-**Mechanics:**
+- **Background parallax** em camadas (céu/montanhas/névoa/chão) com leve movimento ao tilt do device
+- **Personagem central animado**: monstro favorito do jogador em pose hero, breathing idle, reage a clique
+- **Botão JOGAR gigante** estilo Brawl (vermelho/dourado, pulse animado, ícone de espada)
+- Cards de modo (PvP / Solo / Eventos) tipo "menu radial" ou carrossel horizontal
+- Partículas ambient (fagulhas douradas subindo, poeira)
+- Trilha de fundo (opt-in via prefs já existentes)
 
-- **Same-type combo:** Two attack cards → combined `valor` × 1.5. Two defense cards → combined shield. Two heal cards → combined heal.
-- **Monster + Swarm combo:** If player plays an attack card while having swarms equipped, the swarm ATK bonus is already applied (this already works). No additional change needed — clarify to user this is already functional.
-- **Penalty:** Player who combos gets `comboUsed = true` flag. On `advanceTurn`, if `comboUsed`, that player's hand is only 1 card instead of 5.
+## Fase 4 — Game Feel ("Juice")
 
-**Implementation:**
+Pequenos detalhes que fazem o jogo "sentir caro":
 
-- New action `combo_cards` in edge function accepting two card IDs
-- New handler `handleComboCards` that validates both cards are same type, calculates combined effect, applies it, marks `comboUsed` on player
-- In `advanceTurn`, check `comboUsed` flag → `novaMao(1, ...)` instead of `novaMao(5, ...)`, then reset flag
-- New `serverApi.ts` export: `comboCards(sessionId, slot, cardId1, cardId2)`
-- UI in `TelaBatalha.tsx`: when 2 cards of same type are selected, show "⚡ COMBO" button instead of "JOGAR"
+- **Screen shake** em hits críticos e ultimates
+- **Números flutuantes** de dano grandes, com outline preto, escala bouncy, cor por tipo
+- **Squash & stretch** ao jogar carta (encolhe e estica antes de voar pro alvo)
+- **Particle bursts** em combos, vitórias, level up (confetti dourado)
+- **Haptic feedback** (já tem `haptic.ts`) em todos os botões principais
+- **Transições de tela** com wipe/iris (não fade simples)
+- Botões com profundidade 3D real: sombra inferior de 4-6px que "afunda" no press
 
-**Files:** `supabase/functions/game-engine/index.ts`, `src/game/serverApi.ts`, `src/components/game/screens/TelaBatalha.tsx`
-**Risk:** Medium — new game mechanic, needs careful testing
+## Fase 5 — Sistema de Progressão Visível (retenção comercial)
 
-### Execution Order
+Brawl/Clash viciam pelo loop visual de progressão. Componentes que faltam ou estão fracos:
 
-1. Skip name for logged users (Index.tsx)
-2. Prevent simultaneous logins (Index.tsx)
-3. Fix easy mode damage scaling (edge function + easyModeBalance.ts)
-4. Add combo card system (edge function + serverApi + TelaBatalha)
-5. Deploy edge function
+- **Caixas/Baús** animadas abrindo com luz dourada explodindo (recompensa diária, vitória)
+- **Barra de troféus** estilo Brawl com ticks de liga e meta da próxima
+- **Tela de level-up fullscreen** com fanfarra (não só toast)
+- **Showcase de novo monstro desbloqueado**: tela dedicada estilo "NOVO BRAWLER" com câmera orbitando
+
+## Recomendação de execução
+
+Sugiro começarmos pela **Fase 1 (mascotes ilustrados)** porque é o que mais separa visualmente o jogo dos competidores. Posso gerar as 10 ilustrações em uma única rodada usando o gerador premium, criar um componente `<MonsterIllustration>` que substitui o emoji em todas as telas, e adicionar a aura por raridade.
+
+Depois disso, **Fase 4 (juice)** dá um retorno enorme por ser mudança de código pura, sem assets.
+
+## Detalhes técnicos
+
+- Assets em `src/assets/monsters/<key>.png` — importados estaticamente para cache
+- Novo componente `MonsterIllustration` com props `monster`, `size`, `rarity`, `animated` substituindo os spots de `{MONSTROS[x].emoji}`
+- Novo módulo `src/game/juice.ts` com helpers `screenShake()`, `floatingNumber()`, `particleBurst()`
+- Novo componente `<CardFrame rarity="lendario">` envolvendo `<Carta>` com moldura SVG
+- Lobby parallax via `transform: translate3d` nos `useEffect` ouvindo `deviceorientation`
+- Manter design tokens existentes em `styles.ts` — só adicionar `--gradient-hero`, `--shadow-3d-button`
+
+## Confirme o caminho
+
+Quer que eu siga com a **Fase 1 (ilustrações de monstros) + Fase 4 (juice)** como primeiro entregável? Ou prefere outra ordem (ex: começar pelas cartas ilustradas, ou pelo lobby cinemático)?
