@@ -421,6 +421,11 @@ export default function TelaBatalha({
     setComboSel([]); setCartaSel(null); setLoading(true);
     enqueue({ who: "player", type: c1.tipo, card: c1 });
     setBStats(s => ({ ...s, cardsPlayed: s.cardsPlayed+2 }));
+    // Juice: golden burst for combo
+    particleBurst(window.innerWidth / 2, window.innerHeight / 2, {
+      count: 22, color: "#f0b429", spread: 140, size: 9,
+    });
+    screenShake("sm");
     try {
       const r = await comboCards(sid, slotLocal, c1.id, c2.id);
       setServerState(r.state);
