@@ -62,7 +62,7 @@ export async function loadPlayerDeck(userId: string, monstroId: string): Promise
     .eq("user_id", userId)
     .eq("monster_id", monstroId)
     .single();
-  return data?.cards || null;
+  return (data?.cards as any[]) || null;
 }
 
 /** Save player deck */
