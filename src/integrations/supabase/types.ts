@@ -47,6 +47,59 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_history: {
+        Row: {
+          cards_played: number
+          created_at: string
+          damage_dealt: number
+          dificuldade: string
+          id: string
+          mode: string
+          monster_used: string
+          opponent_monster: string | null
+          session_id: string | null
+          turns: number
+          user_id: string
+          won: boolean
+        }
+        Insert: {
+          cards_played?: number
+          created_at?: string
+          damage_dealt?: number
+          dificuldade?: string
+          id?: string
+          mode?: string
+          monster_used?: string
+          opponent_monster?: string | null
+          session_id?: string | null
+          turns?: number
+          user_id: string
+          won?: boolean
+        }
+        Update: {
+          cards_played?: number
+          created_at?: string
+          damage_dealt?: number
+          dificuldade?: string
+          id?: string
+          mode?: string
+          monster_used?: string
+          opponent_monster?: string | null
+          session_id?: string | null
+          turns?: number
+          user_id?: string
+          won?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_history_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_missions: {
         Row: {
           active: boolean
@@ -361,6 +414,39 @@ export type Database = {
           },
         ]
       }
+      player_decks: {
+        Row: {
+          cards: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          monster_id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cards?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monster_id: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cards?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monster_id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       player_leagues: {
         Row: {
           created_at: string
@@ -578,6 +664,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_cards: {
+        Row: {
+          card_data: Json
+          card_key: string
+          id: string
+          obtained_at: string
+          quantity: number
+          raridade: string
+          user_id: string
+        }
+        Insert: {
+          card_data: Json
+          card_key: string
+          id?: string
+          obtained_at?: string
+          quantity?: number
+          raridade?: string
+          user_id: string
+        }
+        Update: {
+          card_data?: Json
+          card_key?: string
+          id?: string
+          obtained_at?: string
+          quantity?: number
+          raridade?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_inventory: {
         Row: {
