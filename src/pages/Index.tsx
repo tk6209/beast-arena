@@ -135,8 +135,10 @@ export default function Index() {
   const handleIniciar = (m: string, diff?: Dificuldade) => {
     setModo(m);
     if (diff) setDificuldade(diff);
-    // Skip name screen for logged-in users who already have a display name
-    if (user && nomeJogador && nomeJogador !== "Jogador") {
+    // Logged-in users always skip name screen
+    if (user) {
+      setTela("monstro");
+    } else if (nomeJogador && nomeJogador !== "Jogador") {
       setTela("monstro");
     } else {
       setTela("nome");

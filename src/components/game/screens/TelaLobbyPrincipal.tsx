@@ -1,15 +1,23 @@
-import React, { useEffect, useState, useRef } from "react";
-import { MONSTROS } from "@/game/data";
-import { MONSTER_IMAGES, MONSTER_IMAGES_SIDE, MONSTER_IMAGES_BACK } from "@/game/monsterImages";
-import { pageBg } from "@/game/styles";
-import ChromeNoise from "@/components/game/ChromeNoise";
-import LobbyParticles from "@/components/game/LobbyParticles";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import ChromeNoise from "@/components/game/ChromeNoise";
+import MonsterAvatar from "@/components/game/MonsterAvatar";
+import { MONSTROS } from "@/game/data";
 import type { Dificuldade } from "@/pages/Index";
 
+const MONSTER_KEYS = Object.keys(MONSTROS);
+
+const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string }> = {
+  bronze:   { emoji: "🥉", color: "#cd7f32", label: "Bronze"   },
+  silver:   { emoji: "🥈", color: "#a8a8b3", label: "Prata"    },
+  gold:     { emoji: "🥇", color: "#ffd54f", label: "Ouro"     },
+  platinum: { emoji: "💎", color: "#67e8f9", label: "Platina"  },
+  diamond:  { emoji: "💠", color: "#818cf8", label: "Diamante" },
+  master:   { emoji: "👑", color: "#f59e0b", label: "Mestre"   },
+};
+
 interface Props {
-  user: User;
+  user: any;
   onIniciar: (modo: string, diff?: Dificuldade) => void;
   onPerfil: () => void;
   onLoja: () => void;
@@ -23,496 +31,270 @@ interface Props {
   onLogout: () => void;
 }
 
-const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string }> = {
-  bronze: { emoji: "🥉", color: "#cd7f32", label: "BRONZE" },
-  silver: { emoji: "🥈", color: "#c0c0c0", label: "PRATA" },
-  gold: { emoji: "🥇", color: "#ffd54f", label: "OURO" },
-  diamond: { emoji: "💎", color: "#b388ff", label: "DIAMANTE" },
-  master: { emoji: "👑", color: "#ff5252", label: "MESTRE" },
-};
-
-const monsterKeys = Object.keys(MONSTROS);
+const CSS = `
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes glowPulse{ 0%,100%{opacity:.45} 50%{opacity:1} }
+  @keyframes badgePop { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  @keyframes shimBar  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes heroShine{ 0%{transform:translateX(-100%) skewX(-12deg)} 100%{transform:translateX(250%) skewX(-12deg)} }
+`;
 
 export default function TelaLobbyPrincipal({
-  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking, onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onLogout,
+  user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking,
+  onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onLogout,
 }: Props) {
-  const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
-  const [league, setLeague] = useState<any>(null);
-  const [seasonPass, setSeasonPass] = useState<any>(null);
-  const [selectedMonster, setSelectedMonster] = useState(0);
-  // Difficulty is set in profile/settings — battle goes straight in
-  const [fade, setFade] = useState(true);
+  const [profile, setProfile]           = useState<any>(null);
+  const [stats, setStats]               = useState<any>(null);
+  const [league, setLeague]             = useState<any>(null);
+  const [bgMonsterIdx, setBgMonsterIdx] = useState(0);
   const [missaoClaimable, setMissaoClaimable] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const lastX = useRef(0);
-  const monsterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadData();
-  }, [user.id]);
+    if (!user) return;
+    (async () => {
+      const [{ data: p }, { data: s }, { data: l }] = await Promise.all([
+        supabase.from("profiles").select("display_name,level,xp,coins,avatar_url").eq("user_id", user.id).single(),
+        supabase.from("user_stats").select("total_wins,total_losses,win_streak,best_streak,favorite_monster").eq("user_id", user.id).single(),
+        supabase.from("player_leagues").select("*").eq("user_id", user.id).single(),
+      ]);
+      if (p) setProfile(p);
+      if (s) setStats(s);
+      if (l) setLeague(l);
+      const today = new Date().toISOString().split("T")[0];
+      const { data: cl } = await supabase.from("user_missions").select("id")
+        .eq("user_id", user.id).eq("assigned_date", today)
+        .eq("completed", true).eq("claimed", false).limit(1);
+      setMissaoClaimable((cl?.length || 0) > 0);
+    })();
+    const t = setInterval(() => setBgMonsterIdx(i => (i + 1) % MONSTER_KEYS.length), 5000);
+    return () => clearInterval(t);
+  }, [user]);
 
-  async function loadData() {
-    const [{ data: p }, { data: s }, { data: l }, { data: sp }] = await Promise.all([
-      supabase.from("profiles").select("display_name, level, xp, coins, avatar_url").eq("user_id", user.id).single(),
-      supabase.from("user_stats").select("total_wins, total_losses, win_streak, best_streak, favorite_monster").eq("user_id", user.id).single(),
-      supabase.from("player_leagues").select("*").eq("user_id", user.id).single(),
-      supabase.from("season_pass").select("*").eq("user_id", user.id).single(),
-    ]);
-    if (p) setProfile(p);
-    if (s) setStats(s);
-    if (l) setLeague(l);
-    if (sp) setSeasonPass(sp);
-    // Check for claimable missions
-    const today = new Date().toISOString().split("T")[0];
-    const { data: claimable } = await supabase
-      .from("user_missions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("assigned_date", today)
-      .eq("completed", true)
-      .eq("claimed", false)
-      .limit(1);
-    setMissaoClaimable((claimable?.length || 0) > 0);
-  }
-
-  const currentKey = monsterKeys[selectedMonster];
-  const currentMonster = MONSTROS[currentKey];
-  const currentImg = MONSTER_IMAGES[currentKey];
-  const leagueInfo = LEAGUE_INFO[league?.league || "bronze"];
-  const xpForNext = (profile?.level || 1) * 100;
-  const xpPct = profile ? Math.min(100, (profile.xp / xpForNext) * 100) : 0;
-
-  const cycleMonster = (dir: number) => {
-    setFade(false);
-    setTimeout(() => {
-      setSelectedMonster((s) => (s + dir + monsterKeys.length) % monsterKeys.length);
-      setFade(true);
-    }, 200);
-  };
-
-  const handleDragStart = (clientX: number) => { setDragging(true); lastX.current = clientX; };
-  const handleDragMove = (clientX: number) => {
-    if (!dragging) return;
-    const delta = clientX - lastX.current;
-    setRotation(r => r + delta * 0.8);
-    lastX.current = clientX;
-  };
-  const handleDragEnd = () => setDragging(false);
+  const li    = LEAGUE_INFO[league?.league || "bronze"];
+  const lvl   = profile?.level || 1;
+  const xp    = profile?.xp || 0;
+  const xpMax = lvl * 100;
+  const xpPct = Math.min(100, (xp / xpMax) * 100);
+  const wins  = stats?.total_wins || 0;
+  const total = wins + (stats?.total_losses || 0);
+  const wr    = total > 0 ? Math.round((wins / total) * 100) : 0;
+  const bgM   = MONSTER_KEYS[bgMonsterIdx % MONSTER_KEYS.length];
+  const bgColor = MONSTROS[bgM]?.glow || "#00e5ff";
 
   return (
-    <div
-      style={{
-        ...pageBg(),
-        background: `radial-gradient(ellipse at 50% 70%, ${currentMonster.bg2}22, transparent 60%), radial-gradient(ellipse at 50% 100%, ${currentMonster.glow}10, transparent 50%), linear-gradient(180deg, #060a14 0%, #0a1628 40%, #0d1b2e 100%)`,
-        transition: "background 1s ease",
-      }}
-    >
+    <div style={{ minHeight:"100dvh", background:"linear-gradient(160deg,#060b14 0%,#080d18 50%,#050810 100%)",
+      position:"relative", overflow:"hidden", fontFamily:"Nunito, sans-serif" }}>
+      <style>{CSS}</style>
       <ChromeNoise />
-      <LobbyParticles />
-      <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes monsterFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes pulseGlow { 0%,100%{opacity:.3} 50%{opacity:.6} }
-        @keyframes scanLine { 0%{top:-2px} 100%{top:100%} }
-        @keyframes slideInLeft { from{opacity:0;transform:translateX(-30px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes slideInRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
-      `}</style>
 
-      <div style={{
-        minHeight: "100dvh", display: "flex", flexDirection: "column",
-        position: "relative", zIndex: 1, overflow: "hidden",
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
-        paddingBottom: 0,
-      }}>
+      {/* Ambient background glow — changes with monster */}
+      <div style={{ position:"fixed",inset:0,zIndex:0,pointerEvents:"none",transition:"all 2s ease" }}>
+        <div style={{ position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",
+          width:500,height:500,borderRadius:"50%",
+          background:`radial-gradient(circle,${bgColor}12,transparent 65%)`,
+          transition:"background 2s ease",animation:"glowPulse 5s ease-in-out infinite" }} />
+        <div style={{ position:"absolute",bottom:-80,right:-60,width:300,height:300,borderRadius:"50%",
+          background:"radial-gradient(circle,rgba(30,136,229,.08),transparent 70%)" }} />
+      </div>
 
-        {/* ═══ TOP BAR ═══ */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 12px 6px", zIndex: 10, flexShrink: 0,
-        }}>
-          {/* Player info */}
-          <div
-            onClick={onPerfil}
-            style={{
-              display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-              animation: "slideInLeft .5s ease forwards",
-            }}
-          >
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${currentMonster.bg1}, ${currentMonster.bg2})`,
-              border: `2px solid ${leagueInfo.color}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 18, boxShadow: `0 0 12px ${leagueInfo.color}44`,
-            }}>
-              {stats?.favorite_monster ? MONSTROS[stats.favorite_monster]?.emoji || "⚔️" : "⚔️"}
+      <div style={{ position:"relative",zIndex:1,display:"flex",flexDirection:"column",
+        minHeight:"100dvh",
+        paddingTop:"env(safe-area-inset-top,0px)",
+        paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 68px)" }}>
+
+        {/* ══ HEADER ══ */}
+        <div style={{ display:"flex",alignItems:"center",gap:12,padding:"14px 16px 10px" }}>
+
+          {/* Avatar circle */}
+          <div onClick={onPerfil} style={{ position:"relative",flexShrink:0,cursor:"pointer" }}>
+            <div style={{ width:50,height:50,borderRadius:"50%",
+              border:`2.5px solid ${li.color}`,
+              background:"rgba(255,255,255,.05)",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              boxShadow:`0 0 16px ${li.color}44,0 0 32px ${li.color}22` }}>
+              <MonsterAvatar monstroId={stats?.favorite_monster || "panther"} size={36} glow={li.color} />
             </div>
-            <div>
-              <div style={{ fontFamily: "Bangers, cursive", fontSize: 13, color: "#e8f0ff", letterSpacing: 1, lineHeight: 1.1 }}>
+            <div style={{ position:"absolute",bottom:-1,right:-1,
+              background:"#060b14",borderRadius:"50%",padding:2,lineHeight:1 }}>
+              <span style={{ fontSize:13 }}>{li.emoji}</span>
+            </div>
+          </div>
+
+          {/* Name + XP */}
+          <div style={{ flex:1,minWidth:0 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:4 }}>
+              <span style={{ fontFamily:"Bangers,cursive",fontSize:17,color:"#f0f4ff",
+                letterSpacing:.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140 }}>
                 {profile?.display_name || "Jogador"}
-                {stats?.win_streak >= 2 && (
-                  <span style={{ fontFamily:"Nunito,sans-serif",fontSize:9,
-                    color:"#ff9800",background:"rgba(255,152,0,.12)",
-                    border:"1px solid rgba(255,152,0,.25)",borderRadius:6,
-                    padding:"1px 6px",marginLeft:4,letterSpacing:.5 }}>
-                    {"🔥".repeat(Math.min(stats.win_streak,3))} {stats.win_streak}×
-                  </span>
-                )}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#ffd54f" }}>
-                  LV {profile?.level || 1}
+              </span>
+              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:li.color,
+                background:`${li.color}1a`,border:`1px solid ${li.color}40`,
+                borderRadius:5,padding:"1px 6px",flexShrink:0,letterSpacing:.5 }}>
+                NÍV {lvl}
+              </span>
+              {(stats?.win_streak || 0) >= 2 && (
+                <span style={{ fontSize:12,background:"rgba(255,100,0,.15)",
+                  border:"1px solid rgba(255,140,0,.3)",borderRadius:5,
+                  padding:"1px 5px",flexShrink:0,animation:"badgePop .4s both" }}>
+                  {"🔥".repeat(Math.min(stats.win_streak,3))}
                 </span>
-                <div style={{
-                  width: 40, height: 3, borderRadius: 2, background: "rgba(255,255,255,.1)", overflow: "hidden",
-                }}>
-                  <div style={{
-                    height: "100%", width: `${xpPct}%`,
-                    transition: "width 1.2s cubic-bezier(0.25,0.46,0.45,0.94)",
-                    background: "linear-gradient(90deg, #00e5ff, #7eb8ff)", borderRadius: 2,
-                  }} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Currencies */}
-          <div style={{ display: "flex", gap: 6, animation: "slideInRight .5s ease forwards" }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4,
-              background: "rgba(255,213,79,.08)", border: "1px solid rgba(255,213,79,.2)",
-              borderRadius: 14, padding: "4px 10px",
-            }}>
-              <span style={{ fontSize: 12 }}>💰</span>
-              <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 13, color: "#ffd54f" }}>
-                {profile?.coins?.toLocaleString() || 0}
-              </span>
-            </div>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4,
-              background: "rgba(0,229,255,.08)", border: "1px solid rgba(0,229,255,.15)",
-              borderRadius: 14, padding: "4px 10px",
-            }}>
-              <span style={{ fontSize: 10, color: leagueInfo.color }}>{leagueInfo.emoji}</span>
-              <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 10, color: leagueInfo.color }}>
-                {league?.rating || 1000}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ MAIN ARENA AREA ═══ */}
-        <div style={{
-          flex: 1, position: "relative", display: "flex",
-          alignItems: "center", justifyContent: "center",
-        }}>
-
-          {/* ── LEFT COLUMN — closer to center ── */}
-          <div style={{
-            position: "absolute",
-            left: "3%",
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 5,
-            display: "flex", flexDirection: "column", gap: "2.5vh",
-            animation: "slideInLeft .6s ease forwards",
-            opacity: 0.85,
-            transition: "opacity .3s",
-            maxHeight: "80%",
-            justifyContent: "center",
-          }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.85"; }}>
-            <SidePanel onClick={onRanking} bg={`linear-gradient(135deg, ${leagueInfo.color}15, ${leagueInfo.color}08)`} border={`${leagueInfo.color}33`} delay={0}>
-              <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: leagueInfo.color, letterSpacing: 1.5 }}>
-                {leagueInfo.emoji} {leagueInfo.label}
-              </div>
-              <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", marginTop: 2 }}>
-                {stats?.total_wins || 0}V / {stats?.total_losses || 0}D
-              </div>
-            </SidePanel>
-
-            <SidePanel onClick={onSeasonPass} bg="linear-gradient(135deg, rgba(255,213,79,.1), rgba(255,152,0,.06))" border="rgba(255,213,79,.25)" delay={1}>
-              <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#ffd54f", letterSpacing: 1 }}>
-                🏆 SEASON
-              </div>
-              <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 8, color: "#8a95aa", marginTop: 2 }}>
-                Tier {seasonPass?.tier || 0}
-              </div>
-            </SidePanel>
-
-            <SidePanel onClick={onLoja} bg="rgba(0,229,255,.08)" border="rgba(0,229,255,.2)" delay={2}>
-              <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#00e5ff", letterSpacing: 1 }}>
-                🏪 LOJA
-              </div>
-            </SidePanel>
-
-            <SidePanel onClick={onMissoes} bg="rgba(105,240,174,.08)" border="rgba(105,240,174,.2)" delay={3}>
-              <div style={{ position: "relative", fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
-                🎯 MISSÕES
-                {missaoClaimable && (
-                  <div style={{
-                    position: "absolute", top: -6, right: -8,
-                    width: 10, height: 10, borderRadius: "50%",
-                    background: "#ffd54f",
-                    boxShadow: "0 0 6px #ffd54f",
-                    animation: "pulse 1s ease-in-out infinite",
-                  }} />
-                )}
-              </div>
-              {missaoClaimable && (
-                <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 7, color: "#ffd54f", marginTop: 2 }}>
-                  COLETAR!
-                </div>
               )}
-            </SidePanel>
+            </div>
+            <div style={{ background:"rgba(255,255,255,.06)",borderRadius:99,height:5,overflow:"hidden",marginBottom:3 }}>
+              <div style={{ height:"100%",width:`${xpPct}%`,borderRadius:99,
+                background:`linear-gradient(90deg,${li.color}88,${li.color})`,
+                transition:"width 1.2s ease",
+                backgroundSize:"200%",animation:"shimBar 3s linear infinite" }} />
+            </div>
+            <div style={{ display:"flex",justifyContent:"space-between" }}>
+              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color:"#3a4458",letterSpacing:.5 }}>
+                {xp}/{xpMax} XP
+              </span>
+              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color:"#3a4458",letterSpacing:.5 }}>
+                {wr}% WR · {wins}V
+              </span>
+            </div>
           </div>
 
-          {/* ── RIGHT COLUMN — game modes, closer to center ── */}
-          <div style={{
-            position: "absolute",
-            right: "3%",
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 5,
-            display: "flex", flexDirection: "column", gap: "2.5vh",
-            alignItems: "flex-end",
-            animation: "slideInRight .6s ease forwards",
-            opacity: 0.85,
-            transition: "opacity .3s",
-            maxHeight: "80%",
-            justifyContent: "center",
-          }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.85"; }}>
-            <>
-              <ModeButton label="⚔️ BATALHAR" color="#00e5ff" desc="vs IA" onClick={() => onIniciar("duel", "medio")} delay={0} />
-              <ModeButton label="🌐 MULTI" color="#69f0ae" desc="Amigo" onClick={onMulti} delay={1} />
-              <ModeButton label="🎯 RANKED" color="#ffd54f" desc="ELO" onClick={onMatchmaking} delay={2} />
-              <ModeButton label="🏆 RANKING" color="#b388ff" desc="Top 10" onClick={onRanking} delay={3} />
-            </>
+          {/* Coins */}
+          <div onClick={onLoja} style={{ flexShrink:0,cursor:"pointer",
+            display:"flex",alignItems:"center",gap:5,
+            background:"rgba(255,213,79,.07)",border:"1.5px solid rgba(255,213,79,.2)",
+            borderRadius:12,padding:"6px 10px" }}>
+            <span style={{ fontSize:15 }}>💰</span>
+            <span style={{ fontFamily:"Bangers,cursive",fontSize:16,color:"#ffd54f" }}>
+              {(profile?.coins || 0).toLocaleString()}
+            </span>
           </div>
+        </div>
 
-          {/* ── CENTER — MONSTER DISPLAY ── */}
-          <div style={{
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            position: "relative",
-            width: "50%",
-            maxWidth: 280,
+        {/* ══ HERO BATTLE BUTTON ══ */}
+        <div style={{ padding:"8px 16px 14px" }}>
+          <HeroBattleBtn onClick={() => onIniciar("duel")} />
+        </div>
+
+        {/* ══ MODE GRID ══ */}
+        <div style={{ padding:"0 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+          <ModeCard emoji="👥" title="AMIGO" sub="Desafie alguém" color="#69f0ae" onClick={onMulti} delay={0} />
+          <ModeCard emoji="🎯" title="RANKED" sub="Batalha por ELO" color="#ffd54f" onClick={onMatchmaking} delay={1} />
+          <ModeCard emoji="🏆" title="RANKING" sub="Top jogadores" color="#b388ff" onClick={onRanking} delay={2} />
+          <ModeCard emoji="🏪" title="LOJA" sub="Cartas e monstros" color="#ff8a65" onClick={onLoja} delay={3} />
+        </div>
+
+        {/* ══ DAILY CHIPS ══ */}
+        <div style={{ padding:"12px 16px 0" }}>
+          <div style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:"#2a3448",
+            letterSpacing:2,marginBottom:8 }}>DIÁRIO</div>
+          <div style={{ display:"flex",gap:8 }}>
+            <DailyChip emoji="🎯" label="MISSÕES"    color="#69f0ae" badge={missaoClaimable} onClick={onMissoes} />
+            <DailyChip emoji="🏅" label="CONQUISTAS" color="#ffd54f" onClick={onConquistas} />
+            <DailyChip emoji="🌟" label="SEASON"     color="#ce93d8" onClick={onSeasonPass} />
+            <DailyChip emoji="👾" label="AMIGOS"     color="#4fc3f7" onClick={onAmigos} />
+          </div>
+        </div>
+      </div>
+
+      {/* ══ BOTTOM NAV ══ */}
+      <div style={{ position:"fixed",bottom:0,left:0,right:0,zIndex:20,
+        background:"linear-gradient(0deg,rgba(5,8,16,.99) 70%,transparent)",
+        borderTop:"1px solid rgba(255,255,255,.04)",
+        display:"flex",justifyContent:"space-around",alignItems:"center",
+        padding:`8px 8px calc(env(safe-area-inset-bottom,0px) + 6px)` }}>
+        {[
+          { icon:"⚔️",  label:"BATALHA", fn:() => onIniciar("duel"), active:true },
+          { icon:"🏪",  label:"LOJA",    fn:onLoja },
+          { icon:"🏆",  label:"TOP",     fn:onRanking },
+          { icon:"👤",  label:"PERFIL",  fn:onPerfil },
+          { icon:"🚪",  label:"SAIR",    fn:onLogout },
+        ].map(b => (
+          <button key={b.label} onClick={b.fn} style={{
+            display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+            minWidth:44,minHeight:44,justifyContent:"center",
+            background:"none",border:"none",cursor:"pointer",
+            opacity:b.active?1:0.45,transition:"opacity .15s, transform .1s",
           }}>
-            {/* Glow orb */}
-            <div style={{
-              position: "absolute", width: "90%", aspectRatio: "1", borderRadius: "50%",
-              background: `radial-gradient(circle, ${currentMonster.glow}25, transparent 70%)`,
-              animation: "pulseGlow 3s ease-in-out infinite",
-              pointerEvents: "none",
-            }} />
-
-            {/* Monster — draggable 360° */}
-            <div
-              ref={monsterRef}
-              onMouseDown={(e) => handleDragStart(e.clientX)}
-              onMouseMove={(e) => handleDragMove(e.clientX)}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-              onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-              onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-              onTouchEnd={handleDragEnd}
-              style={{
-                position: "relative",
-                width: "clamp(160px, 55vw, 260px)",
-                aspectRatio: "1",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: dragging ? "grabbing" : "grab",
-                zIndex: 20, perspective: 1000,
-                touchAction: "none",
-              }}
-            >
-              {/* Shadow under monster */}
-              <div style={{
-                position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)",
-                width: "60%", height: 20, borderRadius: "50%",
-                background: `radial-gradient(ellipse, ${currentMonster.glow}20, transparent 70%)`,
-                filter: "blur(6px)", pointerEvents: "none",
-              }} />
-
-              {/* Monster images */}
-              {(() => {
-                const norm = (((rotation % 360) + 360) % 360);
-                const isLeftSide = norm >= 225 && norm < 315;
-                const isFront = norm < 45 || norm >= 315;
-                const isSide = (norm >= 45 && norm < 135) || (norm >= 225 && norm < 315);
-                const isBack = norm >= 135 && norm < 225;
-
-                const frontImg = MONSTER_IMAGES[currentKey];
-                const sideImg = MONSTER_IMAGES_SIDE[currentKey];
-                const backImg = MONSTER_IMAGES_BACK[currentKey];
-
-                const imgStyle = (visible: boolean, flip: boolean): React.CSSProperties => ({
-                  position: "absolute" as const,
-                  top: 0, left: 0, width: "100%", height: "100%",
-                  objectFit: "contain" as const,
-                  opacity: visible && fade ? 1 : 0,
-                  filter: `drop-shadow(0 0 40px ${currentMonster.glow}66)`,
-                  transition: "opacity .35s ease, filter .3s, transform .35s ease",
-                  animation: !dragging && fade && visible ? "monsterFloat 3s ease-in-out infinite" : "none",
-                  transform: flip ? "scaleX(-1)" : "scaleX(1)",
-                  pointerEvents: "none" as const,
-                });
-
-                return (
-                  <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                    <img src={frontImg} alt="" draggable={false} style={imgStyle(isFront, false)} />
-                    <img src={sideImg} alt="" draggable={false} style={imgStyle(isSide, isLeftSide)} />
-                    <img src={backImg} alt="" draggable={false} style={imgStyle(isBack, false)} />
-                  </div>
-                );
-              })()}
-
-              {/* Rotation indicator */}
-              <div style={{
-                position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)",
-                fontFamily: "Oswald, sans-serif", fontSize: 8,
-                color: "rgba(255,255,255,.25)", letterSpacing: 1,
-                opacity: dragging ? 1 : 0, transition: "opacity .3s",
-              }}>
-                {(() => {
-                  const norm = (((rotation % 360) + 360) % 360);
-                  if (norm < 45 || norm > 315) return "▶ FRENTE";
-                  if (norm >= 45 && norm < 135) return "◀ LATERAL";
-                  if (norm >= 135 && norm < 225) return "◆ COSTAS";
-                  return "▶ LATERAL";
-                })()}
-              </div>
-
-              {/* Scan line */}
-              <div style={{
-                position: "absolute", left: 0, right: 0, height: 1,
-                background: `linear-gradient(90deg, transparent, ${currentMonster.glow}33, transparent)`,
-                animation: "scanLine 4s linear infinite", pointerEvents: "none",
-              }} />
-            </div>
-
-            {/* Monster name */}
-            <div style={{
-              fontFamily: "Bangers, cursive", fontSize: "clamp(16px, 5vw, 22px)", color: currentMonster.glow,
-              letterSpacing: 3, marginTop: 4, textShadow: `0 0 20px ${currentMonster.glow}44`,
-              transition: "color .3s ease",
-            }}>
-              {currentMonster.nome}
-            </div>
-            <div style={{
-              fontFamily: "Nunito, sans-serif", fontSize: "clamp(8px, 2.5vw, 10px)", color: "#8a95aa",
-              letterSpacing: 1, textAlign: "center",
-            }}>
-              {currentMonster.hab} — {currentMonster.habD}
-            </div>
-
-            {/* Monster cycle arrows */}
-            <div style={{ display: "flex", gap: 24, marginTop: 10 }}>
-              <button onClick={() => cycleMonster(-1)} style={arrowBtn}>◀</button>
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                {monsterKeys.map((_, i) => (
-                  <div key={i} style={{
-                    width: i === selectedMonster ? 12 : 5, height: 5,
-                    borderRadius: 3, transition: "all .3s ease",
-                    background: i === selectedMonster ? currentMonster.glow : "rgba(255,255,255,.15)",
-                  }} />
-                ))}
-              </div>
-              <button onClick={() => cycleMonster(1)} style={arrowBtn}>▶</button>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ BOTTOM NAV ═══ */}
-        <div style={{
-          display: "flex", justifyContent: "space-around", alignItems: "center",
-          padding: `10px 20px calc(env(safe-area-inset-bottom, 0px) + 16px)`,
-          background: "linear-gradient(180deg, transparent, rgba(0,0,0,.5))",
-          zIndex: 10, flexShrink: 0,
-        }}>
-          <BottomTab icon="⚔️" label="COMBATE" active onClick={() => onIniciar("duel")} />
-          <BottomTab icon="🏪" label="LOJA" onClick={onLoja} />
-          <BottomTab icon="🏆" label="RANKING" onClick={onRanking} />
-          <BottomTab icon="👤" label="PERFIL" onClick={onPerfil} />
-          <BottomTab icon="🚪" label="SAIR" onClick={onLogout} />
-        </div>
+            <span style={{ fontSize:20 }}>{b.icon}</span>
+            <span style={{ fontFamily:"Oswald,sans-serif",fontSize:7,letterSpacing:1,
+              color:b.active?"#00e5ff":"#8a95aa" }}>{b.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ── Sub-components ── */
-
-function SidePanel({ children, onClick, bg, border, delay = 0 }: { children: React.ReactNode; onClick: () => void; bg: string; border: string; delay?: number }) {
-  const [pressed, setPressed] = React.useState(false);
+function HeroBattleBtn({ onClick }: { onClick: () => void }) {
+  const [pressed, setPressed] = useState(false);
   return (
-    <div
-      onClick={onClick}
+    <button onClick={onClick}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       style={{
-        background: bg, border: `1px solid ${border}`,
-        borderRadius: 10, padding: "8px 10px", cursor: "pointer",
-        width: "clamp(80px, 22vw, 110px)",
-        transform: pressed ? "scale(0.93)" : "scale(1)",
-        boxShadow: pressed ? `0 0 16px ${border}, inset 0 0 8px ${border}` : "none",
-        transition: "transform .15s ease, box-shadow .15s ease",
-        animation: `fadeUp .5s ease ${delay * 0.1}s both`,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function ModeButton({ label, color, desc, onClick, delay = 0 }: { label: string; color: string; desc?: string; onClick: () => void; delay?: number }) {
-  const [pressed, setPressed] = React.useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      style={{
-        background: `${color}12`, border: `1px solid ${color}33`,
-        borderRadius: 10, padding: "8px 12px", cursor: "pointer",
-        fontFamily: "Bangers, cursive", fontSize: 10, color,
-        letterSpacing: 1.5, textAlign: "right",
-        width: "clamp(80px, 22vw, 110px)",
-        display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
-        transform: pressed ? "scale(0.93)" : "scale(1)",
-        boxShadow: pressed ? `0 0 16px ${color}66, inset 0 0 8px ${color}33` : "none",
-        transition: "transform .15s ease, box-shadow .15s ease",
-        animation: `fadeUp .5s ease ${delay * 0.1}s both`,
-      }}
-    >
-      <span>{label}</span>
-      {desc && <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 7, color: "#8a95aa", letterSpacing: 1 }}>{desc}</span>}
+        width:"100%", minHeight:96, borderRadius:20, border:"none", cursor:"pointer",
+        position:"relative", overflow:"hidden",
+        background: pressed
+          ? "linear-gradient(135deg,#0d3080,#1560c0)"
+          : "linear-gradient(135deg,#1044c8,#1e88e5,#00b0d4)",
+        transform: pressed ? "scale(0.97) translateY(1px)" : "scale(1)",
+        transition:"transform .1s ease",
+        boxShadow: pressed
+          ? "0 4px 16px rgba(0,160,255,.2)"
+          : "0 10px 40px rgba(0,160,255,.38),0 0 0 1px rgba(255,255,255,.08) inset,0 1px 0 rgba(255,255,255,.2) inset",
+        animation:"fadeUp .35s both",
+      }}>
+      {/* Animated shine */}
+      <div style={{ position:"absolute",top:0,bottom:0,width:60,
+        background:"linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)",
+        animation:"heroShine 3s ease-in-out 1s infinite",pointerEvents:"none" }} />
+      {/* Content */}
+      <div style={{ position:"relative",zIndex:1,display:"flex",alignItems:"center",
+        justifyContent:"center",gap:14,padding:"0 24px",height:"100%" }}>
+        <span style={{ fontSize:48,filter:"drop-shadow(0 4px 12px rgba(0,0,0,.3))" }}>⚔️</span>
+        <div style={{ textAlign:"left" }}>
+          <div style={{ fontFamily:"Bangers,cursive",fontSize:36,color:"#fff",
+            letterSpacing:2,lineHeight:1,textShadow:"0 2px 12px rgba(0,0,0,.4)" }}>
+            BATALHAR
+          </div>
+          <div style={{ fontFamily:"Nunito,sans-serif",fontSize:12,
+            color:"rgba(255,255,255,.65)",marginTop:3,letterSpacing:.3 }}>
+            Desafiar Inteligência Artificial
+          </div>
+        </div>
+        <span style={{ marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,.6)" }}>›</span>
+      </div>
     </button>
   );
 }
 
-function BottomTab({ icon, label, active, onClick }: { icon: string; label: string; active?: boolean; onClick?: () => void }) {
+function ModeCard({ emoji, title, sub, color, onClick, delay }:
+  { emoji:string;title:string;sub:string;color:string;onClick:()=>void;delay:number }) {
+  const [p, setP] = useState(false);
   return (
-    <div onClick={onClick} style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-      cursor: "pointer", opacity: active ? 1 : 0.6,
-      minWidth: 44, minHeight: 44,
-      justifyContent: "center",
-    }}>
-      <span style={{ fontSize: 20 }}>{icon}</span>
-      <span style={{
-        fontFamily: "Oswald, sans-serif", fontSize: 7, letterSpacing: 1,
-        color: active ? "#00e5ff" : "#8a95aa",
-      }}>{label}</span>
-    </div>
+    <button onClick={onClick}
+      onPointerDown={() => setP(true)} onPointerUp={() => setP(false)} onPointerLeave={() => setP(false)}
+      style={{ background:p?`${color}18`:`${color}0b`,border:`1.5px solid ${color}${p?"55":"22"}`,
+        borderRadius:16,padding:"14px",cursor:"pointer",textAlign:"left",minHeight:76,
+        transform:p?"scale(0.95)":"scale(1)",transition:"transform .1s ease, border-color .1s",
+        boxShadow:p?`0 0 20px ${color}22`:"none",animation:`fadeUp .4s ${delay*0.07}s both` }}>
+      <div style={{ fontSize:26,marginBottom:6 }}>{emoji}</div>
+      <div style={{ fontFamily:"Bangers,cursive",fontSize:15,color,letterSpacing:1.5,lineHeight:1 }}>{title}</div>
+      <div style={{ fontFamily:"Nunito,sans-serif",fontSize:9,color:"#8a95aa",marginTop:3 }}>{sub}</div>
+    </button>
   );
 }
 
-const arrowBtn: React.CSSProperties = {
-  background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)",
-  borderRadius: 8, padding: "6px 12px", cursor: "pointer",
-  color: "#8a95aa", fontSize: 14, fontFamily: "Oswald, sans-serif",
-};
+function DailyChip({ emoji, label, color, badge, onClick }:
+  { emoji:string;label:string;color:string;badge?:boolean;onClick:()=>void }) {
+  return (
+    <button onClick={onClick} style={{ flex:1,background:`${color}09`,
+      border:`1px solid ${color}1e`,borderRadius:12,padding:"10px 6px",
+      cursor:"pointer",position:"relative",transition:"all .15s" }}>
+      <div style={{ fontSize:22,marginBottom:3 }}>{emoji}</div>
+      <div style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color,letterSpacing:1 }}>{label}</div>
+      {badge && <div style={{ position:"absolute",top:5,right:5,width:8,height:8,
+        borderRadius:"50%",background:"#ffd54f",boxShadow:"0 0 6px #ffd54f",
+        animation:"glowPulse 1s ease-in-out infinite" }} />}
+    </button>
+  );
+}
