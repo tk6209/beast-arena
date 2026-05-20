@@ -371,6 +371,16 @@ export default function Index() {
         <TelaAmigos user={user} onVoltar={() => setTela("lobby_principal")} onConvidar={handleConvidarAmigo} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
+    case "colecao":
+      return user ? (
+        <TelaColecao user={user} onVoltar={() => setTela("lobby_principal")} onDeckBuilder={() => setTela("deck_builder")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "deck_builder":
+      return user ? (
+        <TelaDeckBuilder user={user} onVoltar={() => setTela("colecao")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "home":
       return (
         <>
