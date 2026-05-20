@@ -350,20 +350,31 @@ export default function TelaBatalha({
   }
 
   function selCarta(carta: CartaData) {
-    if (serverState?.fase !== "acao" || loading) return;
+    // Only block during active network request, not during animations
+    if (serverState?.fase !== "acao") return;
+    if (loading) return;
+
+    // Deselect from combo
     if (comboSel.find(c => c.id === carta.id)) {
-      setComboSel(comboSel.filter(c => c.id !== carta.id));
-      if (comboSel.length === 1) setCartaSel(null);
+      const updated = comboSel.filter(c => c.id !== carta.id);
+      setComboSel(updated);
+      if (updated.length === 0) setCartaSel(null);
       sfxTap(); return;
     }
+
     const basic = ["ataque","defesa","cura"];
     const isSpec = (c: CartaData) => Boolean(c.esp) || !basic.includes(c.tipo);
+
+    // Form combo: same basic type, both non-special
     if (cartaSel && cartaSel.id !== carta.id && cartaSel.tipo === carta.tipo
         && basic.includes(carta.tipo) && !isSpec(cartaSel) && !isSpec(carta)) {
       setComboSel([cartaSel, carta]); setCartaSel(null); sfxTap(); hapticLight(); return;
     }
+
+    // Toggle selection
     const desel = cartaSel?.id === carta.id;
-    setCartaSel(desel ? null : carta); setComboSel([]);
+    setCartaSel(desel ? null : carta);
+    setComboSel([]);
     if (!desel) { sfxTap(); hapticLight(); }
   }
 
@@ -385,8 +396,11 @@ export default function TelaBatalha({
       if (r.state.turno !== serverState?.turno) showNewTurn();
       showEnemyAction(r.events, r.state, bid);
       handleGameOver(r.events, bid);
-    } catch (e) { console.error(e); }
-    setLoading(false);
+      setLoading(false);
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
   }
 
   async function jogarCombo() {
@@ -405,8 +419,13 @@ export default function TelaBatalha({
       if (r.state.turno !== serverState?.turno) showNewTurn();
       showEnemyAction(r.events, r.state, bid);
       handleGameOver(r.events, bid);
-    } catch (e) { console.error(e); setComboSel([]); }
-    setLoading(false);
+      // Release lock quickly — enemy animation is visual only, doesn't block input
+      setLoading(false);
+    } catch (e) {
+      console.error(e);
+      setComboSel([]);
+      setLoading(false);
+    }
   }
 
   async function handlePassar() {
