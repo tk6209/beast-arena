@@ -152,6 +152,14 @@ export default function TelaLobbyPrincipal({
             <div>
               <div style={{ fontFamily: "Bangers, cursive", fontSize: 13, color: "#e8f0ff", letterSpacing: 1, lineHeight: 1.1 }}>
                 {profile?.display_name || "Jogador"}
+                {stats?.win_streak >= 2 && (
+                  <span style={{ fontFamily:"Nunito,sans-serif",fontSize:9,
+                    color:"#ff9800",background:"rgba(255,152,0,.12)",
+                    border:"1px solid rgba(255,152,0,.25)",borderRadius:6,
+                    padding:"1px 6px",marginLeft:4,letterSpacing:.5 }}>
+                    {"🔥".repeat(Math.min(stats.win_streak,3))} {stats.win_streak}×
+                  </span>
+                )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ fontFamily: "Oswald, sans-serif", fontSize: 9, color: "#ffd54f" }}>
@@ -162,6 +170,7 @@ export default function TelaLobbyPrincipal({
                 }}>
                   <div style={{
                     height: "100%", width: `${xpPct}%`,
+                    transition: "width 1.2s cubic-bezier(0.25,0.46,0.45,0.94)",
                     background: "linear-gradient(90deg, #00e5ff, #7eb8ff)", borderRadius: 2,
                   }} />
                 </div>
