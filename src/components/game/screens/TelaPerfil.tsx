@@ -391,6 +391,41 @@ export default function TelaPerfil({ user, onVoltar, onLogout, onReplayTutorial 
             )}
           </div>
 
+          {/* Dificuldade padrão */}
+          <div style={{
+            background: "rgba(0,229,255,.03)",
+            border: "1px solid rgba(0,229,255,.1)",
+            borderRadius: 10, padding: "12px 16px", marginBottom: 10,
+          }}>
+            <div style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#00e5ff", letterSpacing: 2, marginBottom: 10 }}>
+              ⚙️ DIFICULDADE PADRÃO
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["facil","medio","avancado"] as const).map(d => {
+                const labels: Record<string,string> = { facil:"😊 Fácil", medio:"⚔️ Médio", avancado:"💀 Difícil" };
+                const colors: Record<string,string> = { facil:"#69f0ae", medio:"#00e5ff", avancado:"#ffd54f" };
+                const stored = localStorage.getItem("beast_dificuldade") || "medio";
+                const active = stored === d;
+                return (
+                  <button key={d} onClick={() => { localStorage.setItem("beast_dificuldade", d); window.dispatchEvent(new Event("dificuldade-change")); }}
+                    style={{
+                      flex: 1, padding: "8px 4px", borderRadius: 10,
+                      border: `1.5px solid ${active ? colors[d] : "rgba(255,255,255,.08)"}`,
+                      background: active ? `${colors[d]}18` : "rgba(255,255,255,.03)",
+                      color: active ? colors[d] : "#8a95aa",
+                      fontFamily: "Nunito, sans-serif", fontSize: 10, fontWeight: 700,
+                      cursor: "pointer", transition: "all .2s",
+                    }}>
+                    {labels[d]}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: "#4a5568", marginTop: 8, textAlign: "center" }}>
+              Esta configuração será usada em todas as batalhas vs IA
+            </div>
+          </div>
+
           {/* Tutorial replay + actions */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {onReplayTutorial && (

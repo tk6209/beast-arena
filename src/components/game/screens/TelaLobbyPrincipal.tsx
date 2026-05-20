@@ -41,7 +41,7 @@ export default function TelaLobbyPrincipal({
   const [league, setLeague] = useState<any>(null);
   const [seasonPass, setSeasonPass] = useState<any>(null);
   const [selectedMonster, setSelectedMonster] = useState(0);
-  const [showDiff, setShowDiff] = useState(false);
+  // Difficulty is set in profile/settings — battle goes straight in
   const [fade, setFade] = useState(true);
   const [missaoClaimable, setMissaoClaimable] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -422,7 +422,7 @@ export default function TelaLobbyPrincipal({
           background: "linear-gradient(180deg, transparent, rgba(0,0,0,.5))",
           zIndex: 10, flexShrink: 0,
         }}>
-          <BottomTab icon="⚔️" label="COMBATE" active onClick={() => setShowDiff(true)} />
+          <BottomTab icon="⚔️" label="COMBATE" active onClick={() => onIniciar("duel")} />
           <BottomTab icon="🏪" label="LOJA" onClick={onLoja} />
           <BottomTab icon="🏆" label="RANKING" onClick={onRanking} />
           <BottomTab icon="👤" label="PERFIL" onClick={onPerfil} />

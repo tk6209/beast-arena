@@ -40,7 +40,16 @@ export default function Index() {
   const [salaId, setSalaId] = useState<string | null>(null);
   const [slotLocal, setSlotLocal] = useState<number>(0);
   const [vencedor, setVencedor] = useState<Jogador | null>(null);
-  const [dificuldade, setDificuldade] = useState<Dificuldade>("medio");
+  const [dificuldade, setDificuldade] = useState<Dificuldade>(
+    () => (localStorage.getItem("beast_dificuldade") as Dificuldade) || "medio"
+  );
+
+  // Listen for profile changes
+  useEffect(() => {
+    const handler = () => setDificuldade((localStorage.getItem("beast_dificuldade") as Dificuldade) || "medio");
+    window.addEventListener("dificuldade-change", handler);
+    return () => window.removeEventListener("dificuldade-change", handler);
+  }, []);
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [forceReplayTutorial, setForceReplayTutorial] = useState(false);
