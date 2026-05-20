@@ -246,8 +246,10 @@ export default function TelaBatalha({ modo, monstroP1, nomeJogador = "Você", sa
     }
     
     // If we have a card selected and this new card is same type (ataque/defesa/cura), start combo
+    // Special cards (esp field) cannot be part of combos
     const comboTypes = ["ataque", "defesa", "cura"];
-    if (cartaSel && cartaSel.id !== carta.id && cartaSel.tipo === carta.tipo && comboTypes.includes(carta.tipo)) {
+    const isSpecial = (c: any) => Boolean(c.esp) || c.tipo === "evolucao" || c.tipo === "swarm" || c.tipo === "poderzinho" || c.tipo === "desafio";
+    if (cartaSel && cartaSel.id !== carta.id && cartaSel.tipo === carta.tipo && comboTypes.includes(carta.tipo) && !isSpecial(cartaSel) && !isSpecial(carta)) {
       setComboSel([cartaSel, carta]);
       setCartaSel(null);
       sfxTap();

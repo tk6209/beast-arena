@@ -39,6 +39,12 @@ const SWARMS: any[] = [
   { id: "swarm_raiz_viva", nome: "Raiz Viva", emoji: "🌿", efeito: "growth", valor: 4 },
   { id: "swarm_escudo_azul", nome: "Escudo Azul", emoji: "💎", efeito: "shield_flat", valor: 8 },
   { id: "swarm_trovao", nome: "Trovão", emoji: "⚡", efeito: "atk_flat", valor: 15 },
+  /* ── Lendários / Épicos (sincronizados com data.ts) ── */
+  { id: "swarm_vampiro", nome: "Vampiro Sombrio", emoji: "🧛", efeito: "drain", valor: 8 },
+  { id: "swarm_espelho", nome: "Espelho Arcano", emoji: "🪞", efeito: "reflect", valor: 25 },
+  { id: "swarm_paralisia", nome: "Aranha Elétrica", emoji: "🕷️", efeito: "stun", valor: 30 },
+  { id: "swarm_fenix", nome: "Fênix Menor", emoji: "🔥", efeito: "revive", valor: 20 },
+  { id: "swarm_gelo_eterno", nome: "Gelo Eterno", emoji: "🧊", efeito: "def_flat", valor: 12 },
 ];
 
 /* ─── Easy Mode Balance Constants ─── */
@@ -150,16 +156,21 @@ function evoluir(m: any, pid: string): any {
 
 function swarmBonus(swarms: any[]): any {
   let atkBonus = 0, defBonus = 0, hpRegen = 0, poison = 0, growth = 0, shield = 0;
+  let drain = 0, reflect = 0, stunChance = 0, hasRevive = false;
   for (const s of swarms) {
     if (!s) continue;
-    if (s.efeito === "atk_flat") atkBonus += s.valor;
-    if (s.efeito === "def_flat") defBonus += s.valor;
-    if (s.efeito === "hp_regen") hpRegen += s.valor;
-    if (s.efeito === "poison") poison += s.valor;
-    if (s.efeito === "growth") growth += s.valor;
-    if (s.efeito === "shield_flat") shield += s.valor;
+    if (s.efeito === "atk_flat")   atkBonus += s.valor;
+    if (s.efeito === "def_flat")   defBonus += s.valor;
+    if (s.efeito === "hp_regen")   hpRegen  += s.valor;
+    if (s.efeito === "poison")     poison   += s.valor;
+    if (s.efeito === "growth")     growth   += s.valor;
+    if (s.efeito === "shield_flat") shield  += s.valor;
+    if (s.efeito === "drain")      drain    += s.valor;
+    if (s.efeito === "reflect")    reflect  += s.valor;   // % to reflect back
+    if (s.efeito === "stun")       stunChance += s.valor; // % chance
+    if (s.efeito === "revive" && !s._used) hasRevive = true;
   }
-  return { atkBonus, defBonus, hpRegen, poison, growth, shield };
+  return { atkBonus, defBonus, hpRegen, poison, growth, shield, drain, reflect, stunChance, hasRevive };
 }
 
 function aplicarInicioTurno(j: any, log: any[]): { j: any; log: any[] } {
@@ -183,7 +194,30 @@ function aplicarInicioTurno(j: any, log: any[]): { j: any; log: any[] } {
       log.push({ msg: `🦇 ${j.monstro.nome} preparado para esquivar!`, t: "efeito" });
     }
   }
+  // Passive: Tsunami — Maré Alta (+8 HP por turno automaticamente)
+  if (j.monstro.id === "tsunami") {
+    const antes = j.hp;
+    j.hp = Math.min(j.maxHp, j.hp + 8);
+    if (j.hp > antes) log.push({ msg: `🌊 Maré Alta! ${j.monstro.nome} recupera ${j.hp - antes} HP!`, t: "cura" });
+  }
+  // Clear per-turn Volt flag
+  if (j.monstro.id === "volt") j._voltUsed = false;
+  // Clear stun after it has had its effect
+  if (j.stunned) { j.stunned = false; log.push({ msg: `${j.monstro.nome} se recupera do atordoamento!`, t: "efeito" }); }
   return { j, log };
+}
+
+/* ─── Revive check — call after any hp <= 0 event ─── */
+function checkRevive(player: any, log: any[]): { player: any; revived: boolean; log: any[] } {
+  if (player.hp > 0) return { player, revived: false, log };
+  const swarms = player.swarms || [];
+  const fenixIdx = swarms.findIndex((s: any) => s && s.efeito === "revive" && !s._used);
+  if (fenixIdx < 0) return { player, revived: false, log };
+  swarms[fenixIdx] = { ...swarms[fenixIdx], _used: true };
+  player.swarms = swarms;
+  player.hp = swarms[fenixIdx].valor; // e.g. 20 HP
+  log.push({ msg: `🔥 Fênix Menor ressuscita ${player.monstro.nome} com ${player.hp} HP!`, t: "cura" });
+  return { player, revived: true, log };
 }
 
 function aplicarPoison(alvo: any, log: any[]): { alvo: any; log: any[] } {
@@ -257,17 +291,29 @@ function handleChoosePower(state: any, payload: any): any {
   player.maxHp = player.monstro.maxHp;
   player.mao = novaMao(5, powerId);
 
+  const readyCount = (state.readyCount || 0) + 1;
+  const totalPlayers = state.players.filter(Boolean).length;
+
   const log = [...(state.log || []),
     { msg: `✨ Poder ${PODERES[powerId].nome} escolhido! ${player.monstro.nome} evolui para Nível 1!`, t: "efeito" },
-    { msg: `🔄 Turno 1 — Cartas distribuídas!`, t: "sistema" },
   ];
 
   state.players[slot] = player;
-  state.log = log;
-  state.turno = 0;
-  state.fase = "acao";
-  state.readyCount = (state.readyCount || 0) + 1;
-  return { state, events: [{ type: "power_chosen", slot, powerId }] };
+  state.readyCount = readyCount;
+
+  // In multiplayer: only start battle when BOTH players chose their power
+  // In AI mode: start immediately (only 1 human)
+  if (state.modo === "multi" && readyCount < totalPlayers) {
+    state.log = [...log, { msg: `⏳ Aguardando adversário escolher poder...`, t: "sistema" }];
+    state.fase = "poder"; // Stay in power phase until everyone is ready
+  } else {
+    state.log = [...log, { msg: `🔄 Turno 1 — Cartas distribuídas!`, t: "sistema" }];
+    state.turno = 0;
+    state.fase = "acao";
+    state.currentTurn = 0;
+  }
+
+  return { state, events: [{ type: "power_chosen", slot, powerId, allReady: readyCount >= totalPlayers }] };
 }
 
 /** Apply easy mode damage scaling */
@@ -284,12 +330,28 @@ function processAttack(attacker: any, defender: any, carta: any, log: any[], dif
     ? (Math.random() < 0.5 ? 80 : 0)
     : attacker.monstro.atk + fxAtk.atkBonus + (carta.valor || 0);
 
+  // Passive: Dobra dano
   if (attacker.dobra) { dmg *= 2; attacker.dobra = false; log.push({ msg: `✖️ Dano dobrado!`, t: "combo" }); }
+  // Passive: Auto-dano (EXPLODE etc.)
   if (carta.autoDano) { attacker.hp = Math.max(0, attacker.hp - carta.autoDano); log.push({ msg: `💥 Auto-dano de ${carta.autoDano}!`, t: "dano" }); }
+  // Passive: Macaco — 50% chance double hit
   if (attacker.monstro.id === "macaco" && Math.random() < 0.5) { dmg *= 2; log.push({ msg: `🐒 Hit duplo do Macaco!`, t: "combo" }); }
+  // Passive: Drako — Fúria de Fogo (+20% dmg)
+  if (attacker.monstro.id === "drako") { dmg = Math.floor(dmg * 1.2); log.push({ msg: `🐉 Fúria de Fogo! +20% dano!`, t: "efeito" }); }
+  // Passive: Volt — Descarga Elétrica (dobra PRIMEIRO ataque do turno)
+  if (attacker.monstro.id === "volt" && !attacker._voltUsed) {
+    dmg *= 2; attacker._voltUsed = true;
+    log.push({ msg: `⚡ Descarga Elétrica! Primeiro ataque dobrado!`, t: "combo" });
+  }
 
   // Apply easy mode damage scaling
   dmg = applyEasyDamageScaling(dmg, dificuldade, turno);
+
+  // Swarm: Aranha Elétrica — chance de atordoar
+  if (fxAtk.stunChance > 0 && Math.random() * 100 < fxAtk.stunChance) {
+    defender.stunned = true;
+    log.push({ msg: `🕷️ ${defender.monstro.nome} foi atordoado! Perde o próximo turno!`, t: "efeito" });
+  }
 
   if (defender.imune) {
     defender.imune = false;
@@ -298,11 +360,39 @@ function processAttack(attacker: any, defender: any, carta: any, log: any[], dif
     defender.dodgeOnce = false;
     log.push({ msg: `🌪️ ${defender.monstro.nome} esquivou!`, t: "efeito" });
   } else {
+    // Passive: Phantom — 25% chance de esquivar qualquer ataque
+    if (defender.monstro.id === "phantom" && Math.random() < 0.25) {
+      log.push({ msg: `👻 ${defender.monstro.nome} atravessa o plano sombrio e esquiva!`, t: "efeito" });
+      return log;
+    }
+
     const fxDef = swarmBonus(defender.swarms || []);
     const def = defender.monstro.def + (defender.defAtiva || 0) + fxDef.defBonus;
-    const fin = Math.max(0, dmg - def);
+    let fin = Math.max(0, dmg - def);
+
+    // Passive: Crystal — reflete 15% do dano recebido
+    if (defender.monstro.id === "crystal" && fin > 0) {
+      const reflected = Math.floor(fin * 0.15);
+      attacker.hp = Math.max(0, attacker.hp - reflected);
+      log.push({ msg: `💎 Armadura Cristal reflete ${reflected} de dano em ${attacker.monstro.nome}!`, t: "efeito" });
+    }
+
+    // Swarm: Espelho Arcano — reflete % do dano
+    if (fxDef.reflect > 0 && fin > 0) {
+      const reflected = Math.floor(fin * (fxDef.reflect / 100));
+      attacker.hp = Math.max(0, attacker.hp - reflected);
+      log.push({ msg: `🪞 Espelho Arcano reflete ${reflected} de dano em ${attacker.monstro.nome}!`, t: "efeito" });
+    }
+
     defender.hp = Math.max(0, defender.hp - fin);
     log.push({ msg: `⚔️ ${attacker.monstro.nome} causa ${fin} de dano em ${defender.monstro.nome}!`, t: "dano", dmg: fin });
+
+    // Swarm: Vampiro Sombrio — drena HP do inimigo
+    if (fxAtk.drain > 0 && fin > 0) {
+      const drained = Math.min(fxAtk.drain, fin);
+      attacker.hp = Math.min(attacker.maxHp, attacker.hp + drained);
+      log.push({ msg: `🧛 ${attacker.monstro.nome} drena ${drained} HP de ${defender.monstro.nome}!`, t: "cura" });
+    }
 
     const pr = aplicarPoison(defender, log);
     defender = pr.alvo;
@@ -394,12 +484,16 @@ function handlePlayCard(state: any, payload: any): any {
 
   const events: any[] = [{ type: "card_played", slot, carta }];
 
-  // Check victory
+  // Check victory (with Fenix revive)
   if (opponent && opponent.hp <= 0) {
-    state.fase = "resultado";
-    state.vencedor = slot;
-    events.push({ type: "game_over", winner: slot });
-    return { state, events };
+    const rev = checkRevive(opponent, [...(state.log || [])]);
+    state.log = rev.log;
+    if (rev.revived) { state.players[opSlot] = rev.player; }
+    else {
+      state.fase = "resultado"; state.vencedor = slot;
+      events.push({ type: "game_over", winner: slot });
+      return { state, events };
+    }
   }
 
   // For AI mode, run AI turn
@@ -409,10 +503,14 @@ function handlePlayCard(state: any, payload: any): any {
     events.push(...aiResult.events);
 
     if (state.players[slot].hp <= 0) {
-      state.fase = "resultado";
-      state.vencedor = opSlot;
-      events.push({ type: "game_over", winner: opSlot });
-      return { state, events };
+      const rev = checkRevive(state.players[slot], [...(state.log || [])]);
+      state.log = rev.log;
+      if (rev.revived) { state.players[slot] = rev.player; }
+      else {
+        state.fase = "resultado"; state.vencedor = opSlot;
+        events.push({ type: "game_over", winner: opSlot });
+        return { state, events };
+      }
     }
 
     state = advanceTurn(state);
