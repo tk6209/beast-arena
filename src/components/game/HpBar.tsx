@@ -45,7 +45,7 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
         alignItems: "center",
         gap: 8,
         height: 40,
-        background: "linear-gradient(180deg, rgba(10,17,34,.92), rgba(4,7,18,.95))",
+        background: "linear-gradient(160deg,rgba(16,10,6,.95),rgba(10,6,4,.98))",
         border: `1px solid ${showFlash ? "#ff1744" : mc.g + "44"}`,
         borderRadius: 12,
         padding: "0 10px",
@@ -64,7 +64,7 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
       <div style={{ flexShrink: 0, minWidth: 0 }}>
         <span
           style={{
-            fontFamily: "Bangers, cursive",
+            fontFamily: "'Bebas Neue','Barlow Condensed',cursive",
             fontSize: 13,
             color: mc.g,
             letterSpacing: 0.8,
@@ -79,7 +79,7 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
             style={{
               marginLeft: 4,
               fontSize: 9,
-              fontFamily: "Oswald, sans-serif",
+              fontFamily: "'Rajdhani','Barlow Condensed',sans-serif",
               color: pw?.cor || "#7c3aed",
               fontWeight: 700,
             }}
@@ -122,8 +122,8 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
         <span
           style={{
             fontSize: pct <= 25 ? 10 : 9,
-            fontFamily: "Oswald, sans-serif",
-            color: pct <= 25 ? "#ef4444" : "#e8eefc",
+            fontFamily: "'Rajdhani','Barlow Condensed',sans-serif",
+            color: pct <= 25 ? "#ef4444" : "#e8d8c4",
             whiteSpace: "nowrap",
             flexShrink: 0,
             fontWeight: pct <= 25 ? 700 : 400,
@@ -137,10 +137,10 @@ export default function HpBar({ jog, inimigo, hit }: HpBarProps) {
 
       {/* ATK / DEF badges */}
       <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-        <span style={{ fontSize: 9, color: "#ff7961", fontFamily: "Nunito, sans-serif", fontWeight: 800 }}>
+        <span style={{ fontSize: 9, color: "#ff7961", fontFamily: "'Rajdhani','Barlow Condensed',sans-serif", fontWeight: 800 }}>
           ⚔{atkFinal}
         </span>
-        <span style={{ fontSize: 9, color: "#82b1ff", fontFamily: "Nunito, sans-serif", fontWeight: 800 }}>
+        <span style={{ fontSize: 9, color: "#82b1ff", fontFamily: "'Rajdhani','Barlow Condensed',sans-serif", fontWeight: 800 }}>
           🛡{defFinal}
         </span>
       </div>

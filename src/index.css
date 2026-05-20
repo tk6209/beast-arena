@@ -2,164 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ═══════════════════════════════════════════════════
+   BEAST ARENA — Global CSS v3
+   Dark Fantasy Arcade
+═══════════════════════════════════════════════════ */
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+:root {
+  --bg0: #080503;
+  --bg1: #100c09;
+  --bg2: #181210;
+  --gold: #f0b429;
+  --ember: #ff6b2b;
+  --cyan: #00d4ff;
+  --blood: #c0392b;
+  --font-display: 'Bebas Neue', 'Barlow Condensed', cursive;
+  --font-ui: 'Rajdhani', 'Barlow Condensed', sans-serif;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+*, *::before, *::after { box-sizing: border-box; }
 
-  html {
-    height: -webkit-fill-available;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    overscroll-behavior: none;
-    min-height: 100dvh;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   NORMAN/NIELSEN UX RULES — Applied globally
-═══════════════════════════════════════════════════════════ */
-
-/* 1. Minimum tap target 44px (Apple HIG + WCAG) */
-button, [role="button"] {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* 2. Focus visible — keyboard/screen reader users */
-button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
-  outline: 2px solid #00e5ff;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* 3. Disabled states are clearly distinct */
-button:disabled {
-  opacity: 0.45 !important;
-  cursor: not-allowed !important;
-}
-
-/* 4. Active/pressed feedback */
-button:active:not(:disabled) {
-  transform: scale(0.97) translateY(1px) !important;
-  transition: transform 0.08s ease !important;
-}
-
-/* 5. Smooth transitions everywhere */
-* {
-  -webkit-tap-highlight-color: rgba(0, 229, 255, 0.15);
-}
-
-/* 6. Prevent accidental double-tap zoom on buttons */
-button, a {
-  touch-action: manipulation;
-}
-
-/* 7. Text stays legible — minimum sizes */
-body {
+html, body, #root {
+  margin: 0; padding: 0;
+  min-height: 100dvh;
+  background: var(--bg0);
+  color: #e8e0d8;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  overscroll-behavior: none;
 }
 
-/* 8. Scrollable areas — scroll snap for carousels */
-.carousel-snap {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+/* Scrollbar — dark */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2018; border-radius: 99px; }
+
+/* Touch targets */
+button, [role="button"] { min-height: 44px; min-width: 44px; touch-action: manipulation; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button:disabled { opacity: 0.35 !important; cursor: not-allowed !important; }
+button:active:not(:disabled) { transform: scale(0.96) !important; transition: transform .08s ease !important; }
+
+/* No tap flash */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Noise texture overlay — applied globally */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
-.carousel-snap > * {
-  scroll-snap-align: center;
-}
+
+/* Utility animations */
+@keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes popIn     { 0%{opacity:0;transform:scale(.5)} 65%{transform:scale(1.06)} 100%{opacity:1;transform:scale(1)} }
+@keyframes shimmer   { 0%,100%{background-position:-200% 0} 50%{background-position:200% 0} }
+@keyframes pulse     { 0%,100%{opacity:.5} 50%{opacity:1} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes slideUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes goldShine { 0%{background-position:-200% center} 100%{background-position:200% center} }
+@keyframes scanline  { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }

@@ -1,27 +1,24 @@
 import React, { useState } from "react";
-import { actionBtn } from "@/game/styles";
+import { DS } from "@/game/styles";
 
 interface BtnMainProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: string;
-  disabled?: boolean;
-  style?: React.CSSProperties;
-  title?: string;
+  children: React.ReactNode; onClick?: () => void;
+  variant?: string; disabled?: boolean; style?: React.CSSProperties; title?: string;
 }
 
-const VARIANT_MAP: Record<string, [string, string, string]> = {
-  blue:   ["#1044a7", "#1e88e5", "#00e5ff"],
-  green:  ["#14532d", "#2e7d32", "#69f0ae"],
-  purple: ["#4a148c", "#7b1fa2", "#ce93d8"],
-  gold:   ["#6b4a00", "#d97706", "#ffd54f"],
-  red:    ["#5a0b0b", "#d32f2f", "#ff8a80"],
-  dark:   ["#10131a", "#151921", "#3a4354"],
+const VARIANTS: Record<string, { bg: string; border: string; shadow: string; textColor?: string }> = {
+  gold:   { bg:"linear-gradient(160deg,#7a4f00,#c48000,#f0b429)", border:DS.gold, shadow:`0 8px 28px rgba(240,180,41,.4),inset 0 1px 0 rgba(255,255,255,.15)` },
+  blue:   { bg:"linear-gradient(160deg,#082060,#1044a0,#1a6cd0)", border:DS.cyan, shadow:`0 8px 28px rgba(0,212,255,.3),inset 0 1px 0 rgba(255,255,255,.1)` },
+  green:  { bg:"linear-gradient(160deg,#062a10,#0e5a1e,#27ae60)", border:DS.green, shadow:`0 8px 28px rgba(39,174,96,.3),inset 0 1px 0 rgba(255,255,255,.1)` },
+  red:    { bg:"linear-gradient(160deg,#3a0a08,#7a1510,#c0392b)", border:DS.blood, shadow:`0 8px 28px rgba(192,57,43,.4),inset 0 1px 0 rgba(255,255,255,.1)` },
+  ember:  { bg:"linear-gradient(160deg,#4a1800,#8a3400,#ff6b2b)", border:DS.ember, shadow:`0 8px 28px rgba(255,107,43,.35),inset 0 1px 0 rgba(255,255,255,.1)` },
+  purple: { bg:"linear-gradient(160deg,#250a50,#4a1490,#8b5cf6)", border:DS.violet, shadow:`0 8px 28px rgba(139,92,246,.35),inset 0 1px 0 rgba(255,255,255,.1)` },
+  dark:   { bg:`linear-gradient(160deg,${DS.bg2},${DS.bg3})`, border:DS.bg3, shadow:"0 4px 12px rgba(0,0,0,.4)", textColor:"#8a7a6a" },
 };
 
 export default function BtnMain({ children, onClick, variant = "blue", disabled = false, style = {}, title }: BtnMainProps) {
   const [pressed, setPressed] = useState(false);
-  const [c1, c2, border] = VARIANT_MAP[variant] || VARIANT_MAP.blue;
+  const v = VARIANTS[variant] || VARIANTS.blue;
 
   return (
     <button
@@ -33,20 +30,28 @@ export default function BtnMain({ children, onClick, variant = "blue", disabled 
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       style={{
-        ...actionBtn(c1, c2, border, disabled),
-        width: "100%",
-        // Norman: immediate visual feedback on press (affordance)
-        transform: pressed && !disabled ? "scale(0.97) translateY(1px)" : undefined,
-        boxShadow: pressed && !disabled
-          ? `0 2px 8px ${border}33`
-          : disabled ? "none" : `0 8px 24px ${border}33, inset 0 1px 0 rgba(255,255,255,.14)`,
-        transition: "transform .1s ease, box-shadow .1s ease, opacity .18s ease",
-        // Minimum touch target 44px (Norman/Apple HIG)
-        minHeight: 44,
+        width:"100%", minHeight:50, borderRadius:12,
+        border:`1.5px solid ${disabled ? DS.bg3 : v.border}`,
+        background: disabled ? `linear-gradient(160deg,${DS.bg2},${DS.bg1})` : v.bg,
+        color: disabled ? "#3a3028" : (v.textColor || "#fff"),
+        fontFamily: DS.fontDisplay,
+        fontSize: 22, letterSpacing: 2.5,
+        cursor: disabled ? "default" : "pointer",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        gap:8, padding:"0 20px",
+        boxShadow: disabled ? "none" : pressed ? "0 2px 8px rgba(0,0,0,.4)" : v.shadow,
+        transform: pressed && !disabled ? "scale(0.97) translateY(1px)" : "scale(1)",
+        transition:"transform .1s ease, box-shadow .1s ease",
+        position:"relative", overflow:"hidden",
         ...style,
-      }}
-    >
-      {children}
+      }}>
+      {/* Shine */}
+      {!disabled && !pressed && (
+        <div style={{ position:"absolute",top:0,left:0,right:0,height:"50%",
+          background:"linear-gradient(180deg,rgba(255,255,255,.07),transparent)",
+          pointerEvents:"none",borderRadius:"12px 12px 0 0" }} />
+      )}
+      <span style={{ position:"relative",zIndex:1 }}>{children}</span>
     </button>
   );
 }

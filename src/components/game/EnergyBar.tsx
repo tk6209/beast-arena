@@ -13,12 +13,12 @@ export default function EnergyBar({ energia, max = 6, isMyTurn = true }: EnergyB
       alignItems: "center",
       gap: 6,
       padding: "3px 8px",
-      background: "rgba(0,229,255,.04)",
+      background: "rgba(240,180,41,.04)",
       borderRadius: 8,
-      border: "1px solid rgba(0,229,255,.1)",
+      border: "1px solid rgba(240,180,41,.15)",
     }}>
       <span style={{
-        fontFamily: "Oswald, sans-serif",
+        fontFamily: "'Rajdhani','Barlow Condensed',sans-serif",
         fontSize: 9,
         color: "#8a95aa",
         letterSpacing: 1,
@@ -39,11 +39,11 @@ export default function EnergyBar({ energia, max = 6, isMyTurn = true }: EnergyB
                 borderRadius: 4,
                 background: filled
                   ? isMyTurn
-                    ? "linear-gradient(135deg, #00e5ff, #7eb8ff)"
-                    : "rgba(0,229,255,.3)"
+                    ? "linear-gradient(135deg, #f0b429, #ff8c00)"
+                    : "rgba(240,180,41,.3)"
                   : "rgba(255,255,255,.06)",
                 border: `1px solid ${filled ? "rgba(0,229,255,.5)" : "rgba(255,255,255,.08)"}`,
-                boxShadow: filled && isMyTurn ? "0 0 6px rgba(0,229,255,.4)" : "none",
+                boxShadow: filled && isMyTurn ? "0 0 8px rgba(240,180,41,.5)" : "none",
                 transition: "all .2s ease",
                 position: "relative",
                 overflow: "hidden",
@@ -63,9 +63,9 @@ export default function EnergyBar({ energia, max = 6, isMyTurn = true }: EnergyB
       </div>
 
       <span style={{
-        fontFamily: "Bangers, cursive",
+        fontFamily: "'Bebas Neue','Barlow Condensed',cursive",
         fontSize: 12,
-        color: isMyTurn ? "#00e5ff" : "#8a95aa",
+        color: isMyTurn ? "#f0b429" : "#5a4a3a",
         letterSpacing: 1,
         minWidth: 20,
         textAlign: "right",

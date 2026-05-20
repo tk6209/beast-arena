@@ -6,7 +6,7 @@ import { criarSessao, ouvirSessao, fecharCanal, type GameSession } from "@/game/
 import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
 import { falar, markGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
-import { pageBg } from "@/game/styles";
+import { pageBg, DS } from "@/game/styles";
 import { startBattleMusic, stopBattleMusic } from "@/game/battleMusic";
 import { isMuted, toggleMuted } from "@/game/audioState";
 import { hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticError, hapticExplosion } from "@/game/haptic";
@@ -484,7 +484,11 @@ export default function TelaBatalha({
 
   /* ─── RENDER ─── */
   return (
-    <div style={{ ...pageBg(), position:"relative" }}>
+    <div style={{
+      minHeight:"100dvh",
+      background:`radial-gradient(ellipse at 50% 0%,#1a0a06 0%,#0d0704 35%,${DS.bg0} 100%)`,
+      position:"relative",
+    }}>
       <style>{CSS}</style>
 
       {/* Screen flash overlay */}
@@ -496,30 +500,32 @@ export default function TelaBatalha({
       <ChromeNoise />
       <CombatParticles type={particleType} trigger={particleTrigger} />
 
-      <div style={{ position:"relative",zIndex:1,height:"100dvh",display:"flex",flexDirection:"column",padding:"8px 10px 6px",overflow:"hidden",boxSizing:"border-box",fontFamily:"Nunito,sans-serif" }}>
+      <div style={{ position:"relative",zIndex:1,height:"100dvh",display:"flex",flexDirection:"column",padding:"8px 10px 6px",overflow:"hidden",boxSizing:"border-box",fontFamily:DS.fontUI }}>
 
         {/* ══ TOP BAR ══ */}
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,marginBottom:5 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:7 }}>
-            <span style={{ fontFamily:"Bangers,cursive",fontSize:11,color:"#00e5ff",letterSpacing:2 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+            <span style={{ fontFamily:DS.fontDisplay,fontSize:13,color:DS.gold,letterSpacing:3,
+              background:`${DS.gold}18`,border:`1px solid ${DS.gold}30`,
+              borderRadius:6,padding:"2px 10px" }}>
               TURNO {(serverState.turno||0)+1}
             </span>
             {!gameOver && (
               <span style={{
-                fontFamily:"Oswald,sans-serif",fontSize:9,letterSpacing:1.5,
-                padding:"2px 9px",borderRadius:20,
-                background: isMyTurn ? "rgba(105,240,174,.1)" : "rgba(255,213,79,.08)",
-                border: `1px solid ${isMyTurn ? "rgba(105,240,174,.3)" : "rgba(255,213,79,.3)"}`,
-                color: isMyTurn ? "#69f0ae" : "#ffd54f",
-                animation: !isMyTurn && !loading ? "timerPulse 1.2s infinite" : "none",
+                fontFamily:DS.fontUI,fontSize:10,fontWeight:700,letterSpacing:1.5,
+                padding:"2px 10px",borderRadius:6,
+                background: isMyTurn ? "rgba(39,174,96,.12)" : `${DS.gold}0a`,
+                border: `1px solid ${isMyTurn ? "rgba(39,174,96,.3)" : DS.gold+"22"}`,
+                color: isMyTurn ? DS.green : DS.gold,
+                animation: !isMyTurn && !loading ? "pulse 1.2s infinite" : "none",
               }}>
                 {isMyTurn ? "SUA VEZ" : "ADVERSÁRIO..."}
               </span>
             )}
-            {loading && <div style={{ width:10,height:10,border:"2px solid rgba(255,152,0,.2)",borderTopColor:"#ff9800",borderRadius:"50%",animation:"spin .7s linear infinite" }} />}
+            {loading && <div style={{ width:10,height:10,border:`2px solid ${DS.ember}22`,borderTopColor:DS.ember,borderRadius:"50%",animation:"spin .7s linear infinite" }} />}
           </div>
           <button onClick={() => { const m = toggleMuted(); setMuted(m); m ? stopBattleMusic() : startBattleMusic(); }}
-            style={{ background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.1)",borderRadius:8,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,flexShrink:0 }}>
+            style={{ background:`${DS.bg2}`,border:`1px solid ${DS.bg3}`,borderRadius:8,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:13,flexShrink:0 }}>
             {muted?"🔇":"🔊"}
           </button>
         </div>
@@ -705,7 +711,7 @@ export default function TelaBatalha({
         {!gameOver && (
           <div style={{ display:"flex",gap:8,flexShrink:0,marginBottom:5 }}>
             {comboSel.length === 2 ? (
-              <BtnMain variant="gold" disabled={!isMyTurn||loading||!canCombo} onClick={jogarCombo} style={{ flex:2 }}>
+              <BtnMain variant="ember" disabled={!isMyTurn||loading||!canCombo} onClick={jogarCombo} style={{ flex:2,fontSize:18 }}>
                 ⚡ COMBO! ({comboEnergy}⚡)
               </BtnMain>
             ) : (
@@ -713,15 +719,15 @@ export default function TelaBatalha({
                 variant={cartaSel && canPlay ? "gold" : "dark"}
                 disabled={!cartaSel||!isMyTurn||loading||!canPlay}
                 onClick={jogarCarta}
-                style={{ flex:2 }}
+                style={{ flex:2,fontSize:18 }}
               >
                 {!isMyTurn         ? "AGUARDANDO..." :
-                 !cartaSel         ? "← ESCOLHA UMA CARTA" :
-                 !canPlay          ? `⚡ SEM ENERGIA (${myEnergia}/${cartaSel.custo||1})` :
+                 !cartaSel         ? "ESCOLHA UMA CARTA" :
+                 !canPlay          ? `SEM ENERGIA (${myEnergia}/${cartaSel.custo||1}⚡)` :
                                      `JOGAR (${cartaSel.custo||1}⚡)`}
               </BtnMain>
             )}
-            <BtnMain variant="dark" disabled={!isMyTurn||loading} onClick={handlePassar} style={{ flex:1,fontSize:20 }} title="Encerra turno e compra 3 cartas">
+            <BtnMain variant="dark" disabled={!isMyTurn||loading} onClick={handlePassar} style={{ flex:1,fontSize:22 }} title="Encerra turno e compra 3 cartas">
               ⏭
             </BtnMain>
           </div>
@@ -735,7 +741,7 @@ export default function TelaBatalha({
               textShadow:"0 0 20px currentColor",
               animation:"victoryIn .65s cubic-bezier(.34,1.56,.64,1) forwards",
             }}>
-              {serverState.vencedor===slotLocal ? "🏆 VITÓRIA!" : "💀 DERROTA!"}
+              {serverState.vencedor===slotLocal ? "🏆  VITÓRIA!" : "💀  DERROTA!"}
             </div>
             <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor===slotLocal?p1Display:null,bStats)} style={{ marginTop:10 }}>
               CONTINUAR →
