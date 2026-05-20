@@ -333,6 +333,7 @@ export default function Index() {
             onMissoes={() => setTela("missoes")}
             onConquistas={() => setTela("conquistas")}
             onAmigos={() => setTela("amigos")}
+            onColecao={() => setTela("colecao")}
             onLogout={handleLogout}
           />
         </>
