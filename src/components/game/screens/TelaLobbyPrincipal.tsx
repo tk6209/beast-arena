@@ -43,6 +43,7 @@ export default function TelaLobbyPrincipal({
   const [selectedMonster, setSelectedMonster] = useState(0);
   const [showDiff, setShowDiff] = useState(false);
   const [fade, setFade] = useState(true);
+  const [missaoClaimable, setMissaoClaimable] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
   const lastX = useRef(0);
@@ -63,6 +64,17 @@ export default function TelaLobbyPrincipal({
     if (s) setStats(s);
     if (l) setLeague(l);
     if (sp) setSeasonPass(sp);
+    // Check for claimable missions
+    const today = new Date().toISOString().split("T")[0];
+    const { data: claimable } = await supabase
+      .from("user_missions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("assigned_date", today)
+      .eq("completed", true)
+      .eq("claimed", false)
+      .limit(1);
+    setMissaoClaimable((claimable?.length || 0) > 0);
   }
 
   const currentKey = monsterKeys[selectedMonster];
@@ -227,9 +239,23 @@ export default function TelaLobbyPrincipal({
             </SidePanel>
 
             <SidePanel onClick={onMissoes} bg="rgba(105,240,174,.08)" border="rgba(105,240,174,.2)" delay={3}>
-              <div style={{ fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
+              <div style={{ position: "relative", fontFamily: "Bangers, cursive", fontSize: 10, color: "#69f0ae", letterSpacing: 1 }}>
                 🎯 MISSÕES
+                {missaoClaimable && (
+                  <div style={{
+                    position: "absolute", top: -6, right: -8,
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: "#ffd54f",
+                    boxShadow: "0 0 6px #ffd54f",
+                    animation: "pulse 1s ease-in-out infinite",
+                  }} />
+                )}
               </div>
+              {missaoClaimable && (
+                <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 7, color: "#ffd54f", marginTop: 2 }}>
+                  COLETAR!
+                </div>
+              )}
             </SidePanel>
           </div>
 

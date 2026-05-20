@@ -22,6 +22,7 @@ import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import { loadPrefsFromDB } from "@/game/audioPreferences";
 import { postBattleProgression } from "@/game/postBattle";
+import ScreenTransition from "@/components/game/ScreenTransition";
 import type { Jogador } from "@/game/engine";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
 import type { User } from "@supabase/supabase-js";
@@ -174,7 +175,7 @@ export default function Index() {
     setTela("batalha");
   }, []);
 
-  const handleFim = async (v: Jogador | null, stats?: BattleStats) => {
+  const handleFim = (v: Jogador | null, stats?: BattleStats) => {
     setVencedor(v);
     setLastBattleStats(stats);
     const ganhou = Boolean(v);
@@ -185,62 +186,10 @@ export default function Index() {
         setCampaignFinished(true);
       }
     }
-
-    // ── Persistir resultado no banco ──
-    if (user) {
-      try {
-        // 1. Atualizar user_stats
-        const { data: existing } = await supabase
-          .from("user_stats")
-          .select("total_wins, total_losses, win_streak, best_streak")
-          .eq("user_id", user.id)
-          .single();
-
-        const streak = ganhou ? ((existing?.win_streak || 0) + 1) : 0;
-        const bestStreak = Math.max(existing?.best_streak || 0, streak);
-        const newStats = {
-          user_id: user.id,
-          total_wins: (existing?.total_wins || 0) + (ganhou ? 1 : 0),
-          total_losses: (existing?.total_losses || 0) + (ganhou ? 0 : 1),
-          win_streak: streak,
-          best_streak: bestStreak,
-          favorite_monster: monstroP1 || existing?.favorite_monster,
-        };
-        await supabase.from("user_stats").upsert(newStats, { onConflict: "user_id" });
-
-        // 2. Recompensar coins + XP (10 coins por vitória, 3 por derrota; 20 XP por vitória, 5 por derrota)
-        const coinsGain = ganhou ? 10 : 3;
-        const xpGain = ganhou ? 20 : 5;
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("coins, xp, level")
-          .eq("user_id", user.id)
-          .single();
-        if (prof) {
-          const newXp = (prof.xp || 0) + xpGain;
-          const newLevel = Math.floor(newXp / 100) + 1;
-          await supabase
-            .from("profiles")
-            .update({ coins: (prof.coins || 0) + coinsGain, xp: newXp, level: newLevel })
-            .eq("user_id", user.id);
-        }
-
-        // 3. Ranking global (upsert por user_id)
-        await supabase.from("rankings").upsert({
-          player_name: nomeJogador,
-          wins: (existing?.total_wins || 0) + (ganhou ? 1 : 0),
-          losses: (existing?.total_losses || 0) + (ganhou ? 0 : 1),
-        }, { onConflict: "player_name" });
-
-        // 4. Missões + Conquistas
-        if (stats) {
-          await postBattleProgression(user.id, ganhou, stats, monstroP1 || "panther");
-        }
-      } catch (err) {
-        console.error("Erro ao salvar resultado:", err);
-      }
+    // Season Pass XP (TelaResultado handles stats/missions/achievements)
+    if (user && stats) {
+      postBattleProgression(user.id, ganhou, stats, monstroP1 || "panther").catch(console.error);
     }
-
     setTela("resultado");
   };
 
@@ -334,7 +283,15 @@ export default function Index() {
     <GameInviteNotification userId={user.id} onAccept={handleInviteAccept} />
   ) : null;
 
-  switch (tela) {
+  // Determine transition type per screen
+  const transitionType = (t: string) => {
+    if (t === "batalha") return "battle";
+    if (t === "resultado") return "zoom";
+    if (t === "home" || t === "lobby_principal") return "fade";
+    return "slideUp";
+  };
+
+  const renderScreen = () => { switch (tela) {
     case "auth":
       return <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
@@ -473,5 +430,11 @@ export default function Index() {
           onLoja={() => setTela("loja")}
         />
       );
-  }
+  } }; // end renderScreen
+
+  return (
+    <ScreenTransition screenKey={tela} type={transitionType(tela)}>
+      {renderScreen()}
+    </ScreenTransition>
+  );
 }

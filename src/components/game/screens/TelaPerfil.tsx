@@ -12,6 +12,18 @@ import {
 import { validateDisplayName, canChangeName, daysUntilNameChange } from "@/game/nameValidation";
 import type { User } from "@supabase/supabase-js";
 
+interface BattleHistoryRow {
+  id: string;
+  won: boolean;
+  monster_used: string;
+  opponent_monster: string | null;
+  damage_dealt: number;
+  cards_played: number;
+  mode: string;
+  dificuldade: string;
+  created_at: string;
+}
+
 interface TelaPefilProps {
   user: User;
   onVoltar: () => void;
@@ -46,6 +58,9 @@ export default function TelaPerfil({ user, onVoltar, onLogout, onReplayTutorial 
   const [music, setMusic] = useState(isMusicEnabled());
   const [voice, setVoice] = useState(isVoiceEnabled());
 
+  const [history, setHistory] = useState<BattleHistoryRow[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
   // Name editing
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
@@ -60,6 +75,14 @@ export default function TelaPerfil({ user, onVoltar, onLogout, onReplayTutorial 
       ]);
       if (p) { setProfile(p as Profile); setNewName(p.display_name); }
       if (s) setStats(s);
+      // Load last 10 battles
+      const { data: hist } = await supabase
+        .from("battle_history")
+        .select("id, won, monster_used, opponent_monster, damage_dealt, cards_played, mode, dificuldade, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (hist) setHistory(hist as BattleHistoryRow[]);
       setLoading(false);
     })();
   }, [user.id]);
@@ -305,6 +328,67 @@ export default function TelaPerfil({ user, onVoltar, onLogout, onReplayTutorial 
                 </button>
               </div>
             ))}
+          </div>
+
+          {/* Battle History */}
+          <div style={{
+            background: "rgba(255,213,79,.03)",
+            border: "1px solid rgba(255,213,79,.1)",
+            borderRadius: 10, padding: "12px 16px", marginBottom: 10,
+          }}>
+            <div
+              onClick={() => setShowHistory(h => !h)}
+              style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                cursor: "pointer",
+              }}
+            >
+              <span style={{ fontFamily: "Bangers, cursive", fontSize: 14, color: "#ffd54f", letterSpacing: 2 }}>
+                📜 HISTÓRICO
+              </span>
+              <span style={{ fontSize: 12, color: "#8a95aa" }}>{showHistory ? "▲" : "▼"}</span>
+            </div>
+
+            {showHistory && (
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                {history.length === 0 ? (
+                  <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#8a95aa", textAlign: "center", padding: "8px 0" }}>
+                    Nenhuma batalha registrada ainda.
+                  </div>
+                ) : history.map((b) => {
+                  const mData = MONSTROS[b.monster_used];
+                  const oppData = b.opponent_monster ? MONSTROS[b.opponent_monster] : null;
+                  const date = new Date(b.created_at);
+                  const dateStr = `${date.getDate().toString().padStart(2,"0")}/${(date.getMonth()+1).toString().padStart(2,"0")} ${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}`;
+                  return (
+                    <div key={b.id} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: b.won ? "rgba(105,240,174,.05)" : "rgba(239,68,68,.05)",
+                      border: `1px solid ${b.won ? "rgba(105,240,174,.15)" : "rgba(239,68,68,.15)"}`,
+                      borderRadius: 8, padding: "7px 10px",
+                    }}>
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{mData?.emoji || "⚔️"}</span>
+                      {oppData && <><span style={{ fontSize: 10, color: "#8a95aa" }}>vs</span>
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{oppData.emoji}</span></>}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: "Bangers, cursive", fontSize: 11, letterSpacing: 1,
+                          color: b.won ? "#69f0ae" : "#ef4444",
+                        }}>
+                          {b.won ? "✅ VITÓRIA" : "💀 DERROTA"}
+                          <span style={{ color: "#8a95aa", fontSize: 9, marginLeft: 6 }}>
+                            {b.mode === "ai" ? `vs IA (${b.dificuldade})` : "vs Jogador"}
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 9, color: "#8a95aa" }}>
+                          🗡️{b.damage_dealt} · 🃏{b.cards_played} · {dateStr}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Tutorial replay + actions */}

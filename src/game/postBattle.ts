@@ -8,21 +8,57 @@ import type { BattleStats } from "@/components/game/screens/TelaBatalha";
    - Achievement unlocks
 ───────────────────────────────────────────── */
 
+export interface BattleHistoryEntry {
+  sessionId?: string | null;
+  won: boolean;
+  monsterUsed: string;
+  opponentMonster?: string;
+  damageDealt: number;
+  cardsPlayed: number;
+  turns?: number;
+  mode?: string;
+  dificuldade?: string;
+}
+
 export async function postBattleProgression(
   userId: string,
   ganhou: boolean,
   stats: BattleStats,
-  monstroId: string
+  monstroId: string,
+  historyEntry?: BattleHistoryEntry
 ) {
   try {
     await Promise.all([
       updateMissions(userId, ganhou, stats),
       checkAchievements(userId, ganhou, stats, monstroId),
       updateSeasonPass(userId, ganhou, stats),
+      saveBattleHistory(userId, ganhou, stats, monstroId, historyEntry),
     ]);
   } catch (err) {
     console.error("postBattleProgression error:", err);
   }
+}
+
+/* ── Battle History ── */
+async function saveBattleHistory(
+  userId: string,
+  ganhou: boolean,
+  stats: BattleStats,
+  monstroId: string,
+  entry?: BattleHistoryEntry
+) {
+  await supabase.from("battle_history").insert({
+    user_id: userId,
+    session_id: entry?.sessionId || null,
+    won: ganhou,
+    monster_used: entry?.monsterUsed || monstroId,
+    opponent_monster: entry?.opponentMonster || null,
+    damage_dealt: stats.damageDealt || 0,
+    cards_played: stats.cardsPlayed || 0,
+    turns: entry?.turns || 0,
+    mode: entry?.mode || "ai",
+    dificuldade: entry?.dificuldade || "medio",
+  });
 }
 
 /* ── Season Pass XP ── */

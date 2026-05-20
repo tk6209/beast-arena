@@ -378,6 +378,61 @@ export default function TelaResultado({
             animation: "popIn .5s cubic-bezier(.34,1.56,.64,1) forwards",
             boxShadow: `0 0 40px ${g ? "#00e5ff22" : "#ef444422"}`,
           }}>
+            {/* Rewards earned */}
+            {battleStats && (
+              <div style={{
+                display: "flex", justifyContent: "center", gap: 12,
+                padding: "8px 12px",
+                background: "rgba(255,255,255,.03)",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,.07)",
+              }}>
+                {[
+                  { label: "Dano", value: battleStats.damageDealt || 0, emoji: "⚔️", color: "#ef4444" },
+                  { label: "Cartas", value: battleStats.cardsPlayed || 0, emoji: "🃏", color: "#00e5ff" },
+                  { label: "Evols", value: battleStats.evolutions || 0, emoji: "⭐", color: "#ffd54f" },
+                  { label: "Curas", value: battleStats.healsUsed || 0, emoji: "💚", color: "#69f0ae" },
+                ].map((s) => (
+                  <div key={s.label} style={{ textAlign: "center", minWidth: 44 }}>
+                    <div style={{ fontSize: 14 }}>{s.emoji}</div>
+                    <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 14, color: s.color, fontWeight: 700 }}>
+                      {s.value}
+                    </div>
+                    <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 8, color: "#8a95aa" }}>
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* XP + Coins earned */}
+            <div style={{
+              display: "flex", justifyContent: "center", gap: 16,
+              padding: "8px 0",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "rgba(255,213,79,.08)", border: "1px solid rgba(255,213,79,.2)",
+                borderRadius: 8, padding: "5px 12px",
+              }}>
+                <span style={{ fontSize: 14 }}>💰</span>
+                <span style={{ fontFamily: "Bangers, cursive", fontSize: 18, color: "#ffd54f", letterSpacing: 1 }}>
+                  +{g ? (dificuldade === "facil" ? 10 : dificuldade === "avancado" ? 40 : 20) : 5}
+                </span>
+              </div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "rgba(0,229,255,.08)", border: "1px solid rgba(0,229,255,.2)",
+                borderRadius: 8, padding: "5px 12px",
+              }}>
+                <span style={{ fontSize: 14 }}>✨</span>
+                <span style={{ fontFamily: "Bangers, cursive", fontSize: 18, color: "#00e5ff", letterSpacing: 1 }}>
+                  +{g ? 30 : 10} XP
+                </span>
+              </div>
+            </div>
+
             {canContinue && onContinuar && (
               <BtnMain variant="gold" onClick={onContinuar}>
                 ⚔️ PRÓXIMO ADVERSÁRIO
