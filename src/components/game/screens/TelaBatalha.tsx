@@ -336,7 +336,14 @@ export default function TelaBatalha({
       if (evt.type === "game_over") {
         const winner = evt.winner ?? evt.winner;
         setTimeout(() => ifBattleActive(bid, () => {
-          if (winner === slotLocal) { sfxVitoria(); hapticSuccess(); } else { sfxDerrota(); hapticError(); }
+          if (winner === slotLocal) {
+            sfxVitoria(); hapticSuccess();
+            const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+            particleBurst(cx, cy,     { count: 32, color: "#ffd166", spread: 220, size: 10 });
+            setTimeout(() => particleBurst(cx, cy - 60, { count: 24, color: "#f0b429", spread: 180 }), 180);
+            setTimeout(() => particleBurst(cx, cy + 60, { count: 24, color: "#ff6b2b", spread: 180 }), 360);
+            screenShake("md");
+          } else { sfxDerrota(); hapticError(); screenShake("md"); }
         }), 1400);
         stopBattleMusic();
         setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats), 2000);
