@@ -62,16 +62,27 @@ export function actionBtn(c1: string, c2: string, border: string, disabled = fal
       ? `linear-gradient(180deg, ${DS.bg2}, ${DS.bg1})`
       : `linear-gradient(160deg, ${c1}, ${c2})`,
     border: `1px solid ${disabled ? DS.bg3 : border}`,
-    borderRadius: 12,
-    padding: "13px 18px",
+    borderRadius: 14,
+    padding: "14px 18px 16px",
     color: disabled ? "#3a3028" : "#fff",
     fontFamily: DS.fontDisplay,
     fontSize: 20,
     letterSpacing: 2,
-    boxShadow: disabled ? "none" : `0 6px 20px ${border}44, inset 0 1px 0 rgba(255,255,255,.1)`,
+    textShadow: disabled ? "none" : "0 2px 0 rgba(0,0,0,.45)",
+    boxShadow: disabled
+      ? "none"
+      : [
+          `0 5px 0 0 ${border}`,                   // 3D base (Brawl-style bevel)
+          `0 8px 18px ${border}55`,                // soft drop glow
+          "inset 0 1px 0 rgba(255,255,255,.28)",   // top highlight
+          "inset 0 -2px 0 rgba(0,0,0,.25)",        // bottom inner shadow
+        ].join(", "),
     cursor: disabled ? "default" : "pointer",
-    transition: "transform .12s ease, box-shadow .12s ease",
+    transition: "transform .08s cubic-bezier(.4,0,.2,1), box-shadow .08s cubic-bezier(.4,0,.2,1)",
     minHeight: 48,
+    transform: "translateY(0)",
+    WebkitTapHighlightColor: "transparent",
+    userSelect: "none",
   };
 }
 
