@@ -14,6 +14,14 @@ const RARITY_TOP: Record<string, string> = {
   incomum:  `linear-gradient(90deg,#063a14,#27ae60,#aaffcc,#27ae60,#063a14)`,
 };
 
+const RARITY_META: Record<string, { color: string; label: string; icon: string; gem: string }> = {
+  lendario: { color: DS.gold,   label: "LENDÁRIO", icon: "★", gem: "💎" },
+  epico:    { color: DS.violet, label: "ÉPICO",    icon: "✦", gem: "🔮" },
+  raro:     { color: DS.cyan,   label: "RARO",     icon: "◆", gem: "💠" },
+  incomum:  { color: DS.green,  label: "INCOMUM",  icon: "▲", gem: "🟢" },
+  comum:    { color: "#8a95aa", label: "COMUM",    icon: "•",  gem: "" },
+};
+
 const TYPE_ICON: Record<string, string> = {
   ataque:"⚔️", defesa:"🛡️", cura:"💚", evolucao:"⭐",
   swarm:"🐾", desafio:"⚡", poderzinho:"✨",
@@ -26,6 +34,9 @@ export default function Carta({ carta, sel=false, disabled=false, onClick, mini=
   const p = cartaPaleta(carta);
   const rar = carta.raridade || "comum";
   const hasRarBorder = ["lendario","epico","raro","incomum"].includes(rar);
+  const rarMeta = RARITY_META[rar] || RARITY_META.comum;
+  const rarColor = rarMeta.color;
+  const isHighRar = rar === "lendario" || rar === "epico";
 
   const W = mini ? 80 : 104;
   const H = mini ? 120 : 156;
@@ -106,19 +117,70 @@ export default function Carta({ carta, sel=false, disabled=false, onClick, mini=
           boxShadow: sel
             ? `0 0 0 2px ${DS.gold},0 16px 40px rgba(0,0,0,.7),0 0 32px ${p.bc}66`
             : pressed ? "0 2px 8px rgba(0,0,0,.5)"
-            : `0 8px 24px rgba(0,0,0,.6),0 0 0 1px ${p.bc}28`,
+            : hasRarBorder
+              ? `0 8px 24px rgba(0,0,0,.6),0 0 0 1px ${rarColor}55,0 0 ${isHighRar?22:14}px ${rarColor}${isHighRar?"66":"33"}`
+              : `0 8px 24px rgba(0,0,0,.6),0 0 0 1px ${p.bc}28`,
           // Background
           background:`linear-gradient(170deg,${p.t}f8,${p.m}ee,${DS.bg1}fc)`,
-          border:`1.5px solid ${sel?DS.gold:p.bc+"44"}`,
+          border:`1.5px solid ${sel?DS.gold:hasRarBorder?rarColor+"99":p.bc+"44"}`,
           overflow:"hidden",
           display:"flex", flexDirection:"column" as const,
         }}>
 
         {/* Rarity shimmer top edge */}
         {hasRarBorder && (
-          <div style={{ position:"absolute",top:0,left:0,right:0,height:2,
+          <div style={{ position:"absolute",top:0,left:0,right:0,height:3,
             background:RARITY_TOP[rar],backgroundSize:"200%",
             animation:"shimmer 2s linear infinite",zIndex:6,pointerEvents:"none" }} />
+        )}
+        {/* Rarity shimmer bottom edge (mirror) */}
+        {hasRarBorder && (
+          <div style={{ position:"absolute",bottom:0,left:0,right:0,height:3,
+            background:RARITY_TOP[rar],backgroundSize:"200%",
+            animation:"shimmer 2s linear infinite",zIndex:6,pointerEvents:"none" }} />
+        )}
+        {/* Corner ornaments for rarity ≥ raro */}
+        {(rar==="lendario"||rar==="epico"||rar==="raro") && (
+          <>
+            {(["tl","tr","bl","br"] as const).map(pos => {
+              const base: React.CSSProperties = {
+                position:"absolute", width:10, height:10, zIndex:7, pointerEvents:"none",
+                borderColor: rarColor,
+                filter: `drop-shadow(0 0 3px ${rarColor})`,
+              };
+              const s: React.CSSProperties = pos==="tl"
+                ? { ...base, top:3, left:3, borderTop:`1.5px solid ${rarColor}`, borderLeft:`1.5px solid ${rarColor}`, borderTopLeftRadius:4 }
+                : pos==="tr"
+                ? { ...base, top:3, right:3, borderTop:`1.5px solid ${rarColor}`, borderRight:`1.5px solid ${rarColor}`, borderTopRightRadius:4 }
+                : pos==="bl"
+                ? { ...base, bottom:3, left:3, borderBottom:`1.5px solid ${rarColor}`, borderLeft:`1.5px solid ${rarColor}`, borderBottomLeftRadius:4 }
+                : { ...base, bottom:3, right:3, borderBottom:`1.5px solid ${rarColor}`, borderRight:`1.5px solid ${rarColor}`, borderBottomRightRadius:4 };
+              return <div key={pos} style={s} />;
+            })}
+          </>
+        )}
+        {/* Lendário aura — animated radial glow */}
+        {rar==="lendario" && (
+          <div style={{
+            position:"absolute", inset:-1, borderRadius:12, zIndex:0, pointerEvents:"none",
+            background:`radial-gradient(ellipse at 50% 0%, ${DS.gold}33, transparent 60%)`,
+            animation:"rarPulse 2.4s ease-in-out infinite",
+          }} />
+        )}
+        {/* Rarity gem badge (top-right) */}
+        {rarMeta.gem && hasRarBorder && (
+          <div style={{
+            position:"absolute", top:-4, left:-4, zIndex:8,
+            width:16, height:16, borderRadius:"50%",
+            background:`radial-gradient(circle, ${rarColor}, ${rarColor}88)`,
+            border:`1px solid ${rarColor}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:9, color:"#000",
+            boxShadow:`0 0 8px ${rarColor}99`,
+            fontFamily:DS.fontDisplay,
+          }}>
+            {rarMeta.icon}
+          </div>
         )}
 
         {/* Type header */}
@@ -178,7 +240,10 @@ export default function Carta({ carta, sel=false, disabled=false, onClick, mini=
             border:`1.5px solid ${DS.gold}44` }} />
         )}
 
-        <style>{`@keyframes shimmer{0%,100%{background-position:-200% 0}50%{background-position:200% 0}}`}</style>
+        <style>{`
+          @keyframes shimmer{0%,100%{background-position:-200% 0}50%{background-position:200% 0}}
+          @keyframes rarPulse{0%,100%{opacity:.55}50%{opacity:1}}
+        `}</style>
       </div>
     </>
   );
