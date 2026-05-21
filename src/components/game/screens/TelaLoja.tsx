@@ -77,6 +77,10 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
       setOwnedItems(prev => new Set([...prev, invKey]));
       setCoins(c => c - item.price_coins);
       setMessage(`${item.emoji} ${item.name} desbloqueado! 🎉`);
+      try {
+        const { triggerMonsterUnlock } = await import("@/components/game/MonsterUnlockOverlay");
+        triggerMonsterUnlock(item.item_key);
+      } catch {}
     } else if (item.item_type === "swarm_pack") {
       // Generate random swarms from pack
       const swarmItems = generatePackSwarms(item.item_key);
