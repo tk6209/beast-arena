@@ -20,6 +20,7 @@ import TelaAmigos from "@/components/game/screens/TelaAmigos";
 import TelaColecao from "@/components/game/screens/TelaColecao";
 import TelaDeckBuilder from "@/components/game/screens/TelaDeckBuilder";
 import GameInviteNotification from "@/components/game/GameInviteNotification";
+import MonsterUnlockOverlay from "@/components/game/MonsterUnlockOverlay";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import { loadPrefsFromDB } from "@/game/audioPreferences";
@@ -470,6 +471,7 @@ export default function Index() {
       <ScreenTransition screenKey={tela} type={transitionType(tela)}>
         {renderScreen()}
       </ScreenTransition>
+      <MonsterUnlockOverlay />
       {showAccountPrompt && (
         <AccountPrompt
           wins={parseInt(localStorage.getItem("beast_guest_wins") || "1")}
