@@ -94,9 +94,9 @@ export default function TelaMatchmaking({ user, monstroId, nomeJogador, onMatch,
       const m = MONSTROS[monstroId];
       const mOpp = MONSTROS[opponent.monster_id];
 
-      // Join both players
+      // Join both players (self first to satisfy RLS, then opponent)
       await entrarComoJogador(session.id, 0, monstroId, nomeJogador, m.hp, m.hp);
-      await entrarComoJogador(session.id, 1, opponent.monster_id, opponent.player_name, mOpp.hp, mOpp.hp);
+      await entrarComoJogador(session.id, 1, opponent.monster_id, opponent.player_name, mOpp.hp, mOpp.hp, opponent.user_id);
 
       // Update both queue entries
       await supabase.from("matchmaking_queue").update({
