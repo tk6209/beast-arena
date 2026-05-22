@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.is_session_member(uuid, uuid);

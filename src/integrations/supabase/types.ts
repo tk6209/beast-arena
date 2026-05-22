@@ -909,10 +909,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_session_member: {
-        Args: { _session_id: string; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       game_status: "waiting" | "active" | "finished"
