@@ -80,8 +80,14 @@ export async function entrarComoJogador(
   monsterId: string,
   nickname: string = "Jogador",
   hp: number = 100,
-  maxHp: number = 100
+  maxHp: number = 100,
+  userId?: string
 ): Promise<GamePlayer> {
+  let resolvedUserId = userId;
+  if (!resolvedUserId) {
+    const { data: auth } = await supabase.auth.getUser();
+    resolvedUserId = auth?.user?.id;
+  }
   const { data, error } = await supabase
     .from("game_players")
     .insert({
@@ -91,7 +97,7 @@ export async function entrarComoJogador(
       monster_id: monsterId,
       hp,
       max_hp: maxHp,
-      state_json: {},
+      state_json: resolvedUserId ? { user_id: resolvedUserId } : {},
     })
     .select()
     .single();
