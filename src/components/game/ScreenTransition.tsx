@@ -34,31 +34,25 @@ export default function ScreenTransition({
   screenKey,
   type = "slideUp",
 }: ScreenTransitionProps) {
-  const [phase, setPhase] = useState<"enter" | "visible" | "exit">("enter");
+  // Start visible on first mount so the UI is never stuck at opacity 0
+  // if a RAF/cleanup race happens (e.g. StrictMode double-invoke).
+  const [phase, setPhase] = useState<"enter" | "visible" | "exit">("visible");
   const prevKey = useRef(screenKey);
 
   useEffect(() => {
-    if (screenKey === prevKey.current) {
-      // First mount
-      setPhase("enter");
-      const t = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setPhase("visible"));
-      });
-      return () => cancelAnimationFrame(t);
-    }
+    if (screenKey === prevKey.current) return;
 
-    // Key changed — exit then enter
+    // Key changed — play exit, then enter, then visible.
     setPhase("exit");
-    const exitTimer = setTimeout(() => {
+    const exitTimer = window.setTimeout(() => {
       prevKey.current = screenKey;
       setPhase("enter");
-      const enterTimer = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setPhase("visible"));
-      });
-      return () => cancelAnimationFrame(enterTimer);
+      // Force-visible on the next tick. Use setTimeout (not RAF) so the
+      // transition always completes even if the tab is backgrounded.
+      window.setTimeout(() => setPhase("visible"), 20);
     }, 200);
 
-    return () => clearTimeout(exitTimer);
+    return () => window.clearTimeout(exitTimer);
   }, [screenKey]);
 
   const style = TRANSITION_STYLES[type] || TRANSITION_STYLES.slideUp;
