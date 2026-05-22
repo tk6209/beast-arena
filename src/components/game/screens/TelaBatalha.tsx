@@ -147,6 +147,7 @@ export default function TelaBatalha({
   const [newTurnFlash, setNewTurnFlash] = useState(false);
   const [cardDropped, setCardDropped]   = useState<any | null>(null);
   const [bStats, setBStats]             = useState<BattleStats>({ cardsPlayed:0, healsUsed:0, evolutions:0, damageDealt:0, defenseCards:0 });
+  const [xpBoost, setXpBoost]           = useState<XpBoostStatus | null>(null);
 
   /* ─── Refs ─── */
   const sessionIdRef    = useRef<string | null>(salaId || null);
@@ -166,6 +167,11 @@ export default function TelaBatalha({
   useEffect(() => {
     if (!localStorage.getItem("beast_tutorial_done") && !skipPowerSelect) setShowTutorial(true);
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    getActiveXpBoost(userId).then(setXpBoost).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     async function init() {
