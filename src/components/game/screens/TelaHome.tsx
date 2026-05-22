@@ -154,14 +154,9 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHom
               ⚔️ ENTRAR NA ARENA
             </BtnMain>
           ) : (
-            <>
-              <BtnMain variant="gold" onClick={() => { markGesture(); onIniciar("duel"); }}>
-                ⚔️ JOGAR AGORA
-              </BtnMain>
-              <BtnMain variant="dark" onClick={() => { markGesture(); onLogin?.(); }}>
-                ENTRAR / CRIAR CONTA
-              </BtnMain>
-            </>
+            <BtnMain variant="gold" onClick={() => { markGesture(); onLogin?.(); }}>
+              ⚔️ ENTRAR NA ARENA
+            </BtnMain>
           )}
         </div>
 

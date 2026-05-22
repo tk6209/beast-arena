@@ -179,20 +179,6 @@ export default function TelaAuth({ onAuth, onSkip }: TelaAuthProps) {
             {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <BtnMain variant="dark" onClick={onSkip}>
-              ▶ JOGAR SEM CONTA
-            </BtnMain>
-          </div>
-
-          <div style={{
-            fontFamily: "Nunito, sans-serif",
-            fontSize: 10,
-            color: "rgba(255,255,255,.25)",
-            marginTop: 8,
-          }}>
-            Sem conta, seu progresso não será salvo no ranking
-          </div>
         </div>
       </div>
     </div>

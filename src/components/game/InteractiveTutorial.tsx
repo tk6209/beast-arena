@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import BtnMain from "./BtnMain";
 
 interface TutorialStep {
@@ -98,9 +99,12 @@ export default function InteractiveTutorial({ onComplete }: InteractiveTutorialP
 
   const spotlightPadding = 12;
 
-  return (
+  const ui = (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 9999,
+      position: "fixed", inset: 0, zIndex: 99999,
+      width: "100vw", height: "100dvh",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      pointerEvents: "auto",
     }}>
       {/* Dark overlay with optional spotlight cutout */}
       <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
@@ -161,13 +165,9 @@ export default function InteractiveTutorial({ onComplete }: InteractiveTutorialP
       <div
         key={step}
         style={{
-          position: "absolute",
-          left: "50%",
-          transform: "translateX(-50%)",
-          ...(current.position === "top" ? { bottom: 40 } :
-              current.position === "bottom" ? { top: 40 } :
-              { top: "50%", transform: "translate(-50%, -50%)" }),
-          maxWidth: 320, width: "calc(100% - 32px)",
+          position: "relative",
+          maxWidth: 340, width: "calc(100vw - 32px)",
+          marginInline: "auto",
           background: "linear-gradient(180deg, rgba(15,25,45,.97), rgba(5,10,25,.99))",
           border: "1px solid rgba(0,229,255,.25)",
           borderRadius: 16, padding: 24,
@@ -243,4 +243,7 @@ export default function InteractiveTutorial({ onComplete }: InteractiveTutorialP
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return ui;
+  return createPortal(ui, document.body);
 }

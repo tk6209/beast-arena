@@ -7,36 +7,37 @@ import type { CSSProperties } from "react";
 ═══════════════════════════════════════════════════════ */
 
 export const DS = {
-  // Core palette
-  bg0:     "#080503",   // deepest black with warm tint
-  bg1:     "#100c09",   // card surfaces
-  bg2:     "#181210",   // elevated surfaces
-  bg3:     "#221a16",   // borders/dividers
+  // Core palette — Midnight Indigo / Neon Violet
+  bg0:     "#07061a",   // base
+  bg1:     "#0d0a26",   // card surfaces
+  bg2:     "#141133",   // elevated
+  bg3:     "#2a2270",   // borders/dividers
 
-  gold:    "#f0b429",   // primary accent — amber gold
-  goldL:   "#ffd166",   // light gold
-  goldD:   "#b8860b",   // dark gold
-  ember:   "#ff6b2b",   // attack/fire accent
-  blood:   "#c0392b",   // danger/death
-  cyan:    "#00d4ff",   // tech/energy accent
-  green:   "#27ae60",   // heal/success
-  violet:  "#8b5cf6",   // special/magic
+  // primary accent is now neon violet (kept "gold" key for compat)
+  gold:    "#b794ff",   // neon violet primary
+  goldL:   "#d4bbff",   // light violet
+  goldD:   "#7c3aed",   // deep violet
+  ember:   "#a855f7",   // violet/fire accent
+  blood:   "#ff3b7a",   // hot pink danger
+  cyan:    "#38e1ff",   // electric cyan
+  green:   "#22e3a0",   // neon mint heal
+  violet:  "#8b5cf6",   // magic
 
-  // Typography
-  fontDisplay: "'Black Han Sans', 'Bangers', cursive",
-  fontUI:      "'Oswald', sans-serif",
-  fontBody:    "'Nunito', sans-serif",
+  // Typography — Bebas Neue + Barlow
+  fontDisplay: "'Bebas Neue', 'Barlow Condensed', sans-serif",
+  fontUI:      "'Barlow Condensed', 'Barlow', sans-serif",
+  fontBody:    "'Barlow', 'Barlow Condensed', sans-serif",
 
   // Shadows
-  shadowGold: "0 0 20px rgba(240,180,41,.35), 0 0 60px rgba(240,180,41,.12)",
-  shadowEmber:"0 0 20px rgba(255,107,43,.35), 0 0 60px rgba(255,107,43,.12)",
-  shadowCyan: "0 0 20px rgba(0,212,255,.35), 0 0 60px rgba(0,212,255,.12)",
+  shadowGold: "0 0 20px rgba(183,148,255,.45), 0 0 60px rgba(124,58,237,.20)",
+  shadowEmber:"0 0 20px rgba(168,85,247,.45), 0 0 60px rgba(124,58,237,.20)",
+  shadowCyan: "0 0 20px rgba(56,225,255,.45), 0 0 60px rgba(56,225,255,.15)",
 };
 
 export function pageBg(accent?: string): CSSProperties {
   return {
     minHeight: "100dvh",
-    background: `radial-gradient(ellipse at 50% -5%, ${accent || "#1a0e08"} 0%, #0d0806 35%, #080503 70%, #050302 100%)`,
+    background: `radial-gradient(ellipse at 50% -5%, ${accent || "#2a1a7a"} 0%, #15103d 35%, #0a0820 70%, #050316 100%)`,
     position: "relative",
     overflow: "hidden",
     paddingTop: "env(safe-area-inset-top)",
