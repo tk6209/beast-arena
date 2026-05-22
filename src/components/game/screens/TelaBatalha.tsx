@@ -22,6 +22,7 @@ import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
 import EnergyBar from "@/components/game/EnergyBar";
 import { screenShake, particleBurst } from "@/game/juice";
+import { getActiveXpBoost, type XpBoostStatus } from "@/game/xpBoost";
 
 /* ─── Types ─── */
 interface ServerState {
@@ -146,6 +147,7 @@ export default function TelaBatalha({
   const [newTurnFlash, setNewTurnFlash] = useState(false);
   const [cardDropped, setCardDropped]   = useState<any | null>(null);
   const [bStats, setBStats]             = useState<BattleStats>({ cardsPlayed:0, healsUsed:0, evolutions:0, damageDealt:0, defenseCards:0 });
+  const [xpBoost, setXpBoost]           = useState<XpBoostStatus | null>(null);
 
   /* ─── Refs ─── */
   const sessionIdRef    = useRef<string | null>(salaId || null);
@@ -165,6 +167,11 @@ export default function TelaBatalha({
   useEffect(() => {
     if (!localStorage.getItem("beast_tutorial_done") && !skipPowerSelect) setShowTutorial(true);
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    getActiveXpBoost(userId).then(setXpBoost).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     async function init() {
@@ -546,6 +553,22 @@ export default function TelaBatalha({
               </span>
             )}
             {loading && <div style={{ width:10,height:10,border:`2px solid ${DS.ember}22`,borderTopColor:DS.ember,borderRadius:"50%",animation:"spin .7s linear infinite" }} />}
+            {xpBoost?.active && (
+              <span title={`Boost XP ${xpBoost.multiplier}x — ${xpBoost.remaining} partida${xpBoost.remaining===1?"":"s"} restante${xpBoost.remaining===1?"":"s"}`}
+                style={{
+                  fontFamily:DS.fontUI,fontSize:10,fontWeight:800,letterSpacing:1.2,
+                  padding:"2px 8px",borderRadius:6,display:"inline-flex",alignItems:"center",gap:4,
+                  background:"linear-gradient(135deg,rgba(255,210,80,.18),rgba(255,140,40,.18))",
+                  border:"1px solid rgba(255,200,60,.55)",
+                  color:"#ffd24d",
+                  textShadow:"0 0 8px rgba(255,200,60,.6)",
+                  boxShadow:"0 0 10px rgba(255,180,40,.35)",
+                  animation:"pulse 1.6s ease-in-out infinite",
+                }}>
+                ⚡ {xpBoost.multiplier}x XP
+                <span style={{ opacity:.85,fontWeight:700 }}>·{xpBoost.remaining}</span>
+              </span>
+            )}
           </div>
           <button onClick={() => { const m = toggleMuted(); setMuted(m); m ? stopBattleMusic() : startBattleMusic(); }}
             style={{ background:`${DS.bg2}`,border:`1px solid ${DS.bg3}`,borderRadius:8,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:13,flexShrink:0 }}>
