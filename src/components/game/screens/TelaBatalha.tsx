@@ -22,6 +22,7 @@ import InteractiveTutorial from "@/components/game/InteractiveTutorial";
 import BattleChat from "@/components/game/BattleChat";
 import EnergyBar from "@/components/game/EnergyBar";
 import { screenShake, particleBurst } from "@/game/juice";
+import { getActiveXpBoost, type XpBoostStatus } from "@/game/xpBoost";
 
 /* ─── Types ─── */
 interface ServerState {
