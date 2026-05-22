@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
+import { getActiveXpBoost, consumeXpBoost } from "@/game/xpBoost";
 
 /* ─────────────────────────────────────────────
    POST-BATTLE PROGRESSION
@@ -63,9 +64,16 @@ async function saveBattleHistory(
 
 /* ── Season Pass XP ── */
 async function updateSeasonPass(userId: string, ganhou: boolean, stats: BattleStats) {
-  const xpGain = ganhou
+  let xpGain = ganhou
     ? 20 + Math.floor(stats.damageDealt / 10) + stats.evolutions * 5
     : 5;
+
+  // Apply active XP Boost multiplier and consume one charge
+  const boost = await getActiveXpBoost(userId);
+  if (boost.active && boost.multiplier > 1) {
+    xpGain = Math.round(xpGain * boost.multiplier);
+    await consumeXpBoost(userId);
+  }
 
   const { data } = await supabase
     .from("season_pass")
