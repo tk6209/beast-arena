@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { DS } from "@/game/styles";
 import { markGesture } from "@/game/voice";
 import BtnMain from "@/components/game/BtnMain";
@@ -30,11 +30,9 @@ const CSS = `
 const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`;
 
 export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHomeProps) {
-  const [phase, setPhase]       = useState<"tap"|"home">("tap");
   const [show, setShow]         = useState(false);
   const [bgIdx, setBgIdx]       = useState(0);
   const [rankings, setRankings] = useState<any[]>([]);
-  const firedRef                = useRef(false);   // prevent double-fire on iOS
 
   useEffect(() => {
     supabase.from("rankings").select("player_name,wins")
@@ -45,17 +43,9 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHom
   }, []);
 
   useEffect(() => {
-    if (phase !== "home") return;
     const t = setTimeout(() => setShow(true), 80);
     return () => clearTimeout(t);
-  }, [phase]);
-
-  function handleTap() {
-    if (firedRef.current) return;   // iOS fires both touchstart AND click — ignore second
-    firedRef.current = true;
-    setTimeout(() => { firedRef.current = false; }, 600);
-    setPhase("home");
-  }
+  }, []);
 
   const m   = MONSTROS[monsterKeys[bgIdx]];
   const img = MONSTER_IMAGES[monsterKeys[bgIdx]];
@@ -65,61 +55,6 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHom
     position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
     overflow: "hidden",
   };
-
-  /* ── TAP GATE ── */
-  if (phase === "tap") return (
-    <div
-      onClick={handleTap}
-      onTouchStart={handleTap}
-      style={{ ...fullscreen, background: DS.bg0, cursor: "pointer",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: 28,
-        userSelect: "none",
-      }}>
-      <style>{CSS}</style>
-
-      {/* Noise texture overlay */}
-      <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
-        backgroundImage: NOISE_BG, backgroundSize:"200px 200px",
-        opacity:.035, mixBlendMode:"overlay" }} />
-
-      {/* Ambient glow */}
-      <div style={{ position:"absolute",top:"40%",left:"50%",
-        width:320,height:320,borderRadius:"50%",pointerEvents:"none",zIndex:0,
-        background:`radial-gradient(circle,${DS.gold}18,transparent 65%)`,
-        transform:"translate(-50%,-50%)",
-        animation:"glowPulse 4s ease-in-out infinite" }} />
-
-      {/* Logo */}
-      <div style={{ textAlign:"center",position:"relative",zIndex:1 }}>
-        <div style={{ fontFamily:"'Black Han Sans','Bangers',cursive",
-          fontSize:"clamp(76px,22vw,100px)", lineHeight:.85, letterSpacing:4,
-          color: DS.gold,
-          animation:"logoGlow 3s ease-in-out infinite" }}>
-          BEAST
-        </div>
-        <div style={{ fontFamily:"'Black Han Sans','Bangers',cursive",
-          fontSize:"clamp(48px,14vw,64px)", letterSpacing:16, lineHeight:1,
-          color:"#bf9060", marginTop:-4 }}>
-          ARENA
-        </div>
-        <div style={{ height:2,marginTop:10,
-          background:`linear-gradient(90deg,transparent,${DS.gold},transparent)` }} />
-        <div style={{ fontFamily:"'Oswald',sans-serif",fontSize:10,letterSpacing:5,
-          color:`${DS.gold}55`,marginTop:6,fontWeight:600,textTransform:"uppercase" }}>
-          CARD BATTLE GAME
-        </div>
-      </div>
-
-      {/* Tap hint */}
-      <div style={{ position:"relative",zIndex:1,
-        fontFamily:"'Oswald',sans-serif",fontSize:15,fontWeight:600,
-        color:DS.gold,letterSpacing:5,textTransform:"uppercase",
-        animation:"tapBeat 1.5s ease-in-out infinite" }}>
-        ▶ TOQUE PARA ENTRAR
-      </div>
-    </div>
-  );
 
   /* ── HOME SCREEN ── */
   return (

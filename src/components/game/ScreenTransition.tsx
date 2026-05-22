@@ -58,6 +58,11 @@ export default function ScreenTransition({
   const style = TRANSITION_STYLES[type] || TRANSITION_STYLES.slideUp;
 
   const inlineStyle: React.CSSProperties = {
+    position: "fixed",
+    inset: 0,
+    width: "100vw",
+    minHeight: "100dvh",
+    overflow: "hidden",
     transition: "opacity 0.22s ease, transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
     willChange: "opacity, transform",
     ...(phase === "enter"
