@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import BtnMain from "./BtnMain";
 
 interface TutorialStep {
@@ -98,9 +99,12 @@ export default function InteractiveTutorial({ onComplete }: InteractiveTutorialP
 
   const spotlightPadding = 12;
 
-  return (
+  const ui = (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 9999,
+      position: "fixed", inset: 0, zIndex: 99999,
+      width: "100vw", height: "100dvh",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      pointerEvents: "auto",
     }}>
       {/* Dark overlay with optional spotlight cutout */}
       <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
