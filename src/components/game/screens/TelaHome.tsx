@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { DS } from "@/game/styles";
 import { markGesture } from "@/game/voice";
 import BtnMain from "@/components/game/BtnMain";
