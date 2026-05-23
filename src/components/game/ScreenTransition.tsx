@@ -60,7 +60,7 @@ export default function ScreenTransition({
   const inlineStyle: React.CSSProperties = {
     position: "fixed",
     inset: 0,
-    width: "100vw",
+    width: "100%",
     minHeight: "100dvh",
     overflow: "hidden",
     transition: "opacity 0.22s ease, transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
