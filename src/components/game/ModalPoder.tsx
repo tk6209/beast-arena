@@ -304,6 +304,7 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }
 
 function PoderStat({ label, value, color }: { label: string; value: string; color: string }) {
