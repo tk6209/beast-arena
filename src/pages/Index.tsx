@@ -393,6 +393,7 @@ export default function Index() {
             onLogin={() => setTela("auth")}
             onPerfil={() => setTela("perfil")}
             onLoja={() => setTela("loja")}
+            onLobby={() => setTela("lobby_principal")}
           />
         </>
       );
@@ -462,6 +463,7 @@ export default function Index() {
           onLogin={() => setTela("auth")}
           onPerfil={() => setTela("perfil")}
           onLoja={() => setTela("loja")}
+          onLobby={() => setTela("lobby_principal")}
         />
       );
   } }; // end renderScreen
