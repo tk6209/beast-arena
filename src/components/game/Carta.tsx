@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { CartaData } from "@/game/data";
 import { cartaPaleta, DS } from "@/game/styles";
 
@@ -46,8 +47,8 @@ export default function Carta({ carta, sel=false, disabled=false, onClick, mini=
 
   return (
     <>
-      {/* Preview modal */}
-      {showPreview && (
+      {/* Preview modal (portaled to body so it isn't clipped by transforms) */}
+      {showPreview && typeof document !== "undefined" && createPortal((
         <div style={{ position:"fixed",inset:0,zIndex:9999,
           background:"rgba(0,0,0,.92)",backdropFilter:"blur(16px)",
           display:"flex",alignItems:"center",justifyContent:"center" }}
@@ -91,7 +92,7 @@ export default function Carta({ carta, sel=false, disabled=false, onClick, mini=
           </div>
           <style>{`@keyframes shimmer{0%,100%{background-position:-200% 0}50%{background-position:200% 0}}`}</style>
         </div>
-      )}
+      ), document.body)}
 
       <div
         onClick={disabled ? undefined : onClick}
