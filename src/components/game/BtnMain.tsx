@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { DS } from "@/game/styles";
 
 interface BtnMainProps {
@@ -18,14 +18,24 @@ const VARIANTS: Record<string, { bg: string; border: string; shadow: string; tex
 
 export default function BtnMain({ children, onClick, variant = "blue", disabled = false, style = {}, title }: BtnMainProps) {
   const [pressed, setPressed] = useState(false);
+  const lastClickRef = useRef(0);
   const v = VARIANTS[variant] || VARIANTS.blue;
+
+  const handleClick = () => {
+    if (disabled || !onClick) return;
+    const now = Date.now();
+    // Suppress duplicate iOS taps (touch + synthesized click) within 350ms
+    if (now - lastClickRef.current < 350) return;
+    lastClickRef.current = now;
+    onClick();
+  };
 
   return (
     <button
       disabled={disabled}
       title={title}
       aria-disabled={disabled}
-      onClick={disabled ? undefined : onClick}
+      onClick={handleClick}
       onPointerDown={() => !disabled && setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
