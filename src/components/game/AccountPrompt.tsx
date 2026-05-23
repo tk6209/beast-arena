@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { DS } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 
@@ -22,7 +23,7 @@ const PERKS = [
 ];
 
 export default function AccountPrompt({ onCriarConta, onAgora_Nao, wins = 1 }: AccountPromptProps) {
-  return (
+  const ui = (
     <div style={{
       position: "fixed", inset: 0, zIndex: 500,
       background: "rgba(0,0,0,.88)",
@@ -114,4 +115,5 @@ export default function AccountPrompt({ onCriarConta, onAgora_Nao, wins = 1 }: A
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }

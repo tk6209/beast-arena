@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -72,7 +73,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
 
   if (loading) return null;
 
-  return (
+  const ui = (
     <div
       onClick={onClose}
       style={{
@@ -155,4 +156,5 @@ export default function TelaDailyReward({ user, onClose }: Props) {
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }

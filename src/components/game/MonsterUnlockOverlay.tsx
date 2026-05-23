@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
 import { MONSTROS } from "@/game/data";
 import { DS } from "@/game/styles";
@@ -39,7 +40,7 @@ export default function MonsterUnlockOverlay() {
   // Confetti pieces
   const confetti = Array.from({ length: 28 });
 
-  return (
+  const ui = (
     <div
       onClick={() => setMonstroId(null)}
       style={{
@@ -164,4 +165,5 @@ export default function MonsterUnlockOverlay() {
       `}</style>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }

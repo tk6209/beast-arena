@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BtnMain from "@/components/game/BtnMain";
 
@@ -80,7 +81,7 @@ export default function GameInviteNotification({ userId, onAccept }: Props) {
 
   if (!invite) return null;
 
-  return (
+  const ui = (
     <div style={{
       position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
       zIndex: 9000, width: "calc(100% - 32px)", maxWidth: 320,
@@ -109,4 +110,5 @@ export default function GameInviteNotification({ userId, onAccept }: Props) {
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }

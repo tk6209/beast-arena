@@ -476,7 +476,7 @@ export default function TelaBatalha({
 
   /* ─── Derived ─── */
   if (!serverState) return (
-    <div style={{ ...pageBg(), display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh" }}>
+    <div style={{ ...pageBg(), display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100dvh" }}>
       <ChromeNoise />
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
         <div style={{ width:40,height:40,border:"3px solid rgba(0,229,255,.15)",borderTopColor:"#00e5ff",borderRadius:"50%",animation:"spin .8s linear infinite" }} />

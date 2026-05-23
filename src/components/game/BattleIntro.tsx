@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { MONSTROS } from "@/game/data";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
 
@@ -46,7 +47,7 @@ export default function BattleIntro({ monstroP1, monstroP2, nomeP1, nomeP2, onDo
     return () => timers.forEach(clearTimeout);
   }, [onDone]);
 
-  return (
+  const ui = (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
       background: "#030810", overflow: "hidden",
@@ -380,6 +381,7 @@ export default function BattleIntro({ monstroP1, monstroP2, nomeP1, nomeP2, onDo
       </button>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }
 
 /* Stat mini bar */

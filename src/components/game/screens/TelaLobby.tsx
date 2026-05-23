@@ -83,7 +83,7 @@ export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
     return (
       <div style={pageBg()}>
         <ChromeNoise />
-        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
           <div style={{ fontFamily: "Bangers, cursive", fontSize: 24, color: "#00e5ff", letterSpacing: 2 }}>
             ⏳ Criando sala...
           </div>
@@ -98,7 +98,7 @@ export default function TelaLobby({ monstroHost, onBatalha }: TelaLobbyProps) {
 
       <div
         style={{
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
