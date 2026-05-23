@@ -9,7 +9,7 @@ import type { Dificuldade } from "@/pages/Index";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
-  user?: any; onLogin?: () => void; onPerfil?: () => void; onLoja?: () => void;
+  user?: any; onLogin?: () => void; onPerfil?: () => void; onLoja?: () => void; onLobby?: () => void;
 }
 
 const monsterKeys = Object.keys(MONSTROS);
@@ -29,7 +29,7 @@ const CSS = `
 /* ── Noise texture as inline SVG data URI ── */
 const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`;
 
-export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHomeProps) {
+export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeProps) {
   const [show, setShow]         = useState(false);
   const [bgIdx, setBgIdx]       = useState(0);
   const [rankings, setRankings] = useState<any[]>([]);
@@ -150,7 +150,7 @@ export default function TelaHome({ onIniciar, user, onLogin, onPerfil }: TelaHom
         <div style={{ width:"100%",maxWidth:320,display:"flex",flexDirection:"column",gap:10,
           animation:show?"btnIn .5s .18s both":"none",opacity:show?1:0 }}>
           {user ? (
-            <BtnMain variant="gold" onClick={() => { markGesture(); onIniciar("duel"); }}>
+            <BtnMain variant="gold" onClick={() => { markGesture(); onLobby?.(); }}>
               ⚔️ ENTRAR NA ARENA
             </BtnMain>
           ) : (
