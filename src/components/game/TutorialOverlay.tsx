@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import BtnMain from "./BtnMain";
 
 interface TutorialStep {
@@ -45,7 +46,7 @@ export default function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  return (
+  const ui = (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
       background: "rgba(3,8,16,.92)",
@@ -141,4 +142,5 @@ export default function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }
