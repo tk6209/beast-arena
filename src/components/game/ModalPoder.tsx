@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { PODERES } from "@/game/data";
 import { falar, markGesture } from "@/game/voice";
 import { sfxTap, sfxPoder } from "@/game/sfx";
@@ -77,7 +78,7 @@ export default function ModalPoder({ onEscolha }: ModalPoderProps) {
       ? "poderSlideRight .4s cubic-bezier(.22,1,.36,1) forwards"
       : "none";
 
-  return (
+  const ui = (
     <div
       style={{
         position: "fixed",
