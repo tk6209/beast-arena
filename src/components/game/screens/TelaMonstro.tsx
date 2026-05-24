@@ -14,12 +14,18 @@ interface TelaMonstroProps {
   titulo?: string;
   userId?: string;
   onEvoluir?: (monstroId: string) => void;
+  /** "evolution" hides the battle button and only shows Evoluir */
+  modo?: "battle" | "evolution";
 }
 
 const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId, onEvoluir }: TelaMonstroProps) {
+export default function TelaMonstro({
+  onConfirmar, onVoltar,
+  titulo = "ESCOLHA SEU MONSTRO",
+  userId, onEvoluir, modo = "battle",
+}: TelaMonstroProps) {
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
@@ -384,9 +390,11 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
           {isUnlocked ? (
             <>
-              <BtnMain variant="gold" onClick={handleConfirm}>
-                ✅ BATALHAR COM {m.nome.toUpperCase()}
-              </BtnMain>
+              {modo === "battle" && (
+                <BtnMain variant="gold" onClick={handleConfirm}>
+                  ✅ BATALHAR COM {m.nome.toUpperCase()}
+                </BtnMain>
+              )}
               {onEvoluir && userId && (
                 <button onClick={() => onEvoluir(m.id)} style={{
                   marginTop: 10, width: "100%", padding: "10px 14px",
