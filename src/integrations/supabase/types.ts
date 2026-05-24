@@ -796,6 +796,51 @@ export type Database = {
           },
         ]
       }
+      user_monsters: {
+        Row: {
+          created_at: string
+          id: string
+          monster_id: string
+          power_level: number
+          selected_gadget: string | null
+          selected_gear: string | null
+          selected_hyper: string | null
+          selected_star_power: string | null
+          shards: number
+          total_battles: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monster_id: string
+          power_level?: number
+          selected_gadget?: string | null
+          selected_gear?: string | null
+          selected_hyper?: string | null
+          selected_star_power?: string | null
+          shards?: number
+          total_battles?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monster_id?: string
+          power_level?: number
+          selected_gadget?: string | null
+          selected_gear?: string | null
+          selected_hyper?: string | null
+          selected_star_power?: string | null
+          shards?: number
+          total_battles?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string

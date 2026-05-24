@@ -1,81 +1,88 @@
-# Roadmap Visual: Beast Arena → Qualidade Brawl Stars / Clash Royale
+# Evolução de Personagens — estilo Brawl Stars
 
-## Diagnóstico atual
+Cada monstro que o jogador possui terá seu **próprio nível de poder** (1 → 11), independente dos outros. O jogador escolhe em qual monstro investir, e isso muda os atributos em batalha.
 
-O jogo já tem uma boa base (Dark Fantasy Arcade, paleta âmbar/obsidiana, Bangers/Oswald), mas o que separa dele dos top mobile games é:
+## 1. Conceitos do sistema
 
-- **Personagens são emojis** (🐆🍌🐵...) — Brawl/Clash usam ilustrações 3D-renderizadas
-- **Cartas são gradientes CSS** sem arte ilustrada
-- **Lobby estático** — falta cenário/parallax/personagem "vivo" no centro
-- **Sem feedback "juicy"** — faltam squash & stretch, partículas em cada ação, screen shake, números flutuantes grandes
-- **Tipografia funcional**, mas sem o "chunky cartoon" outline grosso característico do gênero
-- **UI plana** — botões precisam de profundidade 3D (bevel, sombra inferior espessa, brilho superior)
+- **Nível de Poder (PL)**: 1–11 por monstro.
+- **Power Shards** (fragmentos): moeda específica do monstro. Caem em vitórias, baús, missões e loja.
+- **Coins**: custo paralelo para evoluir (já existe no projeto).
+- **Curva de upgrade** (shards / coins por nível):
 
-## Fase 1 — Identidade Visual dos Personagens (impacto máximo)
+  ```text
+  PL 1→2:  10 sh /   50 c
+  PL 2→3:  20 sh /  100 c
+  PL 3→4:  40 sh /  200 c
+  PL 4→5:  80 sh /  400 c
+  PL 5→6: 130 sh /  800 c
+  PL 6→7: 200 sh / 1500 c
+  PL 7→8: 300 sh / 2500 c
+  PL 8→9: 450 sh / 4000 c
+  PL 9→10: 650 sh / 6000 c
+  PL10→11: 900 sh / 9000 c
+  ```
 
-O salto de qualidade nº 1. Substituir todos os emojis por ilustrações próprias.
+- **Escalamento de atributos** por nível:
+  - HP: `base × (1 + 0.06 × (PL−1))` (≈ +60% no PL 11)
+  - Dano: `base × (1 + 0.05 × (PL−1))` (≈ +50% no PL 11)
 
-- Gerar 10 ilustrações de mascotes em **estilo cartoon 3D-rendered** (Brawl Stars vibe): contorno preto grosso, sombreamento cell-shaded, cores saturadas, pose dinâmica de "idle hero"
-- Variações por raridade: aura/glow ao fundo (comum cinza → lendário dourado animado)
-- Aplicar em: TelaMonstro (cards de seleção), Lobby (hero central), TelaBatalha (avatar), Carta (quando carta de monstro)
-- Bônus: 2-3 frames de animação por monstro (idle breathing, ataque, dano) — pode ser CSS keyframes simples sobre PNG
+- **Perks desbloqueáveis** (escolha do jogador, como Star Powers / Gadgets):
+  - **PL 5** — desbloqueia 1 *Gadget* (escolher 1 de 2 ativos: ex. "Recarga rápida", "Escudo inicial")
+  - **PL 7** — desbloqueia 1 *Star Power* passiva (escolher 1 de 2: ex. "Cura ao matar", "Dano crítico +15%")
+  - **PL 9** — desbloqueia *Hyper* (escolher 1 de 2: efeito ultimate único do monstro)
+  - **PL 11** — *Mythic Gear* (slot extra, escolher 1 de 3 modificadores)
 
-## Fase 2 — Cartas Ilustradas (segundo maior impacto)
+## 2. Banco de dados (nova migração)
 
-Hoje cartas são caixas coloridas com texto. Clash Royale tem moldura ornada + arte + custo destacado.
+Tabela `user_monsters`:
 
-- Template de moldura por raridade (comum → lendário): borda metálica com gemas, brilho animado em lendários
-- Ilustração central por arquetipo de carta (ataque, defesa, cura, swarm, evolução, poder)
-- Badge de custo de energia no canto (círculo gota d'água estilo Clash)
-- Hover/seleção: lift 3D + brilho holográfico passando
+- `user_id` (uuid)
+- `monster_id` (text) — chave em `MONSTROS`
+- `power_level` (int, default 1)
+- `shards` (int, default 0)
+- `selected_gadget` (text, nullable)
+- `selected_star_power` (text, nullable)
+- `selected_hyper` (text, nullable)
+- `selected_gear` (text, nullable)
+- `total_battles` (int)
+- Unique (`user_id`, `monster_id`)
+- RLS: dono lê/insere/atualiza.
 
-## Fase 3 — Lobby Cinemático
+Backfill: para cada `user_inventory` com `item_type='monster'`, criar linha `power_level=1` se não existir.
 
-Transformar o lobby principal em uma "vitrine" do jogo.
+## 3. Frontend
 
-- **Background parallax** em camadas (céu/montanhas/névoa/chão) com leve movimento ao tilt do device
-- **Personagem central animado**: monstro favorito do jogador em pose hero, breathing idle, reage a clique
-- **Botão JOGAR gigante** estilo Brawl (vermelho/dourado, pulse animado, ícone de espada)
-- Cards de modo (PvP / Solo / Eventos) tipo "menu radial" ou carrossel horizontal
-- Partículas ambient (fagulhas douradas subindo, poeira)
-- Trilha de fundo (opt-in via prefs já existentes)
+- **`src/game/evolution.ts`** (novo) — constantes da curva, perks por monstro, helpers `getStats(monsterId, pl)`, `getUpgradeCost(pl)`, `canUpgrade(pl, shards, coins)`.
+- **`src/components/game/screens/TelaEvolucao.tsx`** (novo)
+  - Header: avatar + nome do monstro + PL grande + barra de shards (X/Y).
+  - Stats antes/depois (HP, Dano) com seta verde se há upgrade.
+  - Botão "EVOLUIR" (gasta shards + coins; toast + animação de level-up).
+  - Ao atingir PL 5/7/9/11: modal de **escolha de perk** (2–3 cards, jogador escolhe um — gravado em `selected_*`).
+  - Bloqueia perks já escolhidos (decisão permanente nesta versão; podemos adicionar "respec" pago depois).
+- **`TelaMonstro.tsx`** — overlay com badge `PL{n}` em cada card e botão "Evoluir →" abre `TelaEvolucao`.
+- **`TelaLobbyPrincipal.tsx`** — chip "EVOLUIR" no DIÁRIO ou ícone no avatar quando há upgrade disponível.
+- **Drop de shards**: ao concluir batalha (vitória = 10 shards do monstro usado, derrota = 3). Aplicado em `postBattle.ts`.
+- **Aplicação em batalha**: `engine.ts` / `TelaBatalha.tsx` lê PL do monstro do jogador (e do oponente quando online) e aplica multiplicadores em HP e dano. Para batalha IA o oponente escala PL ≈ ao do jogador.
 
-## Fase 4 — Game Feel ("Juice")
+## 4. Loja
+- Adicionar "Pacote de Shards" (item_type `shards`, item_key = monsterId) — opcional nesta primeira entrega, podemos só dropar em batalha.
 
-Pequenos detalhes que fazem o jogo "sentir caro":
+## 5. Roteamento
+- Em `pages/Index.tsx`, novo modo `"evolucao"` com `monstroSelecionado: string`.
+- Navegação: Lobby/Monstro → Evolução → volta.
 
-- **Screen shake** em hits críticos e ultimates
-- **Números flutuantes** de dano grandes, com outline preto, escala bouncy, cor por tipo
-- **Squash & stretch** ao jogar carta (encolhe e estica antes de voar pro alvo)
-- **Particle bursts** em combos, vitórias, level up (confetti dourado)
-- **Haptic feedback** (já tem `haptic.ts`) em todos os botões principais
-- **Transições de tela** com wipe/iris (não fade simples)
-- Botões com profundidade 3D real: sombra inferior de 4-6px que "afunda" no press
+## 6. Fora de escopo (próximas iterações)
+- Trocar perks pagando gemas.
+- Caixas com shards aleatórios.
+- Visual "skin" diferente por PL (5/7/9/11 ganha aura nova).
+- Balanceamento PvP por PL no matchmaking.
 
-## Fase 5 — Sistema de Progressão Visível (retenção comercial)
+## Ordem de implementação
 
-Brawl/Clash viciam pelo loop visual de progressão. Componentes que faltam ou estão fracos:
-
-- **Caixas/Baús** animadas abrindo com luz dourada explodindo (recompensa diária, vitória)
-- **Barra de troféus** estilo Brawl com ticks de liga e meta da próxima
-- **Tela de level-up fullscreen** com fanfarra (não só toast)
-- **Showcase de novo monstro desbloqueado**: tela dedicada estilo "NOVO BRAWLER" com câmera orbitando
-
-## Recomendação de execução
-
-Sugiro começarmos pela **Fase 1 (mascotes ilustrados)** porque é o que mais separa visualmente o jogo dos competidores. Posso gerar as 10 ilustrações em uma única rodada usando o gerador premium, criar um componente `<MonsterIllustration>` que substitui o emoji em todas as telas, e adicionar a aura por raridade.
-
-Depois disso, **Fase 4 (juice)** dá um retorno enorme por ser mudança de código pura, sem assets.
-
-## Detalhes técnicos
-
-- Assets em `src/assets/monsters/<key>.png` — importados estaticamente para cache
-- Novo componente `MonsterIllustration` com props `monster`, `size`, `rarity`, `animated` substituindo os spots de `{MONSTROS[x].emoji}`
-- Novo módulo `src/game/juice.ts` com helpers `screenShake()`, `floatingNumber()`, `particleBurst()`
-- Novo componente `<CardFrame rarity="lendario">` envolvendo `<Carta>` com moldura SVG
-- Lobby parallax via `transform: translate3d` nos `useEffect` ouvindo `deviceorientation`
-- Manter design tokens existentes em `styles.ts` — só adicionar `--gradient-hero`, `--shadow-3d-button`
-
-## Confirme o caminho
-
-Quer que eu siga com a **Fase 1 (ilustrações de monstros) + Fase 4 (juice)** como primeiro entregável? Ou prefere outra ordem (ex: começar pelas cartas ilustradas, ou pelo lobby cinemático)?
+1. Migration `user_monsters` + backfill.
+2. `evolution.ts` (regras puras).
+3. `TelaEvolucao.tsx` + modal de perks.
+4. Hook em `TelaMonstro` (badge + botão).
+5. Integração `postBattle` (drop de shards).
+6. Integração `engine`/`TelaBatalha` (stats por PL).
+7. QA: subir 1 monstro até PL 11, validar perks e batalha.
