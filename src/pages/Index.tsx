@@ -408,7 +408,12 @@ export default function Index() {
     case "nome":
       return <TelaNome onConfirmar={handleNomeConfirm} />;
     case "monstro":
-      return <TelaMonstro onConfirmar={handleMonstroConfirm} onVoltar={() => setTela(user ? "lobby_principal" : "home")} userId={user?.id} />;
+      return <TelaMonstro
+        onConfirmar={handleMonstroConfirm}
+        onVoltar={() => setTela(user ? "lobby_principal" : "home")}
+        userId={user?.id}
+        onEvoluir={(mid) => { setEvolucaoMonstroId(mid); setTela("evolucao"); }}
+      />;
     case "lobby":
       return <TelaLobby monstroHost={monstroP1} onBatalha={handleBatalha} />;
     case "entrar":
