@@ -4,6 +4,7 @@ import BattleIntro from "@/components/game/BattleIntro";
 import { criarJ, type Jogador, type LogEntry } from "@/game/engine";
 import { criarSessao, ouvirSessao, fecharCanal, type GameSession } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
+import { supabase } from "@/integrations/supabase/client";
 import { falar, markGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg, DS } from "@/game/styles";
