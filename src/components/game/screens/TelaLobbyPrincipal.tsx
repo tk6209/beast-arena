@@ -5,7 +5,7 @@ import type { Dificuldade } from "@/pages/Index";
 import { toast } from "@/hooks/use-toast";
 import {
   Swords, Store, BookOpen, Users, User as UserIcon, LogOut,
-  Trophy, Medal, Zap, Award,
+  Trophy, Medal, Zap, Award, Wifi, QrCode, Bluetooth,
 } from "lucide-react";
 
 const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string }> = {
@@ -97,180 +97,151 @@ export default function TelaLobbyPrincipal({
   const favMonster = stats?.favorite_monster || "panther";
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#05020a] flex items-center justify-center p-3 sm:p-4 overflow-hidden select-none font-['Nunito']">
-      {/* Main Landscape Container */}
-      <div className="relative w-full h-full max-w-[1280px] max-h-[720px] flex gap-3 sm:gap-4 p-3 sm:p-4 text-white bg-[#0d071b] rounded-[28px] sm:rounded-[40px] border-2 sm:border-4 border-[#1a1438] shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+    <div className="fixed inset-0 w-full h-full bg-[#0a0a0a] flex items-center justify-center p-2 sm:p-3 overflow-hidden select-none font-['Barlow']">
+      {/* Landscape container */}
+      <div className="relative w-full h-full max-w-[1280px] max-h-[720px] bg-[#0a0a0a] border-[6px] sm:border-8 border-black rounded-[24px] sm:rounded-[40px] overflow-hidden flex shadow-[0_0_50px_rgba(0,0,0,0.6)]">
 
-        {/* Decorative dot grid */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden rounded-[24px] sm:rounded-[36px]">
-          <div className="absolute inset-0" style={{ backgroundImage:"radial-gradient(circle at 2px 2px, #38e1ff 1px, transparent 0)", backgroundSize:"40px 40px" }} />
-        </div>
-
-        {/* ═══ LEFT RAIL — Command Center ═══ */}
-        <aside className="w-14 sm:w-20 flex flex-col items-center py-4 sm:py-6 gap-3 sm:gap-4 bg-[#110c26]/80 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl z-10 shrink-0">
+        {/* === LEFT NAVIGATION RAIL === */}
+        <nav className="w-[60px] sm:w-[88px] bg-white border-r-4 border-black flex flex-col items-center py-3 sm:py-5 gap-2 sm:gap-4 z-20 shrink-0">
           <RailIcon active onClick={() => onIniciar("duel")} tooltip="BATALHA">
-            <Swords className="w-5 h-5 sm:w-7 sm:h-7" />
+            <Swords className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
           </RailIcon>
-          <div className="flex flex-col gap-2 sm:gap-4 mt-1 sm:mt-2">
-            <RailIcon onClick={onLoja} tooltip="LOJA"><Store className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
-            <RailIcon onClick={onColecao} tooltip="COLEÇÃO"><BookOpen className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
-            <RailIcon onClick={onAmigos} tooltip="AMIGOS"><Users className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
-            <RailIcon onClick={onPerfil} tooltip="PERFIL"><UserIcon className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
-          </div>
-          <div className="mt-auto">
-            <RailIcon onClick={onLogout} tooltip="SAIR" danger>
-              <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-            </RailIcon>
-          </div>
-        </aside>
+          <RailIcon onClick={onLoja} tooltip="LOJA"><Store className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} /></RailIcon>
+          <RailIcon onClick={onColecao} tooltip="COLEÇÃO"><BookOpen className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} /></RailIcon>
+          <RailIcon onClick={onAmigos} tooltip="AMIGOS"><Users className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} /></RailIcon>
+          <RailIcon onClick={onPerfil} tooltip="PERFIL"><UserIcon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} /></RailIcon>
+          <RailIcon className="mt-auto" onClick={onLogout} tooltip="SAIR" danger>
+            <LogOut className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+          </RailIcon>
+        </nav>
 
-        {/* ═══ MAIN DASHBOARD ═══ */}
-        <div className="flex-1 flex flex-col gap-3 sm:gap-4 min-w-0">
+        {/* === MAIN INTERFACE === */}
+        <div className="flex-1 flex flex-col relative min-w-0">
 
-          {/* ── HEADER ── */}
-          <header className="flex justify-between items-center h-12 sm:h-14 px-1 sm:px-2 shrink-0">
-            <div onClick={onPerfil} className="flex items-center gap-2 sm:gap-4 group cursor-pointer min-w-0">
-              <div className="relative shrink-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border-2 border-[#38e1ff] bg-[#1a1438] p-0.5 overflow-hidden rotate-3 group-hover:rotate-0 transition-transform flex items-center justify-center">
-                  <MonsterAvatar monstroId={favMonster} size={36} glow={li.color} />
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-[#ff3b7a] text-[9px] sm:text-[10px] font-black min-w-[20px] h-5 px-1 flex items-center justify-center rounded-lg border-2 border-[#0d071b] shadow-lg">
-                  {lvl}
-                </div>
+          {/* Glow overlay */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffeb3b]/10 blur-[100px] pointer-events-none" />
+
+          {/* === HEADER === */}
+          <header className="h-[52px] sm:h-[68px] px-3 sm:px-6 flex items-center justify-between z-10 gap-2 shrink-0">
+            {/* Level + XP */}
+            <button
+              onClick={onPerfil}
+              className="flex items-center bg-black border-[3px] border-white rounded-full px-2 py-1 gap-2 sm:gap-3 shadow-[3px_3px_0px_0px_#ffeb3b] hover:shadow-[5px_5px_0px_0px_#ffeb3b] transition-shadow min-w-0"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#ffeb3b] rounded-full border-2 border-black flex items-center justify-center text-black font-black text-[10px] sm:text-xs shrink-0">
+                {lvl}
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-xs sm:text-sm font-['Bangers'] tracking-[0.1em] text-[#38e1ff] drop-shadow-[0_0_8px_rgba(56,225,255,0.4)] truncate max-w-[120px] sm:max-w-[200px]">
-                  {profile?.display_name || "JOGADOR"}
-                </div>
-                <div className="w-24 sm:w-32 h-1.5 sm:h-2 bg-black/50 rounded-full border border-white/5 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#38e1ff] to-[#b794ff] shadow-[0_0_10px_rgba(56,225,255,0.5)] transition-all duration-700" style={{ width:`${xpPct}%` }} />
-                </div>
-                <div className="text-[8px] sm:text-[9px] font-bold text-white/40 mt-0.5">{xp}/{xpMax} XP</div>
+              <span className="text-white font-['Bebas_Neue'] text-base sm:text-xl tracking-wider leading-none truncate max-w-[80px] sm:max-w-[140px]">
+                {profile?.display_name || "JOGADOR"}
+              </span>
+              <div className="w-16 sm:w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-white/20 shrink-0">
+                <div className="h-full bg-[#ffeb3b] transition-all duration-700" style={{ width: `${xpPct}%` }} />
               </div>
-            </div>
+            </button>
 
+            {/* Currencies */}
             <div className="flex gap-2 sm:gap-3 shrink-0">
-              <button onClick={onLoja} className="bg-[#110c26]/60 backdrop-blur border border-white/10 rounded-xl sm:rounded-2xl pl-1.5 pr-3 sm:pl-2 sm:pr-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-3 hover:border-yellow-400/40 transition-colors">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.4)] flex items-center justify-center">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 border-2 border-yellow-600 rounded-full" />
-                </div>
-                <span className="text-xs sm:text-sm font-black text-yellow-100">{(profile?.coins || 0).toLocaleString()}</span>
+              <button onClick={onLoja} className="flex items-center bg-black border-[3px] border-white rounded-xl pl-1.5 pr-2 sm:pl-2 sm:pr-4 py-1 gap-1.5 sm:gap-2 shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] hover:border-[#ffeb3b] transition-colors">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-[#ffeb3b] border-2 border-black rotate-45 shrink-0" />
+                <span className="text-white font-['Bebas_Neue'] text-sm sm:text-xl tracking-widest">{(profile?.coins || 0).toLocaleString()}</span>
               </button>
-              <button onClick={onLoja} className="bg-[#110c26]/60 backdrop-blur border border-white/10 rounded-xl sm:rounded-2xl pl-1.5 pr-3 sm:pl-2 sm:pr-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-3 hover:border-cyan-400/40 transition-colors">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#38e1ff] shadow-[0_0_10px_rgba(56,225,255,0.4)] rotate-45 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#0a0518] -rotate-45" />
-                </div>
-                <span className="text-xs sm:text-sm font-black text-cyan-100">{(profile?.gems || 0).toLocaleString()}</span>
+              <button onClick={onLoja} className="flex items-center bg-black border-[3px] border-white rounded-xl pl-1.5 pr-2 sm:pl-2 sm:pr-4 py-1 gap-1.5 sm:gap-2 shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] hover:border-[#ff5722] transition-colors">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-[#ff5722] border-2 border-black rounded-full shrink-0" />
+                <span className="text-white font-['Bebas_Neue'] text-sm sm:text-xl tracking-widest">{(profile?.gems || 0).toLocaleString()}</span>
               </button>
             </div>
           </header>
 
-          {/* ── BODY ── */}
-          <div className="flex-1 flex gap-3 sm:gap-4 min-h-0">
+          {/* === BENTO LAYOUT === */}
+          <main className="flex-1 grid grid-cols-12 grid-rows-6 gap-2 sm:gap-3 p-3 sm:p-4 pt-1 min-h-0">
 
-            {/* === GAME MODES === */}
-            <main className="flex-[1.8] flex flex-col gap-3 sm:gap-4 min-w-0">
+            {/* VS IA HERO */}
+            <button
+              onClick={() => onIniciar("duel")}
+              className="col-span-8 row-span-4 bg-white border-4 border-black rounded-2xl sm:rounded-3xl shadow-[4px_4px_0px_0px_#000] sm:shadow-[8px_8px_0px_0px_#000] relative overflow-hidden group cursor-pointer text-left"
+            >
+              <div className="absolute inset-0 bg-[#f8f8f8]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#ffeb3b_0%,transparent_60%)] opacity-40" />
 
-              {/* VS IA Hero Banner */}
-              <button
-                onClick={() => onIniciar("duel")}
-                className="relative group flex-1 bg-[#1a1438] border-2 border-[#38e1ff]/20 rounded-[24px] sm:rounded-[32px] overflow-hidden cursor-pointer hover:border-[#38e1ff]/60 transition-all shadow-2xl text-left"
-              >
-                {/* Character art overlay */}
-                <div className="absolute right-0 top-0 w-3/4 h-full pointer-events-none flex items-center justify-center opacity-50 group-hover:scale-105 transition-transform duration-700">
-                  <MonsterAvatar monstroId={favMonster} size={220} glow="#38e1ff" />
+              <div className="absolute top-3 left-3 sm:top-5 sm:left-6 z-10">
+                <div className="bg-black text-white px-2 py-0.5 sm:px-3 sm:py-1 font-['Bebas_Neue'] text-xs sm:text-lg skew-x-[-10deg] inline-block mb-1">MAIN EVENT</div>
+                <h2 className="font-['Bebas_Neue'] text-4xl sm:text-6xl text-black leading-[0.85] tracking-tight">VERSUS<br/>ARENA</h2>
+                <div className="mt-2 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#ff5722] rounded-full animate-ping" />
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">VS IA · TREINAMENTO</span>
                 </div>
-                {/* Gradient mask */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0d071b] via-[#0d071b]/80 to-transparent" />
-
-                <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-10 gap-1 sm:gap-2">
-                  <span className="text-[#38e1ff] text-[10px] sm:text-xs font-black tracking-[0.3em] uppercase opacity-60">Treinamento</span>
-                  <h2 className="text-4xl sm:text-6xl md:text-7xl font-['Bangers'] text-white italic leading-tight tracking-wider drop-shadow-[4px_4px_0px_#ff3b7a]">VS IA</h2>
-                  <p className="hidden sm:block text-xs sm:text-sm font-bold text-[#b794ff] max-w-[200px] leading-tight">APERFEIÇOE SUAS HABILIDADES EM COMBATE REAL.</p>
-                  <span className="mt-2 sm:mt-4 w-fit px-6 sm:px-12 py-2 sm:py-3 bg-[#38e1ff] text-[#0a0518] font-black rounded-xl sm:rounded-2xl text-sm sm:text-lg uppercase tracking-widest group-hover:bg-white group-hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-all">
-                    Jogar
-                  </span>
-                </div>
-              </button>
-
-              {/* Secondary modes */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 h-16 sm:h-24 shrink-0">
-                <ModeTile color="#38e1ff" title="ONLINE"   sub="MULTIJOGADOR" onClick={onMatchmaking} />
-                <ModeTile color="#b794ff" title="SALA QR"  sub="JOGO LOCAL"   onClick={onMulti} />
-                <ModeTile color="#ff3b7a" title="BLUETOOTH" sub="EM BREVE" disabled onClick={() => {
-                  toast({ title:"📡 Bluetooth em breve", description:"Use SALA QR para jogar com amigos perto." });
-                }} />
               </div>
-            </main>
 
-            {/* === PROGRESSION SIDEBAR === */}
-            <aside className="hidden md:flex flex-1 flex-col gap-3 sm:gap-4 min-w-[220px] max-w-[300px]">
+              {/* Monster art */}
+              <div className="absolute right-0 bottom-0 w-3/5 sm:w-3/4 h-full pointer-events-none flex items-end justify-end pr-2 pb-2 sm:pr-6 sm:pb-6">
+                <div className="transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                  <MonsterAvatar monstroId={favMonster} size={180} glow={li.color} />
+                </div>
+              </div>
+            </button>
 
-              {/* Season pass card */}
+            {/* SECONDARY TILES */}
+            <div className="col-span-8 row-span-2 grid grid-cols-3 gap-2 sm:gap-3">
+              <ModeTile icon={<Wifi className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />} title="ONLINE" onClick={onMatchmaking} />
+              <ModeTile icon={<QrCode className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />} title="SALA QR" onClick={onMulti} />
+              <ModeTile icon={<Bluetooth className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />} title="LOCAL" disabled onClick={() => {
+                toast({ title:"📡 Bluetooth em breve", description:"Use SALA QR para jogar com amigos perto." });
+              }} />
+            </div>
+
+            {/* RIGHT SIDEBAR: SEASON + PLAY */}
+            <div className="col-span-4 row-span-6 flex flex-col gap-2 sm:gap-3 min-w-0">
+              {/* Season Pass */}
               <button
                 onClick={onSeasonPass}
-                className="bg-gradient-to-br from-[#16112a] to-[#0a0518] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl text-left hover:border-[#b794ff]/40 transition-colors"
+                className="flex-1 bg-black border-4 border-white rounded-2xl sm:rounded-[2rem] p-2.5 sm:p-4 flex flex-col shadow-[4px_4px_0px_0px_#ff5722] sm:shadow-[6px_6px_0px_0px_#ff5722] rotate-[1.5deg] text-left hover:rotate-0 transition-transform"
               >
-                <div className="flex justify-between items-end mb-2 sm:mb-3">
-                  <div className="flex flex-col">
-                    <span className="font-['Bangers'] text-base sm:text-lg tracking-widest text-[#b794ff]">SEASON 01</span>
-                    <span className="text-[9px] sm:text-[10px] font-black text-white/40 uppercase">Passe de Batalha</span>
-                  </div>
-                  <span className="text-lg sm:text-xl font-['Bangers'] text-white drop-shadow-[0_0_5px_#ff3b7a]">LVL {seasonInfo.level}</span>
+                <div className="flex justify-between items-center mb-2 sm:mb-3">
+                  <h3 className="font-['Bebas_Neue'] text-base sm:text-2xl text-[#ffeb3b] italic tracking-tighter leading-none">SEASON {String(seasonInfo.level).padStart(2,'0')}</h3>
+                  <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] text-white font-bold">PRO</span>
                 </div>
-                <div className="relative w-full h-2.5 sm:h-3 bg-black/60 rounded-full overflow-hidden border border-white/5">
-                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#ff3b7a] via-[#b794ff] to-[#38e1ff] shadow-[0_0_15px_rgba(183,148,255,0.6)] transition-all duration-700" style={{ width:`${seasonInfo.pct}%` }} />
+                <div className="flex-1 bg-white/5 rounded-xl sm:rounded-2xl p-2 sm:p-3 border border-white/10 flex flex-col justify-center min-h-0">
+                  <p className="text-[9px] sm:text-[11px] text-white font-bold uppercase tracking-widest mb-1">Progressão</p>
+                  <div className="w-full h-2 sm:h-3 bg-white/10 rounded-full mb-2 sm:mb-4 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-[#ff5722] to-[#ffeb3b] transition-all duration-700" style={{ width: `${seasonInfo.pct}%` }} />
+                  </div>
+                  <div className="space-y-1.5 sm:space-y-2 overflow-hidden">
+                    {missoes.length === 0 ? (
+                      <div className="text-[9px] text-white/40 italic">Carregando missões…</div>
+                    ) : missoes.slice(0,2).map((m, i) => (
+                      <div key={m.id} className={`flex items-center gap-2 sm:gap-3 ${m.claimable ? "" : i === 1 ? "opacity-60" : ""}`}>
+                        <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg border-2 border-black flex items-center justify-center shrink-0 ${m.claimable ? "bg-[#ffeb3b] shadow-[2px_2px_0px_0px_#fff]" : "bg-[#ff5722]"}`}>
+                          {m.claimable ? <Award className="w-3 h-3 sm:w-4 sm:h-4 text-black" /> : <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[9px] sm:text-[10px] text-gray-200 font-bold leading-tight truncate uppercase">{m.title}</span>
+                          <span className="block text-[8px] sm:text-[9px] text-gray-400 leading-tight">{m.current}/{m.target}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </button>
 
-              {/* Missions panel */}
-              <div className="flex-1 bg-[#110c26]/60 backdrop-blur-md border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col min-h-0">
-                <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0">
-                  <h3 className="text-[10px] sm:text-xs font-black text-[#38e1ff] uppercase tracking-widest">Missões Diárias</h3>
-                  <div className="flex gap-1.5">
-                    <ChipMini onClick={onRanking} title="RANKING"><Trophy className="w-3 h-3" /></ChipMini>
-                    <ChipMini onClick={onConquistas} title="CONQUISTAS"><Medal className="w-3 h-3" /></ChipMini>
-                    <ChipMini onClick={onEvoluir} title="EVOLUIR"><Zap className="w-3 h-3" /></ChipMini>
-                  </div>
-                </div>
-
-                <div className="space-y-2 sm:space-y-3 flex-1 overflow-y-auto min-h-0">
-                  {missoes.length === 0 ? (
-                    <div className="text-center text-white/30 text-[10px] py-4">Carregando missões…</div>
-                  ) : missoes.map(m => (
-                    <div key={m.id} className="group p-2.5 sm:p-3 bg-black/40 border border-white/5 rounded-xl sm:rounded-2xl hover:border-[#38e1ff]/30 transition-colors">
-                      <div className="text-[11px] sm:text-xs font-bold text-white/90 truncate">{m.title}</div>
-                      <div className="flex items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2">
-                        <div className="flex-1 h-1 sm:h-1.5 bg-black/60 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#38e1ff]" style={{ width:`${Math.min(100,(m.current/m.target)*100)}%` }} />
-                        </div>
-                        <span className="text-[9px] sm:text-[10px] font-black text-[#38e1ff]">{m.current}/{m.target}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-3 sm:mt-4 pt-2 shrink-0">
-                  <button
-                    onClick={onMissoes}
-                    className={`w-full rounded-xl sm:rounded-2xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_10px_20px_rgba(255,59,122,0.3)] ${hasClaimable ? "bg-[#ff3b7a] animate-pulse" : "bg-[#ff3b7a]/70"}`}
-                  >
-                    <div className="flex flex-col text-left">
-                      <span className="text-[8px] sm:text-[9px] font-black text-[#0a0518] leading-none uppercase">
-                        {hasClaimable ? "Disponível" : "Acompanhar"}
-                      </span>
-                      <span className="text-xs sm:text-sm font-['Bangers'] text-white leading-none mt-0.5 tracking-widest">
-                        {hasClaimable ? "RESGATAR" : "MISSÕES"}
-                      </span>
-                    </div>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                      <Award className="w-4 h-4 text-yellow-300" />
-                    </div>
-                  </button>
-                </div>
+              {/* Quick chips */}
+              <div className="flex gap-1.5 sm:gap-2 shrink-0">
+                <QuickChip onClick={onRanking} icon={<Trophy className="w-3 h-3 sm:w-4 sm:h-4" />} label="RANK" />
+                <QuickChip onClick={onConquistas} icon={<Medal className="w-3 h-3 sm:w-4 sm:h-4" />} label="MEDAL" />
+                <QuickChip onClick={onMissoes} icon={<Award className="w-3 h-3 sm:w-4 sm:h-4" />} label={hasClaimable ? "!" : "ALVO"} hot={hasClaimable} />
               </div>
-            </aside>
-          </div>
+
+              {/* PLAY BUTTON */}
+              <button
+                onClick={() => onIniciar("duel")}
+                className="h-[72px] sm:h-[110px] bg-[#ff5722] border-4 border-black rounded-2xl sm:rounded-[2rem] shadow-[6px_6px_0px_0px_#000] sm:shadow-[10px_10px_0px_0px_#000] flex flex-col items-center justify-center group relative overflow-hidden active:translate-x-1 active:translate-y-1 active:shadow-[2px_2px_0px_0px_#000] transition-all cursor-pointer shrink-0"
+              >
+                <div className="absolute top-0 right-0 w-12 h-12 bg-white/20 -translate-y-6 translate-x-6 rotate-45" />
+                <span className="font-['Bebas_Neue'] text-3xl sm:text-5xl text-white tracking-widest drop-shadow-[3px_3px_0px_#000] italic group-hover:scale-110 transition-transform leading-none">BATTLE</span>
+                <span className="font-['Bebas_Neue'] text-[10px] sm:text-sm text-black tracking-[0.3em] mt-0.5 sm:mt-1">SELECT BEAST</span>
+              </button>
+            </div>
+
+          </main>
         </div>
       </div>
     </div>
@@ -279,22 +250,20 @@ export default function TelaLobbyPrincipal({
 
 /* ─── Sub-components ─── */
 
-function RailIcon({ children, onClick, active, danger, tooltip }: {
-  children: React.ReactNode; onClick: () => void; active?: boolean; danger?: boolean; tooltip?: string;
+function RailIcon({ children, onClick, active, danger, tooltip, className = "" }: {
+  children: React.ReactNode; onClick: () => void; active?: boolean; danger?: boolean; tooltip?: string; className?: string;
 }) {
+  const base = "w-9 h-9 sm:w-11 sm:h-11 border-[3px] border-black rounded-lg sm:rounded-xl flex items-center justify-center shadow-[3px_3px_0px_0px_#000] sm:shadow-[4px_4px_0px_0px_#000] cursor-pointer transition-all hover:-translate-y-0.5 hover:rotate-0 active:translate-y-0 active:shadow-[1px_1px_0px_0px_#000]";
+  const variant = active
+    ? "bg-[#ff5722] text-white rotate-[-3deg] hover:bg-[#ff5722]"
+    : danger
+      ? "bg-white text-[#ff5722] hover:bg-red-50"
+      : "bg-white text-black hover:bg-[#ffeb3b]";
   return (
-    <button onClick={onClick} className="group relative">
-      <div className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl cursor-pointer transition-all hover:scale-110 active:scale-95 ${
-        active
-          ? "bg-gradient-to-br from-[#38e1ff] via-[#38e1ff] to-[#b794ff] text-[#0a0518] shadow-[0_0_20px_rgba(56,225,255,0.5)]"
-          : danger
-            ? "text-[#ff3b7a] hover:bg-[#ff3b7a]/10"
-            : "text-[#b794ff]/60 hover:text-[#38e1ff] hover:bg-[#38e1ff]/10"
-      }`}>
-        {children}
-      </div>
+    <button onClick={onClick} className={`group relative ${className}`}>
+      <div className={`${base} ${variant}`}>{children}</div>
       {tooltip && (
-        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-[#38e1ff] text-[#0a0518] text-[10px] font-black rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-[#ffeb3b] text-[10px] font-['Bebas_Neue'] tracking-widest rounded border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
           {tooltip}
         </div>
       )}
@@ -302,32 +271,38 @@ function RailIcon({ children, onClick, active, danger, tooltip }: {
   );
 }
 
-function ModeTile({ color, title, sub, onClick, disabled }: {
-  color: string; title: string; sub: string; onClick: () => void; disabled?: boolean;
+function ModeTile({ icon, title, onClick, disabled }: {
+  icon: React.ReactNode; title: string; onClick: () => void; disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`relative bg-[#110c26] border border-white/5 rounded-xl sm:rounded-3xl flex flex-col items-center justify-center transition-all px-2 ${
-        disabled ? "opacity-40" : "hover:bg-white/5 cursor-pointer"
+      className={`bg-white border-4 border-black rounded-xl sm:rounded-2xl shadow-[3px_3px_0px_0px_#000] sm:shadow-[4px_4px_0px_0px_#000] flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-all relative ${
+        disabled ? "opacity-50" : "hover:-translate-y-1 hover:bg-[#ffeb3b] active:translate-y-0 cursor-pointer"
       }`}
-      style={!disabled ? { borderColor:`${color}26` } : undefined}
     >
-      <div className="text-sm sm:text-lg font-['Bangers'] tracking-widest" style={{ color }}>{title}</div>
-      <div className="text-[7px] sm:text-[9px] font-bold text-white/30 tracking-tighter uppercase">{sub}</div>
+      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#0a0a0a] rounded-md sm:rounded-lg flex items-center justify-center text-[#ffeb3b]">
+        {icon}
+      </div>
+      <span className="font-['Bebas_Neue'] text-sm sm:text-lg leading-none">{title}</span>
       {disabled && (
-        <div className="absolute top-1 right-2 text-[7px] sm:text-[8px] font-black px-1.5 rounded" style={{ background:`${color}33`, color }}>
-          BREVE
-        </div>
+        <div className="absolute top-1 right-1 text-[7px] sm:text-[8px] font-black px-1 rounded bg-[#ff5722] text-white border border-black">BREVE</div>
       )}
     </button>
   );
 }
 
-function ChipMini({ children, onClick, title }: { children: React.ReactNode; onClick: () => void; title: string }) {
+function QuickChip({ onClick, icon, label, hot }: {
+  onClick: () => void; icon: React.ReactNode; label: string; hot?: boolean;
+}) {
   return (
-    <button onClick={onClick} title={title} className="w-6 h-6 rounded-md bg-black/40 border border-white/10 text-white/60 hover:text-[#38e1ff] hover:border-[#38e1ff]/40 flex items-center justify-center transition-colors">
-      {children}
+    <button
+      onClick={onClick}
+      className={`flex-1 h-7 sm:h-9 border-2 border-black rounded-md sm:rounded-lg flex items-center justify-center gap-1 font-['Bebas_Neue'] text-[10px] sm:text-xs tracking-widest shadow-[2px_2px_0px_0px_#000] hover:-translate-y-0.5 transition-transform ${
+        hot ? "bg-[#ffeb3b] text-black animate-pulse" : "bg-white text-black hover:bg-[#ffeb3b]"
+      }`}
+    >
+      {icon}<span>{label}</span>
     </button>
   );
 }
