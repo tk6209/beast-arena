@@ -26,6 +26,9 @@
 html, body, #root {
   margin: 0; padding: 0;
   min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   background: radial-gradient(ellipse at 50% 0%, #1a0f4a 0%, #0a0820 50%, #050316 100%);
   color: #e8e6ff;
   font-family: var(--font-ui);
@@ -33,6 +36,18 @@ html, body, #root {
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
 }
+
+/* Safe-area padding utility — for notched phones in any orientation */
+#root {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Prevent content from being clipped by zoom on iOS form fields */
+input, select, textarea { font-size: 16px; }
+
+/* Imagens fluidas */
+img, video, svg { max-width: 100%; height: auto; }
 
 /* Scrollbar — dark */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
