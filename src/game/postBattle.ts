@@ -34,10 +34,31 @@ export async function postBattleProgression(
       checkAchievements(userId, ganhou, stats, monstroId),
       updateSeasonPass(userId, ganhou, stats),
       saveBattleHistory(userId, ganhou, stats, monstroId, historyEntry),
+      grantShards(userId, monstroId, ganhou),
     ]);
   } catch (err) {
     console.error("postBattleProgression error:", err);
   }
+}
+
+/* ── Power Shards (per-monster evolution currency) ── */
+async function grantShards(userId: string, monstroId: string, ganhou: boolean) {
+  if (!monstroId) return;
+  const amount = ganhou ? 10 : 3;
+  // Read-modify-write (Supabase JS has no atomic increment via REST without RPC)
+  const { data: row } = await supabase.from("user_monsters")
+    .select("shards,total_battles")
+    .eq("user_id", userId).eq("monster_id", monstroId).maybeSingle();
+  if (!row) {
+    await supabase.from("user_monsters").insert({
+      user_id: userId, monster_id: monstroId,
+      power_level: 1, shards: amount, total_battles: 1,
+    });
+    return;
+  }
+  await supabase.from("user_monsters")
+    .update({ shards: (row.shards || 0) + amount, total_battles: (row.total_battles || 0) + 1 })
+    .eq("user_id", userId).eq("monster_id", monstroId);
 }
 
 /* ── Battle History ── */
