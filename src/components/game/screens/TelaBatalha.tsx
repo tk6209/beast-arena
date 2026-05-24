@@ -4,6 +4,7 @@ import BattleIntro from "@/components/game/BattleIntro";
 import { criarJ, type Jogador, type LogEntry } from "@/game/engine";
 import { criarSessao, ouvirSessao, fecharCanal, type GameSession } from "@/game/multiplayer";
 import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
+import { supabase } from "@/integrations/supabase/client";
 import { falar, markGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { pageBg, DS } from "@/game/styles";
@@ -177,8 +178,16 @@ export default function TelaBatalha({
     async function init() {
       try {
         let sid = salaId || null;
+        // Load player's power level for this monster (if logged in)
+        let powerLevel = 1;
+        if (userId && monstroP1) {
+          const { data } = await supabase.from("user_monsters")
+            .select("power_level")
+            .eq("user_id", userId).eq("monster_id", monstroP1).maybeSingle();
+          if (data?.power_level) powerLevel = data.power_level;
+        }
         const result = await initGame(sid, modo === "multi" ? "multi" : "ai", [
-          { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1 }
+          { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1, powerLevel }
         ], dificuldade, aiMonstroId);
         if (!sid && result.sessionId) sid = result.sessionId;
         sessionIdRef.current = sid!;

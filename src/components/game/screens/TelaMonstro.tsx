@@ -13,12 +13,19 @@ interface TelaMonstroProps {
   onVoltar?: () => void;
   titulo?: string;
   userId?: string;
+  onEvoluir?: (monstroId: string) => void;
+  /** "evolution" hides the battle button and only shows Evoluir */
+  modo?: "battle" | "evolution";
 }
 
 const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
+export default function TelaMonstro({
+  onConfirmar, onVoltar,
+  titulo = "ESCOLHA SEU MONSTRO",
+  userId, onEvoluir, modo = "battle",
+}: TelaMonstroProps) {
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
@@ -31,6 +38,7 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
   const [animating, setAnimating] = useState(false);
   const touchStart = useRef<number | null>(null);
   const [unlockedMonsters, setUnlockedMonsters] = useState<Set<string>>(new Set(STARTER_MONSTERS));
+  const [powerLevels, setPowerLevels] = useState<Record<string, number>>({});
 
   // Load unlocked monsters from inventory
   useEffect(() => {
@@ -42,6 +50,13 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         .eq("item_type", "monster");
       if (data) {
         setUnlockedMonsters(new Set([...STARTER_MONSTERS, ...data.map((d: any) => d.item_key)]));
+      }
+      const { data: pls } = await supabase.from("user_monsters")
+        .select("monster_id,power_level").eq("user_id", userId);
+      if (pls) {
+        const map: Record<string, number> = {};
+        pls.forEach((r: any) => { map[r.monster_id] = r.power_level; });
+        setPowerLevels(map);
       }
     })();
   }, [userId]);
@@ -374,9 +389,24 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         {/* Confirm button */}
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
           {isUnlocked ? (
-            <BtnMain variant="gold" onClick={handleConfirm}>
-              ✅ BATALHAR COM {m.nome.toUpperCase()}
-            </BtnMain>
+            <>
+              {modo === "battle" && (
+                <BtnMain variant="gold" onClick={handleConfirm}>
+                  ✅ BATALHAR COM {m.nome.toUpperCase()}
+                </BtnMain>
+              )}
+              {onEvoluir && userId && (
+                <button onClick={() => onEvoluir(m.id)} style={{
+                  marginTop: 10, width: "100%", padding: "10px 14px",
+                  background: "linear-gradient(135deg,#7c3aed,#b794ff)",
+                  border: "none", borderRadius: 12, color: "#fff",
+                  fontFamily: "Bangers, cursive", letterSpacing: 2, fontSize: 16,
+                  cursor: "pointer", boxShadow: "0 6px 20px rgba(124,58,237,.4)",
+                }}>
+                  ⚡ EVOLUIR · PL {powerLevels[m.id] || 1}
+                </button>
+              )}
+            </>
           ) : (
             <div>
               <BtnMain variant="dark" onClick={() => {}}>

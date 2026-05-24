@@ -432,17 +432,24 @@ function iaJogar(ai: any, dificuldade: string = "medio", turno: number = 0): { t
 }
 
 /* ── Create player ── */
-function criarJogador(id: string, nome: string, mId: string): any {
+function criarJogador(id: string, nome: string, mId: string, powerLevel: number = 1): any {
   const m = { ...MONSTROS[mId] };
+  // Apply Power Level scaling (Brawl Stars style)
+  const pl = Math.max(1, Math.min(11, powerLevel));
+  const hpMult  = 1 + 0.06 * (pl - 1);
+  const atkMult = 1 + 0.05 * (pl - 1);
+  m.hp  = Math.round(m.hp  * hpMult);
+  m.atk = Math.round(m.atk * atkMult);
   return {
     id, nome,
-    monstro: { ...m, nivel: 0, poder: null, maxHp: m.hp },
+    monstro: { ...m, nivel: 0, poder: null, maxHp: m.hp, powerLevel: pl },
     hp: m.hp, maxHp: m.hp,
     mao: [], deck: [], drawnIds: [],
     defAtiva: 0, imune: false, dobra: false, dodgeOnce: false,
     swarms: [null, null],
     energia: 3, // start with 3 energy
     _voltUsed: false,
+    powerLevel: pl,
   };
 }
 
@@ -864,7 +871,7 @@ function handleInitGame(state: any, payload: any): any {
 
   const players: any[] = [];
   for (const pc of playerConfigs) {
-    const p = criarJogador(pc.slot.toString(), pc.nome, pc.monstroId);
+    const p = criarJogador(pc.slot.toString(), pc.nome, pc.monstroId, pc.powerLevel || 1);
     if (pc.deck && pc.deck.length >= 5) {
       p.deck = pc.deck; // use player's personal deck
     }
@@ -875,7 +882,10 @@ function handleInitGame(state: any, payload: any): any {
     const aiM = aiMonstroId && MONSTROS[aiMonstroId] ? aiMonstroId : rndItem(Object.keys(MONSTROS));
     const aiP = rndItem(Object.keys(PODERES));
     const archetypes = ["aggro", "control", "balanced"];
-    let ai = criarJogador("ai", "Rival Sombrio", aiM);
+    // AI scales to player's PL (±1) so battles stay fair
+    const playerPL = playerConfigs?.[0]?.powerLevel || 1;
+    const aiPL = Math.max(1, Math.min(11, playerPL + (Math.random() < 0.5 ? 0 : -1)));
+    let ai = criarJogador("ai", "Rival Sombrio", aiM, aiPL);
     ai.archetype = archetypes[Math.floor(Math.random() * archetypes.length)];
     ai.monstro = evoluir(ai.monstro, aiP);
     // Apply difficulty scaling

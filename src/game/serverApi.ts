@@ -29,7 +29,7 @@ async function callEngine(action: string, sessionId: string | null, payload: any
 export async function initGame(
   sessionId: string | null,
   modo: string,
-  players: { slot: number; nome: string; monstroId: string }[],
+  players: { slot: number; nome: string; monstroId: string; powerLevel?: number }[],
   dificuldade?: string,
   aiMonstroId?: string,
   playerDeck?: any[]

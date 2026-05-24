@@ -19,6 +19,7 @@ import TelaConquistas from "@/components/game/screens/TelaConquistas";
 import TelaAmigos from "@/components/game/screens/TelaAmigos";
 import TelaColecao from "@/components/game/screens/TelaColecao";
 import TelaDeckBuilder from "@/components/game/screens/TelaDeckBuilder";
+import TelaEvolucao from "@/components/game/screens/TelaEvolucao";
 import GameInviteNotification from "@/components/game/GameInviteNotification";
 import MonsterUnlockOverlay from "@/components/game/MonsterUnlockOverlay";
 import { MONSTROS } from "@/game/data";
@@ -31,7 +32,7 @@ import type { Jogador } from "@/game/engine";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "amigos" | "colecao" | "deck_builder" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "amigos" | "colecao" | "deck_builder" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select" | "evolucao";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -57,6 +58,8 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [forceReplayTutorial, setForceReplayTutorial] = useState(false);
+  const [evolucaoMonstroId, setEvolucaoMonstroId] = useState<string>("panther");
+  const [monstroMode, setMonstroMode] = useState<"battle" | "evolution">("battle");
 
   // Campaign state
   const [campaignQueue, setCampaignQueue] = useState<string[]>([]);
@@ -142,6 +145,7 @@ export default function Index() {
     if (diff) setDificuldade(diff);
     // Always skip name screen — guest gets "Jogador" as default, logged-in uses profile name
     if (!user) setNomeJogador(localStorage.getItem("beast_arena_nome") || "Jogador");
+    setMonstroMode("battle");
     setTela("monstro");
   };
 
@@ -335,6 +339,7 @@ export default function Index() {
             onConquistas={() => setTela("conquistas")}
             onAmigos={() => setTela("amigos")}
             onColecao={() => setTela("colecao")}
+            onEvoluir={() => { setMonstroMode("evolution"); setTela("monstro"); }}
             onLogout={handleLogout}
           />
         </>
@@ -383,6 +388,11 @@ export default function Index() {
         <TelaDeckBuilder user={user} onVoltar={() => setTela("colecao")} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
+    case "evolucao":
+      return user ? (
+        <TelaEvolucao user={user} monstroId={evolucaoMonstroId} onVoltar={() => setTela("lobby_principal")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
     case "home":
       return (
         <>
@@ -401,7 +411,14 @@ export default function Index() {
     case "nome":
       return <TelaNome onConfirmar={handleNomeConfirm} />;
     case "monstro":
-      return <TelaMonstro onConfirmar={handleMonstroConfirm} onVoltar={() => setTela(user ? "lobby_principal" : "home")} userId={user?.id} />;
+      return <TelaMonstro
+        onConfirmar={handleMonstroConfirm}
+        onVoltar={() => setTela(user ? "lobby_principal" : "home")}
+        userId={user?.id}
+        onEvoluir={(mid) => { setEvolucaoMonstroId(mid); setTela("evolucao"); }}
+        modo={monstroMode}
+        titulo={monstroMode === "evolution" ? "EVOLUIR MONSTRO" : "ESCOLHA SEU MONSTRO"}
+      />;
     case "lobby":
       return <TelaLobby monstroHost={monstroP1} onBatalha={handleBatalha} />;
     case "entrar":
