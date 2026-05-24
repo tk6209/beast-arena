@@ -19,6 +19,7 @@ import TelaConquistas from "@/components/game/screens/TelaConquistas";
 import TelaAmigos from "@/components/game/screens/TelaAmigos";
 import TelaColecao from "@/components/game/screens/TelaColecao";
 import TelaDeckBuilder from "@/components/game/screens/TelaDeckBuilder";
+import TelaEvolucao from "@/components/game/screens/TelaEvolucao";
 import GameInviteNotification from "@/components/game/GameInviteNotification";
 import MonsterUnlockOverlay from "@/components/game/MonsterUnlockOverlay";
 import { MONSTROS } from "@/game/data";
@@ -31,7 +32,7 @@ import type { Jogador } from "@/game/engine";
 import type { BattleStats } from "@/components/game/screens/TelaBatalha";
 import type { User } from "@supabase/supabase-js";
 
-type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "amigos" | "colecao" | "deck_builder" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select";
+type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" | "season_pass" | "missoes" | "conquistas" | "amigos" | "colecao" | "deck_builder" | "nome" | "monstro" | "lobby" | "entrar" | "batalha" | "resultado" | "matchmaking" | "matchmaking_select" | "evolucao";
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
@@ -57,6 +58,7 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [forceReplayTutorial, setForceReplayTutorial] = useState(false);
+  const [evolucaoMonstroId, setEvolucaoMonstroId] = useState<string>("panther");
 
   // Campaign state
   const [campaignQueue, setCampaignQueue] = useState<string[]>([]);
@@ -381,6 +383,11 @@ export default function Index() {
     case "deck_builder":
       return user ? (
         <TelaDeckBuilder user={user} onVoltar={() => setTela("colecao")} />
+      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+
+    case "evolucao":
+      return user ? (
+        <TelaEvolucao user={user} monstroId={evolucaoMonstroId} onVoltar={() => setTela("lobby_principal")} />
       ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
     case "home":
