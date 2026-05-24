@@ -59,6 +59,7 @@ export default function Index() {
   const [authChecked, setAuthChecked] = useState(false);
   const [forceReplayTutorial, setForceReplayTutorial] = useState(false);
   const [evolucaoMonstroId, setEvolucaoMonstroId] = useState<string>("panther");
+  const [monstroMode, setMonstroMode] = useState<"battle" | "evolution">("battle");
 
   // Campaign state
   const [campaignQueue, setCampaignQueue] = useState<string[]>([]);
@@ -144,6 +145,7 @@ export default function Index() {
     if (diff) setDificuldade(diff);
     // Always skip name screen — guest gets "Jogador" as default, logged-in uses profile name
     if (!user) setNomeJogador(localStorage.getItem("beast_arena_nome") || "Jogador");
+    setMonstroMode("battle");
     setTela("monstro");
   };
 
@@ -337,7 +339,7 @@ export default function Index() {
             onConquistas={() => setTela("conquistas")}
             onAmigos={() => setTela("amigos")}
             onColecao={() => setTela("colecao")}
-            onEvoluir={() => setTela("monstro")}
+            onEvoluir={() => { setMonstroMode("evolution"); setTela("monstro"); }}
             onLogout={handleLogout}
           />
         </>
@@ -414,6 +416,8 @@ export default function Index() {
         onVoltar={() => setTela(user ? "lobby_principal" : "home")}
         userId={user?.id}
         onEvoluir={(mid) => { setEvolucaoMonstroId(mid); setTela("evolucao"); }}
+        modo={monstroMode}
+        titulo={monstroMode === "evolution" ? "EVOLUIR MONSTRO" : "ESCOLHA SEU MONSTRO"}
       />;
     case "lobby":
       return <TelaLobby monstroHost={monstroP1} onBatalha={handleBatalha} />;
