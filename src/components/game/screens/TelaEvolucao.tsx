@@ -99,8 +99,9 @@ export default function TelaEvolucao({ user, monstroId, onVoltar }: Props) {
 
   async function escolherPerk(slot: PerkSlot, perkId: string) {
     const col = `selected_${slot}` as const;
+    const patch: Record<string, string> = { [col]: perkId };
     const { error } = await supabase.from("user_monsters")
-      .update({ [col]: perkId })
+      .update(patch as any)
       .eq("user_id", user.id).eq("monster_id", monstroId);
     if (error) { toast({ title: "Erro", description: error.message, variant:"destructive" }); return; }
     setUm({ ...um!, [col]: perkId } as any);
