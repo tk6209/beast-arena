@@ -383,9 +383,22 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         {/* Confirm button */}
         <div style={{ flexShrink: 0, maxWidth: 300, marginInline: "auto", width: "100%" }}>
           {isUnlocked ? (
-            <BtnMain variant="gold" onClick={handleConfirm}>
-              ✅ BATALHAR COM {m.nome.toUpperCase()}
-            </BtnMain>
+            <>
+              <BtnMain variant="gold" onClick={handleConfirm}>
+                ✅ BATALHAR COM {m.nome.toUpperCase()}
+              </BtnMain>
+              {onEvoluir && userId && (
+                <button onClick={() => onEvoluir(m.id)} style={{
+                  marginTop: 10, width: "100%", padding: "10px 14px",
+                  background: "linear-gradient(135deg,#7c3aed,#b794ff)",
+                  border: "none", borderRadius: 12, color: "#fff",
+                  fontFamily: "Bangers, cursive", letterSpacing: 2, fontSize: 16,
+                  cursor: "pointer", boxShadow: "0 6px 20px rgba(124,58,237,.4)",
+                }}>
+                  ⚡ EVOLUIR · PL {powerLevels[m.id] || 1}
+                </button>
+              )}
+            </>
           ) : (
             <div>
               <BtnMain variant="dark" onClick={() => {}}>
