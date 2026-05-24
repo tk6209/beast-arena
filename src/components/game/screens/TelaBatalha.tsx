@@ -125,6 +125,8 @@ export default function TelaBatalha({
   const [cartaSel, setCartaSel]         = useState<CartaData | null>(null);
   const [comboSel, setComboSel]         = useState<CartaData[]>([]);
   const [loading, setLoading]           = useState(false);
+  const [initError, setInitError]       = useState<string | null>(null);
+  const [initAttempt, setInitAttempt]   = useState(0);
   const [muted, setMuted]               = useState(isMuted());
   const [turnTimer, setTurnTimer]       = useState(TURN_TIMER);
 
@@ -176,15 +178,18 @@ export default function TelaBatalha({
 
   useEffect(() => {
     async function init() {
+      setInitError(null);
       try {
         let sid = salaId || null;
         // Load player's power level for this monster (if logged in)
         let powerLevel = 1;
         if (userId && monstroP1) {
-          const { data } = await supabase.from("user_monsters")
-            .select("power_level")
-            .eq("user_id", userId).eq("monster_id", monstroP1).maybeSingle();
-          if (data?.power_level) powerLevel = data.power_level;
+          try {
+            const { data } = await supabase.from("user_monsters")
+              .select("power_level")
+              .eq("user_id", userId).eq("monster_id", monstroP1).maybeSingle();
+            if (data?.power_level) powerLevel = data.power_level;
+          } catch (e) { console.warn("[battle] power_level lookup failed, default=1", e); }
         }
         const result = await initGame(sid, modo === "multi" ? "multi" : "ai", [
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1, powerLevel }
@@ -197,10 +202,13 @@ export default function TelaBatalha({
           setServerState(pr.state);
           sfxPoder(); startBattleMusic();
         }
-      } catch (e) { console.error(e); }
+      } catch (e: any) {
+        console.error("[battle] init failed", e);
+        setInitError(e?.message || "Falha ao iniciar a batalha. Verifique sua conexão.");
+      }
     }
     init();
-  }, []);
+  }, [initAttempt]);
 
   useEffect(() => {
     const sid = sessionIdRef.current;
@@ -488,8 +496,27 @@ export default function TelaBatalha({
     <div style={{ ...pageBg(), display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100dvh" }}>
       <ChromeNoise />
       <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
-        <div style={{ width:40,height:40,border:"3px solid rgba(0,229,255,.15)",borderTopColor:"#00e5ff",borderRadius:"50%",animation:"spin .8s linear infinite" }} />
-        <span style={{ fontFamily:"Bangers,cursive",fontSize:18,color:"#00e5ff",letterSpacing:2 }}>CARREGANDO...</span>
+        {initError ? (
+          <>
+            <div style={{ fontSize:42 }}>⚠️</div>
+            <span style={{ fontFamily:"Bangers,cursive",fontSize:18,color:"#ef5350",letterSpacing:2,textAlign:"center",maxWidth:320 }}>
+              {initError}
+            </span>
+            <div style={{ display:"flex", gap:10, marginTop:8 }}>
+              <button onClick={() => setInitAttempt(a => a + 1)} style={{ padding:"10px 20px",background:"#00e5ff",color:"#001018",border:"none",borderRadius:8,fontFamily:"Bangers,cursive",fontSize:16,letterSpacing:1,cursor:"pointer" }}>
+                TENTAR DE NOVO
+              </button>
+              <button onClick={() => onFim(null, bStats)} style={{ padding:"10px 20px",background:"transparent",color:"#8a95aa",border:"1px solid #2a3448",borderRadius:8,fontFamily:"Bangers,cursive",fontSize:16,letterSpacing:1,cursor:"pointer" }}>
+                VOLTAR
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ width:40,height:40,border:"3px solid rgba(0,229,255,.15)",borderTopColor:"#00e5ff",borderRadius:"50%",animation:"spin .8s linear infinite" }} />
+            <span style={{ fontFamily:"Bangers,cursive",fontSize:18,color:"#00e5ff",letterSpacing:2 }}>CARREGANDO...</span>
+          </>
+        )}
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
