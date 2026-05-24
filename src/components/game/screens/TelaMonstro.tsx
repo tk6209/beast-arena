@@ -13,12 +13,13 @@ interface TelaMonstroProps {
   onVoltar?: () => void;
   titulo?: string;
   userId?: string;
+  onEvoluir?: (monstroId: string) => void;
 }
 
 const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
-export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId }: TelaMonstroProps) {
+export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA SEU MONSTRO", userId, onEvoluir }: TelaMonstroProps) {
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
@@ -31,6 +32,7 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
   const [animating, setAnimating] = useState(false);
   const touchStart = useRef<number | null>(null);
   const [unlockedMonsters, setUnlockedMonsters] = useState<Set<string>>(new Set(STARTER_MONSTERS));
+  const [powerLevels, setPowerLevels] = useState<Record<string, number>>({});
 
   // Load unlocked monsters from inventory
   useEffect(() => {
@@ -42,6 +44,13 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
         .eq("item_type", "monster");
       if (data) {
         setUnlockedMonsters(new Set([...STARTER_MONSTERS, ...data.map((d: any) => d.item_key)]));
+      }
+      const { data: pls } = await supabase.from("user_monsters")
+        .select("monster_id,power_level").eq("user_id", userId);
+      if (pls) {
+        const map: Record<string, number> = {};
+        pls.forEach((r: any) => { map[r.monster_id] = r.power_level; });
+        setPowerLevels(map);
       }
     })();
   }, [userId]);
