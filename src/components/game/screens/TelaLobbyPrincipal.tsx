@@ -5,6 +5,7 @@ import MonsterAvatar from "@/components/game/MonsterAvatar";
 import { MONSTROS } from "@/game/data";
 import { DS } from "@/game/styles";
 import type { Dificuldade } from "@/pages/Index";
+import { toast } from "@/hooks/use-toast";
 
 const MONSTER_KEYS = Object.keys(MONSTROS);
 
@@ -185,17 +186,28 @@ export default function TelaLobbyPrincipal({
           </div>
         </div>
 
-        {/* ══ HERO BATTLE BUTTON ══ */}
-        <div style={{ padding:"8px 16px 14px" }}>
+        {/* ══ HERO: VS IA ══ */}
+        <div style={{ padding:"8px 16px 10px" }}>
           <HeroBattleBtn onClick={() => onIniciar("duel")} />
         </div>
 
-        {/* ══ MODE GRID ══ */}
-        <div style={{ padding:"0 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
-          <ModeCard emoji="👥" title="AMIGO" sub="Desafie alguém" color="#69f0ae" onClick={onMulti} delay={0} />
-          <ModeCard emoji="🎯" title="RANKED" sub="Batalha por ELO" color="#ffd54f" onClick={onMatchmaking} delay={1} />
-          <ModeCard emoji="🏆" title="RANKING" sub="Top jogadores" color="#b388ff" onClick={onRanking} delay={2} />
-          <ModeCard emoji="🏪" title="LOJA" sub="Cartas e monstros" color="#ff8a65" onClick={onLoja} delay={3} />
+        {/* ══ VS HUMANO ══ */}
+        <div style={{ padding:"4px 16px 0" }}>
+          <div style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:"#2a3448",
+            letterSpacing:2,marginBottom:8 }}>VS HUMANO</div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8 }}>
+            <ModeCard emoji="🌐" title="ONLINE" sub="Servidor" color="#ffd54f" onClick={onMatchmaking} delay={0} />
+            <ModeCard emoji="📱" title="QR/SALA" sub="Amigo perto" color="#69f0ae" onClick={onMulti} delay={1} />
+            <ModeCard emoji="📡" title="BLUETOOTH" sub="Em breve" color="#7a8599" onClick={() => {
+              toast({ title:"📡 Bluetooth em breve", description:"Disponível apenas no app nativo. Use QR/Sala para jogar perto." });
+            }} delay={2} disabled />
+          </div>
+        </div>
+
+        {/* ══ EXTRAS ══ */}
+        <div style={{ padding:"14px 16px 0",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+          <ModeCard emoji="🏆" title="RANKING" sub="Top jogadores" color="#b388ff" onClick={onRanking} delay={3} />
+          <ModeCard emoji="🏪" title="LOJA" sub="Cartas e monstros" color="#ff8a65" onClick={onLoja} delay={4} />
         </div>
 
         {/* ══ DAILY CHIPS ══ */}
@@ -272,11 +284,11 @@ function HeroBattleBtn({ onClick }: { onClick: () => void }) {
         <div style={{ textAlign:"left" }}>
           <div style={{ fontFamily:"Bangers,cursive",fontSize:36,color:"#fff",
             letterSpacing:2,lineHeight:1,textShadow:"0 2px 12px rgba(0,0,0,.4)" }}>
-            BATALHAR
+            VS IA
           </div>
           <div style={{ fontFamily:"Nunito,sans-serif",fontSize:12,
             color:"rgba(255,255,255,.65)",marginTop:3,letterSpacing:.3 }}>
-            Desafiar Inteligência Artificial
+            Jogar contra a Inteligência Artificial
           </div>
         </div>
         <span style={{ marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,.6)" }}>›</span>
@@ -285,8 +297,8 @@ function HeroBattleBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
-function ModeCard({ emoji, title, sub, color, onClick, delay }:
-  { emoji:string;title:string;sub:string;color:string;onClick:()=>void;delay:number }) {
+function ModeCard({ emoji, title, sub, color, onClick, delay, disabled }:
+  { emoji:string;title:string;sub:string;color:string;onClick:()=>void;delay:number;disabled?:boolean }) {
   const [p, setP] = useState(false);
   return (
     <button onClick={onClick}
@@ -294,7 +306,8 @@ function ModeCard({ emoji, title, sub, color, onClick, delay }:
       style={{ background:p?`${color}18`:`${color}0b`,border:`1.5px solid ${color}${p?"55":"22"}`,
         borderRadius:16,padding:"14px",cursor:"pointer",textAlign:"left",minHeight:76,
         transform:p?"scale(0.95)":"scale(1)",transition:"transform .1s ease, border-color .1s",
-        boxShadow:p?`0 0 20px ${color}22`:"none",animation:`fadeUp .4s ${delay*0.07}s both` }}>
+        boxShadow:p?`0 0 20px ${color}22`:"none",animation:`fadeUp .4s ${delay*0.07}s both`,
+        opacity: disabled ? 0.6 : 1 }}>
       <div style={{ fontSize:26,marginBottom:6 }}>{emoji}</div>
       <div style={{ fontFamily:"Bangers,cursive",fontSize:15,color,letterSpacing:1.5,lineHeight:1 }}>{title}</div>
       <div style={{ fontFamily:"Nunito,sans-serif",fontSize:9,color:"#8a95aa",marginTop:3 }}>{sub}</div>
