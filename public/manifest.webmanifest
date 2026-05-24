@@ -5,7 +5,7 @@
   "description": "Jogo de cartas com monstros em tempo real",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "landscape",
   "theme_color": "#0d2137",
   "background_color": "#0a0f1e",
   "icons": [
