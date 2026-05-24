@@ -337,6 +337,7 @@ export default function Index() {
             onConquistas={() => setTela("conquistas")}
             onAmigos={() => setTela("amigos")}
             onColecao={() => setTela("colecao")}
+            onEvoluir={() => setTela("monstro")}
             onLogout={handleLogout}
           />
         </>
