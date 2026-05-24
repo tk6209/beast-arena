@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import ChromeNoise from "@/components/game/ChromeNoise";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
-import { MONSTROS } from "@/game/data";
-import { DS } from "@/game/styles";
 import type { Dificuldade } from "@/pages/Index";
 import { toast } from "@/hooks/use-toast";
-
-const MONSTER_KEYS = Object.keys(MONSTROS);
+import {
+  Swords, Store, BookOpen, Users, User as UserIcon, LogOut,
+  Trophy, Medal, Zap, Award,
+} from "lucide-react";
 
 const LEAGUE_INFO: Record<string, { emoji: string; color: string; label: string }> = {
   bronze:   { emoji: "🥉", color: "#cd7f32", label: "Bronze"   },
@@ -35,14 +34,6 @@ interface Props {
   onLogout: () => void;
 }
 
-const CSS = `
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes glowPulse{ 0%,100%{opacity:.45} 50%{opacity:1} }
-  @keyframes badgePop { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
-  @keyframes shimBar  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  @keyframes heroShine{ 0%{transform:translateX(-100%) skewX(-12deg)} 100%{transform:translateX(250%) skewX(-12deg)} }
-`;
-
 export default function TelaLobbyPrincipal({
   user, onIniciar, onPerfil, onLoja, onMulti, onMatchmaking,
   onRanking, onSeasonPass, onMissoes, onConquistas, onAmigos, onColecao, onEvoluir, onLogout,
@@ -50,8 +41,9 @@ export default function TelaLobbyPrincipal({
   const [profile, setProfile]           = useState<any>(null);
   const [stats, setStats]               = useState<any>(null);
   const [league, setLeague]             = useState<any>(null);
-  const [bgMonsterIdx, setBgMonsterIdx] = useState(0);
-  const [missaoClaimable, setMissaoClaimable] = useState(false);
+  const [seasonInfo, setSeasonInfo]     = useState<{ level: number; pct: number }>({ level: 1, pct: 0 });
+  const [missoes, setMissoes]           = useState<Array<{ id:string; title:string; current:number; target:number; claimable:boolean }>>([]);
+  const [hasClaimable, setHasClaimable] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -64,14 +56,36 @@ export default function TelaLobbyPrincipal({
       if (p) setProfile(p);
       if (s) setStats(s);
       if (l) setLeague(l);
+
+      // Season pass progress
+      const { data: sp } = await supabase.from("season_pass")
+        .select("current_level,current_xp,xp_to_next")
+        .eq("user_id", user.id).maybeSingle();
+      if (sp) {
+        const need = (sp as any).xp_to_next || 100;
+        const cur  = (sp as any).current_xp || 0;
+        setSeasonInfo({ level: (sp as any).current_level || 1, pct: Math.min(100, (cur / need) * 100) });
+      }
+
+      // Daily missions snapshot (top 2)
       const today = new Date().toISOString().split("T")[0];
-      const { data: cl } = await supabase.from("user_missions").select("id")
+      const { data: ms } = await supabase
+        .from("user_missions")
+        .select("id,current_value,completed,claimed,daily_missions(title,target_value)")
         .eq("user_id", user.id).eq("assigned_date", today)
-        .eq("completed", true).eq("claimed", false).limit(1);
-      setMissaoClaimable((cl?.length || 0) > 0);
+        .limit(2);
+      if (ms) {
+        const mapped = (ms as any[]).map(m => ({
+          id: m.id,
+          title: m.daily_missions?.title || "Missão",
+          current: m.current_value || 0,
+          target: m.daily_missions?.target_value || 1,
+          claimable: m.completed && !m.claimed,
+        }));
+        setMissoes(mapped);
+        setHasClaimable(mapped.some(m => m.claimable));
+      }
     })();
-    const t = setInterval(() => setBgMonsterIdx(i => (i + 1) % MONSTER_KEYS.length), 5000);
-    return () => clearInterval(t);
   }, [user]);
 
   const li    = LEAGUE_INFO[league?.league || "bronze"];
@@ -80,254 +94,240 @@ export default function TelaLobbyPrincipal({
   const xpMax = lvl * 100;
   const xpPct = Math.min(100, (xp / xpMax) * 100);
   const wins  = stats?.total_wins || 0;
-  const total = wins + (stats?.total_losses || 0);
-  const wr    = total > 0 ? Math.round((wins / total) * 100) : 0;
-  const bgM   = MONSTER_KEYS[bgMonsterIdx % MONSTER_KEYS.length];
-  const bgColor = MONSTROS[bgM]?.glow || "#00e5ff";
+  const favMonster = stats?.favorite_monster || "panther";
 
   return (
-    <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0,
-      background:"linear-gradient(160deg,#0c0804 0%,#100a06 50%,#080503 100%)",
-      overflow:"hidden", fontFamily:`${DS.fontUI}` }}>
-      <style>{CSS}</style>
-      <ChromeNoise />
+    <div className="fixed inset-0 w-full h-full bg-[#05020a] flex items-center justify-center p-3 sm:p-4 overflow-hidden select-none font-['Nunito']">
+      {/* Main Landscape Container */}
+      <div className="relative w-full h-full max-w-[1280px] max-h-[720px] flex gap-3 sm:gap-4 p-3 sm:p-4 text-white bg-[#0d071b] rounded-[28px] sm:rounded-[40px] border-2 sm:border-4 border-[#1a1438] shadow-[0_0_100px_rgba(0,0,0,0.8)]">
 
-      {/* Ambient background glow — changes with monster */}
-      <div style={{ position:"fixed",inset:0,zIndex:0,pointerEvents:"none",transition:"all 2s ease" }}>
-        <div style={{ position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",
-          width:500,height:500,borderRadius:"50%",
-          background:`radial-gradient(circle,${bgColor}12,transparent 65%)`,
-          transition:"background 2s ease",animation:"glowPulse 5s ease-in-out infinite" }} />
-        <div style={{ position:"absolute",bottom:-80,right:-60,width:300,height:300,borderRadius:"50%",
-          background:"radial-gradient(circle,rgba(30,136,229,.08),transparent 70%)" }} />
-      </div>
-
-      <div style={{ position:"absolute", inset:0, zIndex:1,
-        display:"flex", flexDirection:"column",
-        overflowY:"auto", overflowX:"hidden",
-        WebkitOverflowScrolling:"touch" as any,
-        paddingTop:"max(env(safe-area-inset-top),12px)",
-        paddingBottom:"calc(max(env(safe-area-inset-bottom),0px) + 72px)" }}>
-
-        {/* ══ HEADER ══ */}
-        <div style={{ display:"flex",alignItems:"center",gap:12,padding:"14px 16px 10px" }}>
-
-          {/* Avatar circle */}
-          <div onClick={onPerfil} style={{ position:"relative",flexShrink:0,cursor:"pointer" }}>
-            <div style={{ width:50,height:50,borderRadius:"50%",
-              border:`2.5px solid ${li.color}`,
-              background:"rgba(255,255,255,.05)",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              boxShadow:`0 0 16px ${li.color}44,0 0 32px ${li.color}22` }}>
-              <MonsterAvatar monstroId={stats?.favorite_monster || "panther"} size={36} glow={li.color} />
-            </div>
-            <div style={{ position:"absolute",bottom:-1,right:-1,
-              background:"#060b14",borderRadius:"50%",padding:2,lineHeight:1 }}>
-              <span style={{ fontSize:13 }}>{li.emoji}</span>
-            </div>
-          </div>
-
-          {/* Name + XP */}
-          <div style={{ flex:1,minWidth:0 }}>
-            <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:4 }}>
-              <span style={{ fontFamily:"Bangers,cursive",fontSize:17,color:"#f0f4ff",
-                letterSpacing:.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140 }}>
-                {profile?.display_name || "Jogador"}
-              </span>
-              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:li.color,
-                background:`${li.color}1a`,border:`1px solid ${li.color}40`,
-                borderRadius:5,padding:"1px 6px",flexShrink:0,letterSpacing:.5 }}>
-                NÍV {lvl}
-              </span>
-              {(stats?.win_streak || 0) >= 2 && (
-                <span style={{ fontSize:12,background:"rgba(255,100,0,.15)",
-                  border:"1px solid rgba(255,140,0,.3)",borderRadius:5,
-                  padding:"1px 5px",flexShrink:0,animation:"badgePop .4s both" }}>
-                  {"🔥".repeat(Math.min(stats.win_streak,3))}
-                </span>
-              )}
-            </div>
-            <div style={{ background:"rgba(255,255,255,.06)",borderRadius:99,height:5,overflow:"hidden",marginBottom:3 }}>
-              <div style={{ height:"100%",width:`${xpPct}%`,borderRadius:99,
-                background:`linear-gradient(90deg,${li.color}88,${li.color})`,
-                transition:"width 1.2s ease",
-                backgroundSize:"200%",animation:"shimBar 3s linear infinite" }} />
-            </div>
-            <div style={{ display:"flex",justifyContent:"space-between" }}>
-              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color:"#3a4458",letterSpacing:.5 }}>
-                {xp}/{xpMax} XP
-              </span>
-              <span style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color:"#3a4458",letterSpacing:.5 }}>
-                {wr}% WR · {wins}V
-              </span>
-            </div>
-          </div>
-
-          {/* Coins + Gems */}
-          <div style={{ display:"flex",flexDirection:"column",gap:4,flexShrink:0 }}>
-            <div onClick={onLoja} style={{ cursor:"pointer",
-              display:"flex",alignItems:"center",gap:4,
-              background:"rgba(255,213,79,.07)",border:"1.5px solid rgba(255,213,79,.2)",
-              borderRadius:10,padding:"3px 8px" }}>
-              <span style={{ fontSize:12 }}>💰</span>
-              <span style={{ fontFamily:"Bangers,cursive",fontSize:13,color:"#ffd54f" }}>
-                {(profile?.coins || 0).toLocaleString()}
-              </span>
-            </div>
-            <div onClick={onLoja} style={{ cursor:"pointer",
-              display:"flex",alignItems:"center",gap:4,
-              background:"rgba(0,229,255,.08)",border:"1.5px solid rgba(0,229,255,.25)",
-              borderRadius:10,padding:"3px 8px",
-              boxShadow:"0 0 10px rgba(0,229,255,.15)" }}>
-              <span style={{ fontSize:12 }}>💎</span>
-              <span style={{ fontFamily:"Bangers,cursive",fontSize:13,color:"#00e5ff" }}>
-                {(profile?.gems || 0).toLocaleString()}
-              </span>
-            </div>
-          </div>
+        {/* Decorative dot grid */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden rounded-[24px] sm:rounded-[36px]">
+          <div className="absolute inset-0" style={{ backgroundImage:"radial-gradient(circle at 2px 2px, #38e1ff 1px, transparent 0)", backgroundSize:"40px 40px" }} />
         </div>
 
-        {/* ══ HERO: VS IA ══ */}
-        <div style={{ padding:"8px 16px 10px" }}>
-          <HeroBattleBtn onClick={() => onIniciar("duel")} />
-        </div>
+        {/* ═══ LEFT RAIL — Command Center ═══ */}
+        <aside className="w-14 sm:w-20 flex flex-col items-center py-4 sm:py-6 gap-3 sm:gap-4 bg-[#110c26]/80 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl z-10 shrink-0">
+          <RailIcon active onClick={() => onIniciar("duel")} tooltip="BATALHA">
+            <Swords className="w-5 h-5 sm:w-7 sm:h-7" />
+          </RailIcon>
+          <div className="flex flex-col gap-2 sm:gap-4 mt-1 sm:mt-2">
+            <RailIcon onClick={onLoja} tooltip="LOJA"><Store className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
+            <RailIcon onClick={onColecao} tooltip="COLEÇÃO"><BookOpen className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
+            <RailIcon onClick={onAmigos} tooltip="AMIGOS"><Users className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
+            <RailIcon onClick={onPerfil} tooltip="PERFIL"><UserIcon className="w-5 h-5 sm:w-6 sm:h-6" /></RailIcon>
+          </div>
+          <div className="mt-auto">
+            <RailIcon onClick={onLogout} tooltip="SAIR" danger>
+              <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
+            </RailIcon>
+          </div>
+        </aside>
 
-        {/* ══ VS HUMANO ══ */}
-        <div style={{ padding:"4px 16px 0" }}>
-          <div style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:"#2a3448",
-            letterSpacing:2,marginBottom:8 }}>VS HUMANO</div>
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8 }}>
-            <ModeCard emoji="🌐" title="ONLINE" sub="Servidor" color="#ffd54f" onClick={onMatchmaking} delay={0} />
-            <ModeCard emoji="📱" title="QR/SALA" sub="Amigo perto" color="#69f0ae" onClick={onMulti} delay={1} />
-            <ModeCard emoji="📡" title="BLUETOOTH" sub="Em breve" color="#7a8599" onClick={() => {
-              toast({ title:"📡 Bluetooth em breve", description:"Disponível apenas no app nativo. Use QR/Sala para jogar perto." });
-            }} delay={2} disabled />
+        {/* ═══ MAIN DASHBOARD ═══ */}
+        <div className="flex-1 flex flex-col gap-3 sm:gap-4 min-w-0">
+
+          {/* ── HEADER ── */}
+          <header className="flex justify-between items-center h-12 sm:h-14 px-1 sm:px-2 shrink-0">
+            <div onClick={onPerfil} className="flex items-center gap-2 sm:gap-4 group cursor-pointer min-w-0">
+              <div className="relative shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border-2 border-[#38e1ff] bg-[#1a1438] p-0.5 overflow-hidden rotate-3 group-hover:rotate-0 transition-transform flex items-center justify-center">
+                  <MonsterAvatar monstroId={favMonster} size={36} glow={li.color} />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-[#ff3b7a] text-[9px] sm:text-[10px] font-black min-w-[20px] h-5 px-1 flex items-center justify-center rounded-lg border-2 border-[#0d071b] shadow-lg">
+                  {lvl}
+                </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="text-xs sm:text-sm font-['Bangers'] tracking-[0.1em] text-[#38e1ff] drop-shadow-[0_0_8px_rgba(56,225,255,0.4)] truncate max-w-[120px] sm:max-w-[200px]">
+                  {profile?.display_name || "JOGADOR"}
+                </div>
+                <div className="w-24 sm:w-32 h-1.5 sm:h-2 bg-black/50 rounded-full border border-white/5 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#38e1ff] to-[#b794ff] shadow-[0_0_10px_rgba(56,225,255,0.5)] transition-all duration-700" style={{ width:`${xpPct}%` }} />
+                </div>
+                <div className="text-[8px] sm:text-[9px] font-bold text-white/40 mt-0.5">{xp}/{xpMax} XP</div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 sm:gap-3 shrink-0">
+              <button onClick={onLoja} className="bg-[#110c26]/60 backdrop-blur border border-white/10 rounded-xl sm:rounded-2xl pl-1.5 pr-3 sm:pl-2 sm:pr-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-3 hover:border-yellow-400/40 transition-colors">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.4)] flex items-center justify-center">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 border-2 border-yellow-600 rounded-full" />
+                </div>
+                <span className="text-xs sm:text-sm font-black text-yellow-100">{(profile?.coins || 0).toLocaleString()}</span>
+              </button>
+              <button onClick={onLoja} className="bg-[#110c26]/60 backdrop-blur border border-white/10 rounded-xl sm:rounded-2xl pl-1.5 pr-3 sm:pl-2 sm:pr-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-3 hover:border-cyan-400/40 transition-colors">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#38e1ff] shadow-[0_0_10px_rgba(56,225,255,0.4)] rotate-45 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#0a0518] -rotate-45" />
+                </div>
+                <span className="text-xs sm:text-sm font-black text-cyan-100">{(profile?.gems || 0).toLocaleString()}</span>
+              </button>
+            </div>
+          </header>
+
+          {/* ── BODY ── */}
+          <div className="flex-1 flex gap-3 sm:gap-4 min-h-0">
+
+            {/* === GAME MODES === */}
+            <main className="flex-[1.8] flex flex-col gap-3 sm:gap-4 min-w-0">
+
+              {/* VS IA Hero Banner */}
+              <button
+                onClick={() => onIniciar("duel")}
+                className="relative group flex-1 bg-[#1a1438] border-2 border-[#38e1ff]/20 rounded-[24px] sm:rounded-[32px] overflow-hidden cursor-pointer hover:border-[#38e1ff]/60 transition-all shadow-2xl text-left"
+              >
+                {/* Character art overlay */}
+                <div className="absolute right-0 top-0 w-3/4 h-full pointer-events-none flex items-center justify-center opacity-50 group-hover:scale-105 transition-transform duration-700">
+                  <MonsterAvatar monstroId={favMonster} size={220} glow="#38e1ff" />
+                </div>
+                {/* Gradient mask */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0d071b] via-[#0d071b]/80 to-transparent" />
+
+                <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-10 gap-1 sm:gap-2">
+                  <span className="text-[#38e1ff] text-[10px] sm:text-xs font-black tracking-[0.3em] uppercase opacity-60">Treinamento</span>
+                  <h2 className="text-4xl sm:text-6xl md:text-7xl font-['Bangers'] text-white italic leading-tight tracking-wider drop-shadow-[4px_4px_0px_#ff3b7a]">VS IA</h2>
+                  <p className="hidden sm:block text-xs sm:text-sm font-bold text-[#b794ff] max-w-[200px] leading-tight">APERFEIÇOE SUAS HABILIDADES EM COMBATE REAL.</p>
+                  <span className="mt-2 sm:mt-4 w-fit px-6 sm:px-12 py-2 sm:py-3 bg-[#38e1ff] text-[#0a0518] font-black rounded-xl sm:rounded-2xl text-sm sm:text-lg uppercase tracking-widest group-hover:bg-white group-hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] group-hover:scale-105 transition-all">
+                    Jogar
+                  </span>
+                </div>
+              </button>
+
+              {/* Secondary modes */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 h-16 sm:h-24 shrink-0">
+                <ModeTile color="#38e1ff" title="ONLINE"   sub="MULTIJOGADOR" onClick={onMatchmaking} />
+                <ModeTile color="#b794ff" title="SALA QR"  sub="JOGO LOCAL"   onClick={onMulti} />
+                <ModeTile color="#ff3b7a" title="BLUETOOTH" sub="EM BREVE" disabled onClick={() => {
+                  toast({ title:"📡 Bluetooth em breve", description:"Use SALA QR para jogar com amigos perto." });
+                }} />
+              </div>
+            </main>
+
+            {/* === PROGRESSION SIDEBAR === */}
+            <aside className="hidden md:flex flex-1 flex-col gap-3 sm:gap-4 min-w-[220px] max-w-[300px]">
+
+              {/* Season pass card */}
+              <button
+                onClick={onSeasonPass}
+                className="bg-gradient-to-br from-[#16112a] to-[#0a0518] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl text-left hover:border-[#b794ff]/40 transition-colors"
+              >
+                <div className="flex justify-between items-end mb-2 sm:mb-3">
+                  <div className="flex flex-col">
+                    <span className="font-['Bangers'] text-base sm:text-lg tracking-widest text-[#b794ff]">SEASON 01</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-white/40 uppercase">Passe de Batalha</span>
+                  </div>
+                  <span className="text-lg sm:text-xl font-['Bangers'] text-white drop-shadow-[0_0_5px_#ff3b7a]">LVL {seasonInfo.level}</span>
+                </div>
+                <div className="relative w-full h-2.5 sm:h-3 bg-black/60 rounded-full overflow-hidden border border-white/5">
+                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#ff3b7a] via-[#b794ff] to-[#38e1ff] shadow-[0_0_15px_rgba(183,148,255,0.6)] transition-all duration-700" style={{ width:`${seasonInfo.pct}%` }} />
+                </div>
+              </button>
+
+              {/* Missions panel */}
+              <div className="flex-1 bg-[#110c26]/60 backdrop-blur-md border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col min-h-0">
+                <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0">
+                  <h3 className="text-[10px] sm:text-xs font-black text-[#38e1ff] uppercase tracking-widest">Missões Diárias</h3>
+                  <div className="flex gap-1.5">
+                    <ChipMini onClick={onRanking} title="RANKING"><Trophy className="w-3 h-3" /></ChipMini>
+                    <ChipMini onClick={onConquistas} title="CONQUISTAS"><Medal className="w-3 h-3" /></ChipMini>
+                    <ChipMini onClick={onEvoluir} title="EVOLUIR"><Zap className="w-3 h-3" /></ChipMini>
+                  </div>
+                </div>
+
+                <div className="space-y-2 sm:space-y-3 flex-1 overflow-y-auto min-h-0">
+                  {missoes.length === 0 ? (
+                    <div className="text-center text-white/30 text-[10px] py-4">Carregando missões…</div>
+                  ) : missoes.map(m => (
+                    <div key={m.id} className="group p-2.5 sm:p-3 bg-black/40 border border-white/5 rounded-xl sm:rounded-2xl hover:border-[#38e1ff]/30 transition-colors">
+                      <div className="text-[11px] sm:text-xs font-bold text-white/90 truncate">{m.title}</div>
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2">
+                        <div className="flex-1 h-1 sm:h-1.5 bg-black/60 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#38e1ff]" style={{ width:`${Math.min(100,(m.current/m.target)*100)}%` }} />
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] font-black text-[#38e1ff]">{m.current}/{m.target}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 sm:mt-4 pt-2 shrink-0">
+                  <button
+                    onClick={onMissoes}
+                    className={`w-full rounded-xl sm:rounded-2xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_10px_20px_rgba(255,59,122,0.3)] ${hasClaimable ? "bg-[#ff3b7a] animate-pulse" : "bg-[#ff3b7a]/70"}`}
+                  >
+                    <div className="flex flex-col text-left">
+                      <span className="text-[8px] sm:text-[9px] font-black text-[#0a0518] leading-none uppercase">
+                        {hasClaimable ? "Disponível" : "Acompanhar"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-['Bangers'] text-white leading-none mt-0.5 tracking-widest">
+                        {hasClaimable ? "RESGATAR" : "MISSÕES"}
+                      </span>
+                    </div>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
+                      <Award className="w-4 h-4 text-yellow-300" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
-
-        {/* ══ EXTRAS ══ */}
-        <div style={{ padding:"14px 16px 0",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
-          <ModeCard emoji="🏆" title="RANKING" sub="Top jogadores" color="#b388ff" onClick={onRanking} delay={3} />
-          <ModeCard emoji="🏪" title="LOJA" sub="Cartas e monstros" color="#ff8a65" onClick={onLoja} delay={4} />
-        </div>
-
-        {/* ══ DAILY CHIPS ══ */}
-        <div style={{ padding:"12px 16px 0" }}>
-          <div style={{ fontFamily:"Oswald,sans-serif",fontSize:9,color:"#2a3448",
-            letterSpacing:2,marginBottom:8 }}>DIÁRIO</div>
-          <div style={{ display:"flex",gap:8 }}>
-            <DailyChip emoji="🎯" label="MISSÕES"    color="#69f0ae" badge={missaoClaimable} onClick={onMissoes} />
-            <DailyChip emoji="🏅" label="CONQUISTAS" color="#ffd54f" onClick={onConquistas} />
-            <DailyChip emoji="⚡" label="EVOLUIR"    color="#b794ff" onClick={onEvoluir} />
-            <DailyChip emoji="🌟" label="SEASON"     color="#ce93d8" onClick={onSeasonPass} />
-            <DailyChip emoji="🃏" label="COLEÇÃO"   color="#f0b429" onClick={onColecao} />
-            <DailyChip emoji="👾" label="AMIGOS"     color="#4fc3f7" onClick={onAmigos} />
-          </div>
-        </div>
-      </div>
-
-      {/* ══ BOTTOM NAV ══ */}
-      <div style={{ position:"fixed",bottom:0,left:0,right:0,zIndex:20,
-        background:"linear-gradient(0deg,rgba(5,8,16,.99) 70%,transparent)",
-        borderTop:"1px solid rgba(255,255,255,.04)",
-        display:"flex",justifyContent:"space-around",alignItems:"center",
-        padding:`8px 8px calc(env(safe-area-inset-bottom,0px) + 6px)` }}>
-        {[
-          { icon:"⚔️",  label:"BATALHA", fn:() => onIniciar("duel"), active:true },
-          { icon:"🏪",  label:"LOJA",    fn:onLoja },
-          { icon:"🏆",  label:"TOP",     fn:onRanking },
-          { icon:"👤",  label:"PERFIL",  fn:onPerfil },
-          { icon:"🚪",  label:"SAIR",    fn:onLogout },
-        ].map(b => (
-          <button key={b.label} onClick={b.fn} style={{
-            display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-            minWidth:44,minHeight:44,justifyContent:"center",
-            background:"none",border:"none",cursor:"pointer",
-            opacity:b.active?1:0.45,transition:"opacity .15s, transform .1s",
-          }}>
-            <span style={{ fontSize:20 }}>{b.icon}</span>
-            <span style={{ fontFamily:"Oswald,sans-serif",fontSize:7,letterSpacing:1,
-              color:b.active?"#00e5ff":"#8a95aa" }}>{b.label}</span>
-          </button>
-        ))}
       </div>
     </div>
   );
 }
 
-function HeroBattleBtn({ onClick }: { onClick: () => void }) {
-  const [pressed, setPressed] = useState(false);
+/* ─── Sub-components ─── */
+
+function RailIcon({ children, onClick, active, danger, tooltip }: {
+  children: React.ReactNode; onClick: () => void; active?: boolean; danger?: boolean; tooltip?: string;
+}) {
   return (
-    <button onClick={onClick}
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-      style={{
-        width:"100%", minHeight:96, borderRadius:20, border:"none", cursor:"pointer",
-        position:"relative", overflow:"hidden",
-        background: pressed
-          ? "linear-gradient(135deg,#0d3080,#1560c0)"
-          : "linear-gradient(135deg,#1044c8,#1e88e5,#00b0d4)",
-        transform: pressed ? "scale(0.97) translateY(1px)" : "scale(1)",
-        transition:"transform .1s ease",
-        boxShadow: pressed
-          ? "0 4px 16px rgba(0,160,255,.2)"
-          : "0 10px 40px rgba(0,160,255,.38),0 0 0 1px rgba(255,255,255,.08) inset,0 1px 0 rgba(255,255,255,.2) inset",
-        animation:"fadeUp .35s both",
-      }}>
-      {/* Animated shine */}
-      <div style={{ position:"absolute",top:0,bottom:0,width:60,
-        background:"linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)",
-        animation:"heroShine 3s ease-in-out 1s infinite",pointerEvents:"none" }} />
-      {/* Content */}
-      <div style={{ position:"relative",zIndex:1,display:"flex",alignItems:"center",
-        justifyContent:"center",gap:14,padding:"0 24px",height:"100%" }}>
-        <span style={{ fontSize:48,filter:"drop-shadow(0 4px 12px rgba(0,0,0,.3))" }}>⚔️</span>
-        <div style={{ textAlign:"left" }}>
-          <div style={{ fontFamily:"Bangers,cursive",fontSize:36,color:"#fff",
-            letterSpacing:2,lineHeight:1,textShadow:"0 2px 12px rgba(0,0,0,.4)" }}>
-            VS IA
-          </div>
-          <div style={{ fontFamily:"Nunito,sans-serif",fontSize:12,
-            color:"rgba(255,255,255,.65)",marginTop:3,letterSpacing:.3 }}>
-            Jogar contra a Inteligência Artificial
-          </div>
-        </div>
-        <span style={{ marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,.6)" }}>›</span>
+    <button onClick={onClick} className="group relative">
+      <div className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl cursor-pointer transition-all hover:scale-110 active:scale-95 ${
+        active
+          ? "bg-gradient-to-br from-[#38e1ff] via-[#38e1ff] to-[#b794ff] text-[#0a0518] shadow-[0_0_20px_rgba(56,225,255,0.5)]"
+          : danger
+            ? "text-[#ff3b7a] hover:bg-[#ff3b7a]/10"
+            : "text-[#b794ff]/60 hover:text-[#38e1ff] hover:bg-[#38e1ff]/10"
+      }`}>
+        {children}
       </div>
+      {tooltip && (
+        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-[#38e1ff] text-[#0a0518] text-[10px] font-black rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+          {tooltip}
+        </div>
+      )}
     </button>
   );
 }
 
-function ModeCard({ emoji, title, sub, color, onClick, delay, disabled }:
-  { emoji:string;title:string;sub:string;color:string;onClick:()=>void;delay:number;disabled?:boolean }) {
-  const [p, setP] = useState(false);
+function ModeTile({ color, title, sub, onClick, disabled }: {
+  color: string; title: string; sub: string; onClick: () => void; disabled?: boolean;
+}) {
   return (
-    <button onClick={onClick}
-      onPointerDown={() => setP(true)} onPointerUp={() => setP(false)} onPointerLeave={() => setP(false)}
-      style={{ background:p?`${color}18`:`${color}0b`,border:`1.5px solid ${color}${p?"55":"22"}`,
-        borderRadius:16,padding:"14px",cursor:"pointer",textAlign:"left",minHeight:76,
-        transform:p?"scale(0.95)":"scale(1)",transition:"transform .1s ease, border-color .1s",
-        boxShadow:p?`0 0 20px ${color}22`:"none",animation:`fadeUp .4s ${delay*0.07}s both`,
-        opacity: disabled ? 0.6 : 1 }}>
-      <div style={{ fontSize:26,marginBottom:6 }}>{emoji}</div>
-      <div style={{ fontFamily:"Bangers,cursive",fontSize:15,color,letterSpacing:1.5,lineHeight:1 }}>{title}</div>
-      <div style={{ fontFamily:"Nunito,sans-serif",fontSize:9,color:"#8a95aa",marginTop:3 }}>{sub}</div>
+    <button
+      onClick={onClick}
+      className={`relative bg-[#110c26] border border-white/5 rounded-xl sm:rounded-3xl flex flex-col items-center justify-center transition-all px-2 ${
+        disabled ? "opacity-40" : "hover:bg-white/5 cursor-pointer"
+      }`}
+      style={!disabled ? { borderColor:`${color}26` } : undefined}
+    >
+      <div className="text-sm sm:text-lg font-['Bangers'] tracking-widest" style={{ color }}>{title}</div>
+      <div className="text-[7px] sm:text-[9px] font-bold text-white/30 tracking-tighter uppercase">{sub}</div>
+      {disabled && (
+        <div className="absolute top-1 right-2 text-[7px] sm:text-[8px] font-black px-1.5 rounded" style={{ background:`${color}33`, color }}>
+          BREVE
+        </div>
+      )}
     </button>
   );
 }
 
-function DailyChip({ emoji, label, color, badge, onClick }:
-  { emoji:string;label:string;color:string;badge?:boolean;onClick:()=>void }) {
+function ChipMini({ children, onClick, title }: { children: React.ReactNode; onClick: () => void; title: string }) {
   return (
-    <button onClick={onClick} style={{ flex:1,background:`${color}09`,
-      border:`1px solid ${color}1e`,borderRadius:12,padding:"10px 6px",
-      cursor:"pointer",position:"relative",transition:"all .15s" }}>
-      <div style={{ fontSize:22,marginBottom:3 }}>{emoji}</div>
-      <div style={{ fontFamily:"Oswald,sans-serif",fontSize:8,color,letterSpacing:1 }}>{label}</div>
-      {badge && <div style={{ position:"absolute",top:5,right:5,width:8,height:8,
-        borderRadius:"50%",background:"#ffd54f",boxShadow:"0 0 6px #ffd54f",
-        animation:"glowPulse 1s ease-in-out infinite" }} />}
+    <button onClick={onClick} title={title} className="w-6 h-6 rounded-md bg-black/40 border border-white/10 text-white/60 hover:text-[#38e1ff] hover:border-[#38e1ff]/40 flex items-center justify-center transition-colors">
+      {children}
     </button>
   );
 }
