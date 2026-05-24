@@ -21,7 +21,8 @@ const CSS = `
   @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
   @keyframes rankIn   { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
   @keyframes glowPulse{ 0%,100%{opacity:.4} 50%{opacity:.9} }
-  @keyframes logoGlow { 0%,100%{text-shadow:0 0 20px rgba(240,180,41,.4),0 4px 12px rgba(0,0,0,.8)} 50%{text-shadow:0 0 40px rgba(240,180,41,.85),0 0 80px rgba(255,107,43,.3),0 4px 12px rgba(0,0,0,.8)} }
+  @keyframes logoGlow { 0%,100%{text-shadow:0 0 18px rgba(183,148,255,.45),0 4px 12px rgba(0,0,0,.8)} 50%{text-shadow:0 0 36px rgba(183,148,255,.85),0 0 72px rgba(124,58,237,.35),0 4px 12px rgba(0,0,0,.8)} }
+  @keyframes arenaGlow{ 0%,100%{text-shadow:0 0 18px rgba(56,225,255,.45),0 4px 12px rgba(0,0,0,.8)} 50%{text-shadow:0 0 36px rgba(56,225,255,.85),0 0 72px rgba(56,225,255,.35),0 4px 12px rgba(0,0,0,.8)} }
   @keyframes bgSlide  { from{opacity:0;transform:translateX(-50%) scale(.94)} 15%{opacity:.15} 80%{opacity:.15} to{opacity:0;transform:translateX(-50%) scale(1.04)} }
   @keyframes scanMove { from{top:-2px} to{top:100%} }
 `;
@@ -59,7 +60,7 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
   /* ── HOME SCREEN ── */
   return (
     <div style={{ ...fullscreen,
-      background:`radial-gradient(ellipse at 50% 60%,${m?.glow||DS.ember}12 0%,#0e0806 45%,${DS.bg0} 100%)`,
+      background:`radial-gradient(ellipse at 50% 60%,${m?.glow||DS.violet}1f 0%,#0a0822 45%,${DS.bg0} 100%)`,
       transition:"background 1.8s ease" }}>
       <style>{CSS}</style>
 
@@ -67,6 +68,14 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
       <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
         backgroundImage:NOISE_BG,backgroundSize:"200px 200px",
         opacity:.04,mixBlendMode:"overlay" as any }} />
+
+      {/* Neon ambient glows */}
+      <div style={{ position:"absolute",top:"6%",left:"-18%",width:340,height:340,
+        borderRadius:"50%",pointerEvents:"none",zIndex:0,
+        background:`radial-gradient(circle,${DS.goldD}33,transparent 70%)`,filter:"blur(60px)" }} />
+      <div style={{ position:"absolute",bottom:"10%",right:"-18%",width:340,height:340,
+        borderRadius:"50%",pointerEvents:"none",zIndex:0,
+        background:`radial-gradient(circle,${DS.cyan}26,transparent 70%)`,filter:"blur(60px)" }} />
 
       {/* Grid */}
       <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
@@ -77,7 +86,7 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
 
       {/* Scan line */}
       <div style={{ position:"absolute",left:0,right:0,height:1,zIndex:2,
-        background:`linear-gradient(90deg,transparent,${DS.gold}28,transparent)`,
+        background:`linear-gradient(90deg,transparent,${DS.cyan}33,transparent)`,
         animation:"scanMove 7s linear infinite",pointerEvents:"none" }} />
 
       {/* Monster silhouette */}
@@ -93,10 +102,10 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
         </div>
       )}
 
-      {/* Gold orb */}
+      {/* Violet orb */}
       <div style={{ position:"absolute",top:"35%",left:"50%",
         width:280,height:280,borderRadius:"50%",pointerEvents:"none",zIndex:1,
-        background:`radial-gradient(circle,${DS.gold}0f,transparent 65%)`,
+        background:`radial-gradient(circle,${DS.gold}1a,transparent 65%)`,
         transform:"translate(-50%,-50%)",animation:"glowPulse 5s ease-in-out infinite" }} />
 
       {/* ── CONTENT (absolute inset:0, flex centered) ── */}
@@ -126,23 +135,28 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
         )}
 
         {/* Logo */}
-        <div style={{ textAlign:"center",marginBottom:28,
+        <div style={{ textAlign:"center",marginBottom:32,
           animation:show?"heroIn .6s ease both":"none" }}>
-          <div style={{ fontFamily:"'Black Han Sans','Bangers',cursive",
-            fontSize:"clamp(68px,19vw,88px)",lineHeight:.85,letterSpacing:5,
+          <div style={{ fontFamily:"'Bebas Neue','Black Han Sans',cursive",
+            fontSize:"clamp(72px,20vw,96px)",lineHeight:.82,letterSpacing:2,
             color:DS.gold,animation:"logoGlow 3s ease-in-out infinite" }}>
             BEAST
           </div>
-          <div style={{ fontFamily:"'Black Han Sans','Bangers',cursive",
-            fontSize:"clamp(42px,11.5vw,58px)",letterSpacing:14,lineHeight:1,
-            color:"#bf9060",marginTop:-2 }}>
+          <div style={{ fontFamily:"'Bebas Neue','Black Han Sans',cursive",
+            fontSize:"clamp(64px,18vw,88px)",letterSpacing:4,lineHeight:.82,
+            color:DS.cyan,marginTop:-8,
+            animation:"arenaGlow 3s ease-in-out infinite" }}>
             ARENA
           </div>
-          <div style={{ height:2,marginTop:10,
-            background:`linear-gradient(90deg,transparent,${DS.gold},transparent)` }} />
-          <div style={{ fontFamily:"'Oswald',sans-serif",fontSize:10,letterSpacing:5,
-            color:`${DS.gold}55`,marginTop:6,fontWeight:600,textTransform:"uppercase" }}>
-            {monsterKeys.length} MONSTROS · CARD BATTLE
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginTop:14 }}>
+            <div style={{ height:1,width:32,
+              background:`linear-gradient(90deg,transparent,${DS.cyan}aa)` }} />
+            <div style={{ fontFamily:"'Barlow','Oswald',sans-serif",fontSize:11,letterSpacing:4,
+              color:"#e8e6ff",fontWeight:700,textTransform:"uppercase",whiteSpace:"nowrap" }}>
+              {monsterKeys.length} Monstros <span style={{color:DS.goldD,margin:"0 4px"}}>•</span> Card Battle
+            </div>
+            <div style={{ height:1,width:32,
+              background:`linear-gradient(90deg,${DS.cyan}aa,transparent)` }} />
           </div>
         </div>
 
@@ -150,11 +164,11 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
         <div style={{ width:"100%",maxWidth:320,display:"flex",flexDirection:"column",gap:10,
           animation:show?"btnIn .5s .18s both":"none",opacity:show?1:0 }}>
           {user ? (
-            <BtnMain variant="gold" onClick={() => { markGesture(); onLobby?.(); }}>
+            <BtnMain variant="neon" onClick={() => { markGesture(); onLobby?.(); }}>
               ⚔️ ENTRAR NA ARENA
             </BtnMain>
           ) : (
-            <BtnMain variant="gold" onClick={() => { markGesture(); onLogin?.(); }}>
+            <BtnMain variant="neon" onClick={() => { markGesture(); onLogin?.(); }}>
               ⚔️ ENTRAR NA ARENA
             </BtnMain>
           )}
@@ -162,31 +176,69 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
 
         {/* Ranking */}
         {rankings.length > 0 && show && (
-          <div style={{ width:"100%",maxWidth:320,marginTop:16,
-            background:`${DS.bg2}d0`,border:`1px solid ${DS.bg3}`,
-            borderRadius:12,overflow:"hidden",
+          <div style={{ width:"100%",maxWidth:320,marginTop:20,
+            transform:"rotate(-1deg)",
             animation:"btnIn .5s .35s both" }}>
-            <div style={{ padding:"7px 14px",borderBottom:`1px solid ${DS.bg3}`,
-              display:"flex",alignItems:"center",gap:6 }}>
-              <span style={{ fontSize:12 }}>🏆</span>
-              <span style={{ fontFamily:"'Black Han Sans','Bangers',cursive",
-                fontSize:14,color:DS.gold,letterSpacing:2 }}>RANKING</span>
-            </div>
-            {rankings.map((r,i) => (
-              <div key={i} style={{ display:"flex",justifyContent:"space-between",
-                padding:"6px 14px",
-                borderBottom:i<rankings.length-1?`1px solid ${DS.bg3}18`:"none",
-                animation:`rankIn .3s ${i*.06}s both` }}>
-                <span style={{ fontFamily:"'Oswald',sans-serif",fontSize:12,fontWeight:600,
-                  color:i===0?DS.gold:i===1?"#c0c0c0":i===2?"#cd7f32":"#6a5a4a" }}>
-                  {["🥇","🥈","🥉"][i]||`${i+1}.`} {r.player_name}
-                </span>
-                <span style={{ fontFamily:"'Oswald',sans-serif",fontSize:12,
-                  color:"#4a3a2a",fontWeight:600 }}>
-                  {r.wins}V
+            <div style={{ position:"relative",
+              background:`linear-gradient(160deg,${DS.bg1}f5,${DS.bg2}f0)`,
+              border:`1px solid ${DS.bg3}80`,
+              borderTopRightRadius:32,borderBottomLeftRadius:32,
+              borderTopLeftRadius:12,borderBottomRightRadius:12,
+              padding:"16px 18px",overflow:"hidden",
+              boxShadow:`0 12px 28px rgba(0,0,0,.55),0 0 24px ${DS.goldD}1f` }}>
+              {/* Accent stripe */}
+              <div style={{ position:"absolute",top:0,right:0,width:120,height:2,
+                background:`linear-gradient(270deg,${DS.cyan},transparent)` }} />
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12 }}>
+                <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                  <div style={{ width:8,height:8,borderRadius:"50%",
+                    background:DS.cyan,boxShadow:`0 0 8px ${DS.cyan}`,
+                    animation:"glowPulse 1.6s ease-in-out infinite" }} />
+                  <span style={{ fontFamily:"'Bebas Neue','Black Han Sans',cursive",
+                    fontSize:18,color:"#e8e6ff",letterSpacing:3 }}>RANKING</span>
+                </div>
+                <span style={{ fontFamily:"'Barlow',sans-serif",fontSize:9,letterSpacing:2,
+                  color:`${DS.cyan}cc`,fontWeight:700,textTransform:"uppercase" }}>
+                  Season 01
                 </span>
               </div>
-            ))}
+              <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+                {rankings.slice(0,5).map((r,i) => {
+                  const isFirst = i === 0;
+                  const accent = isFirst ? DS.cyan : DS.gold;
+                  return (
+                    <div key={i} style={{ display:"flex",alignItems:"center",justifyContent:"space-between",
+                      background: isFirst ? `${DS.bg2}` : `${DS.bg2}80`,
+                      padding:"8px 10px",borderRadius:10,
+                      borderLeft:`3px solid ${isFirst ? DS.cyan : `${DS.gold}55`}`,
+                      animation:`rankIn .3s ${i*.06}s both` }}>
+                      <div style={{ display:"flex",alignItems:"center",gap:10 }}>
+                        <div style={{ width:26,height:26,borderRadius:"50%",
+                          display:"flex",alignItems:"center",justifyContent:"center",
+                          background: isFirst
+                            ? `linear-gradient(135deg,${DS.cyan},${DS.goldD})`
+                            : `${DS.bg1}`,
+                          border: isFirst ? "none" : `1px solid ${DS.gold}55`,
+                          fontFamily:"'Bebas Neue','Black Han Sans',cursive",
+                          fontSize:14,
+                          color: isFirst ? DS.bg0 : DS.gold }}>
+                          {i+1}
+                        </div>
+                        <span style={{ fontFamily:"'Barlow','Oswald',sans-serif",fontSize:13,fontWeight:600,
+                          color: isFirst ? "#e8e6ff" : "#e8e6ffb0" }}>
+                          {r.player_name}
+                        </span>
+                      </div>
+                      <span style={{ fontFamily:"'Bebas Neue','Black Han Sans',cursive",fontSize:18,
+                        letterSpacing:1,
+                        color: isFirst ? DS.cyan : DS.gold }}>
+                        {r.wins}V
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>

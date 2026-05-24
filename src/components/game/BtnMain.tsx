@@ -13,6 +13,7 @@ const VARIANTS: Record<string, { bg: string; border: string; shadow: string; tex
   red:    { bg:"linear-gradient(160deg,#3a0a08,#7a1510,#c0392b)", border:DS.blood, shadow:`0 8px 28px rgba(192,57,43,.4),inset 0 1px 0 rgba(255,255,255,.1)` },
   ember:  { bg:"linear-gradient(160deg,#4a1800,#8a3400,#ff6b2b)", border:DS.ember, shadow:`0 8px 28px rgba(255,107,43,.35),inset 0 1px 0 rgba(255,255,255,.1)` },
   purple: { bg:"linear-gradient(160deg,#250a50,#4a1490,#8b5cf6)", border:DS.violet, shadow:`0 8px 28px rgba(139,92,246,.35),inset 0 1px 0 rgba(255,255,255,.1)` },
+  neon:   { bg:"linear-gradient(90deg,#7c3aed,#38e1ff)", border:"#38e1ff", shadow:"0 0 30px rgba(56,225,255,.35),0 8px 22px rgba(124,58,237,.35),inset 0 1px 0 rgba(255,255,255,.18)", textColor:"#07061a" },
   dark:   { bg:`linear-gradient(160deg,${DS.bg2},${DS.bg3})`, border:DS.bg3, shadow:"0 4px 12px rgba(0,0,0,.4)", textColor:"#8a7a6a" },
 };
 
