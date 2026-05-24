@@ -174,11 +174,8 @@ export default function TelaMonstro({ onConfirmar, onVoltar, titulo = "ESCOLHA S
           <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#00e5ff", letterSpacing: 2 }}>
             {titulo}
           </div>
-          <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 10, color: "#4a5568", marginTop: 1 }}>
-            {idx + 1} de {monsters.length}
-          </div>
           <div style={{ fontSize: 11, color: "#8a95aa", marginTop: 2 }}>
-            ← Deslize para navegar · {monsters.length} monstros disponíveis
+            ← Deslize para navegar
           </div>
         </div>
 
