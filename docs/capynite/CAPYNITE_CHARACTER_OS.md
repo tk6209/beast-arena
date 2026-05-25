@@ -202,12 +202,14 @@ Every canonical character must support:
 
 Additional closeups:
 
-- face front
-- face profile
-- ears
-- paws
-- nose
-- eyes
+- `face_front`
+- `face_profile`
+- `ear`
+- `muzzle`
+- `nose`
+- `eye`
+- `front_paw`
+- `back_paw`
 
 **Purpose:** Ensure compatibility for modeling, rigging, AI consistency, animation, merchandising, and procedural generation.
 

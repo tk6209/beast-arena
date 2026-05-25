@@ -106,7 +106,7 @@
     }
   },
   "closeups": {
-    "required": ["face_front", "face_profile", "ear", "muzzle", "eye", "front_paw", "back_paw"]
+    "required": ["face_front", "face_profile", "ear", "muzzle", "nose", "eye", "front_paw", "back_paw"]
   },
   "rigging_guidelines": {
     "skeleton": "biped with extra spine joints for belly squash",
