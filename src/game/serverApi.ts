@@ -90,3 +90,32 @@ export async function passTurn(sessionId: string, slot: number) {
 export async function comboCards(sessionId: string, slot: number, cardId1: number, cardId2: number) {
   return callEngine("combo_cards", sessionId, { slot, cardId1, cardId2 });
 }
+
+export async function recordBattleResult(payload: {
+  userId: string;
+  won: boolean;
+  dificuldade: string;
+  coinBase: number;
+  xpGain: number;
+  battleStats?: any;
+}) {
+  return callEngine("record_battle_result", null, payload);
+}
+
+export async function purchaseShopItem(payload: {
+  userId: string;
+  itemId: string;
+  itemType: string;
+  itemKey: string;
+  quantity?: number;
+}) {
+  return callEngine("purchase_item", null, payload);
+}
+
+export async function claimDailyReward(payload: { userId: string }) {
+  return callEngine("claim_daily_reward", null, payload);
+}
+
+export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
+  return callEngine("claim_mission_reward", null, payload);
+}

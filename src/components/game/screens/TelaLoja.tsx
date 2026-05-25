@@ -4,6 +4,7 @@ import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { supabase } from "@/integrations/supabase/client";
 import { MONSTROS, SWARMS } from "@/game/data";
+import { purchaseShopItem } from "@/game/serverApi";
 import { SWARM_RARITY_STYLES } from "@/game/data";
 import type { User } from "@supabase/supabase-js";
 
@@ -68,43 +69,40 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
 
     setBuying(item.id);
 
-    // Deduct coins
-    const { error: coinErr } = await supabase.from("profiles").update({ coins: coins - item.price_coins }).eq("user_id", user.id);
-    if (coinErr) { setBuying(null); setMessage("Erro ao comprar!"); setTimeout(() => setMessage(null), 2000); return; }
-
-    if (item.item_type === "monster_unlock") {
-      await supabase.from("user_inventory").insert({ user_id: user.id, item_type: "monster", item_key: item.item_key });
-      setOwnedItems(prev => new Set([...prev, invKey]));
-      setCoins(c => c - item.price_coins);
-      setMessage(`${item.emoji} ${item.name} desbloqueado! 🎉`);
-      try {
-        const { triggerMonsterUnlock } = await import("@/components/game/MonsterUnlockOverlay");
-        triggerMonsterUnlock(item.item_key);
-      } catch {}
-    } else if (item.item_type === "swarm_pack") {
-      // Generate random swarms from pack
-      const swarmItems = generatePackSwarms(item.item_key);
-      for (const s of swarmItems) {
-        await supabase.from("user_inventory").upsert(
-          { user_id: user.id, item_type: "swarm", item_key: s.id, quantity: 1 },
-          { onConflict: "user_id,item_type,item_key" }
-        );
-      }
-      setCoins(c => c - item.price_coins);
-      // Show pack reveal
-      setPackReveal({
-        items: swarmItems.map(s => ({ nome: s.nome, emoji: s.emoji, raridade: s.raridade })),
-        showing: true,
-        currentIdx: 0,
+    try {
+      await purchaseShopItem({
+        userId: user.id,
+        itemId: item.id,
+        itemType: item.item_type,
+        itemKey: item.item_key,
+        quantity: 1,
       });
-    } else if (item.item_type === "xp_boost") {
-      // Just mark as owned — logic handled elsewhere
-      await supabase.from("user_inventory").upsert(
-        { user_id: user.id, item_type: "xp_boost", item_key: item.item_key, quantity: 5 },
-        { onConflict: "user_id,item_type,item_key" }
-      );
-      setCoins(c => c - item.price_coins);
-      setMessage("⚡ Boost XP 2x ativado para 5 partidas!");
+
+      if (item.item_type === "monster_unlock") {
+        setOwnedItems(prev => new Set([...prev, invKey]));
+        setCoins(c => c - item.price_coins);
+        setMessage(`${item.emoji} ${item.name} desbloqueado! 🎉`);
+        try {
+          const { triggerMonsterUnlock } = await import("@/components/game/MonsterUnlockOverlay");
+          triggerMonsterUnlock(item.item_key);
+        } catch {}
+      } else if (item.item_type === "swarm_pack") {
+        const swarmItems = generatePackSwarms(item.item_key);
+        setCoins(c => c - item.price_coins);
+        setPackReveal({
+          items: swarmItems.map(s => ({ nome: s.nome, emoji: s.emoji, raridade: s.raridade })),
+          showing: true,
+          currentIdx: 0,
+        });
+      } else if (item.item_type === "xp_boost") {
+        setCoins(c => c - item.price_coins);
+        setMessage("⚡ Boost XP 2x ativado para 5 partidas!");
+      }
+    } catch {
+      setMessage("Compra não autorizada no cliente. Tente novamente.");
+      setBuying(null);
+      setTimeout(() => setMessage(null), 2500);
+      return;
     }
 
     setBuying(null);
