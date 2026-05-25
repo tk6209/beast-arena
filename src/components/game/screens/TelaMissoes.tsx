@@ -3,6 +3,7 @@ import { pageBg } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
 import { supabase } from "@/integrations/supabase/client";
+import { claimMissionReward } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -49,19 +50,6 @@ export default function TelaMissoes({ user, onVoltar }: Props) {
 
     if (myMissions && myMissions.length > 0) {
       setUserMissions(myMissions);
-    } else if (allMissions && allMissions.length > 0) {
-      // Assign 3 random missions for today
-      const shuffled = [...allMissions].sort(() => Math.random() - 0.5).slice(0, 3);
-      const inserts = shuffled.map(m => ({
-        user_id: user.id,
-        mission_id: m.id,
-        progress: 0,
-        completed: false,
-        claimed: false,
-        assigned_date: today,
-      }));
-      const { data: created } = await supabase.from("user_missions").insert(inserts).select();
-      if (created) setUserMissions(created);
     }
     setLoading(false);
   }
@@ -70,18 +58,12 @@ export default function TelaMissoes({ user, onVoltar }: Props) {
     const mission = missions.find(m => m.id === um.mission_id);
     if (!mission || um.claimed) return;
 
-    await supabase.from("user_missions").update({ claimed: true }).eq("id", um.id);
-
-    // Give coins + XP
-    const { data: profile } = await supabase.from("profiles").select("coins, xp").eq("user_id", user.id).single();
-    if (profile) {
-      await supabase.from("profiles").update({
-        coins: profile.coins + mission.reward_coins,
-        xp: profile.xp + mission.reward_xp,
-      }).eq("user_id", user.id);
+    try {
+      await claimMissionReward({ userId: user.id, userMissionId: um.id });
+      setUserMissions(prev => prev.map(u => u.id === um.id ? { ...u, claimed: true } : u));
+    } catch {
+      // server-authoritative path unavailable
     }
-
-    setUserMissions(prev => prev.map(u => u.id === um.id ? { ...u, claimed: true } : u));
   }
 
   const todayMissions = userMissions.map(um => {
