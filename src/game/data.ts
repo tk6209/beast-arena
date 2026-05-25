@@ -13,7 +13,7 @@ export const CATALOG = catalogJson as any;
 export const ONDAS: OndaCalendario[] = CATALOG.admin_system.ondas_calendario;
 
 /* MonstroData mantém o shape consumido pelo engine + campos novos do catálogo */
-export interface MonstroData extends Partial<MonstroCatalog> {
+export interface MonstroData {
   id: string;
   nome: string;
   hp: number;
