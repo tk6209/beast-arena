@@ -6,6 +6,7 @@ import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Dificuldade } from "@/pages/Index";
+import WaveBanner from "@/components/game/WaveBanner";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
@@ -173,6 +174,9 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
             </BtnMain>
           )}
         </div>
+
+        {/* WaveBanner — countdown da próxima onda em pré-lançamento */}
+        {show && <WaveBanner />}
 
         {/* Ranking */}
         {rankings.length > 0 && show && (
