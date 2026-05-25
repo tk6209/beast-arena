@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MONSTROS } from "@/game/data";
+import { usePlayerAccess } from "@/hooks/usePlayerAccess";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
@@ -18,7 +20,6 @@ interface TelaMonstroProps {
   modo?: "battle" | "evolution";
 }
 
-const monsters = Object.values(MONSTROS);
 const STARTER_MONSTERS = ["panther", "banana"];
 
 export default function TelaMonstro({
@@ -26,6 +27,8 @@ export default function TelaMonstro({
   titulo = "ESCOLHA SEU MONSTRO",
   userId, onEvoluir, modo = "battle",
 }: TelaMonstroProps) {
+  const { monstrosDisponiveis, seeAll } = usePlayerAccess();
+  const monsters = monstrosDisponiveis.length > 0 ? monstrosDisponiveis : Object.values(MONSTROS).filter((m: any) => m.status === "ativo");
   const [idx, setIdx] = useState(() => {
     const last = localStorage.getItem("beast_last_monster");
     if (last) {
