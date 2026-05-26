@@ -108,7 +108,3 @@ export async function claimDailyReward(payload: { userId: string }) {
 export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
   return callEngine("claim_mission_reward", null, payload);
 }
-
-export async function acceptFriendRequest(payload: { requestId: string; senderId: string }) {
-  return callEngine("accept_friend_request", null, payload);
-}

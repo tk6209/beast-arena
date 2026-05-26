@@ -1,0 +1,212 @@
+{
+  "$schema": "https://capynite.dev/schemas/capy_base_360.schema.json",
+  "id": "capy_base",
+  "version": "1.0.0",
+  "status": "canonical",
+  "metadata": {
+    "project": "Capynite",
+    "title": "Base Capivara 360 — Canonical Character Specification",
+    "description": "Canonical structured specification for the Capynite base capybara. All character variants MUST be composed from this base via modular accessories, expressions, animation styles and palettes. Variants are configuration recipes, not unique body models.",
+    "owners": ["Capynite Core"],
+    "related_docs": ["docs/capynite/CAPYNITE_CHARACTER_OS.md"],
+    "reference_images": [
+      "docs/capynite/reference/base_capivara_360.png",
+      "docs/capynite/reference/capy_herois_360.png"
+    ]
+  },
+  "visual_style": {
+    "style": "stylized 3D cartoon",
+    "influences": ["Pixar", "Fortnite", "Roblox modular avatars"],
+    "mood": ["adventurous", "friendly", "energetic", "playful", "child-safe"],
+    "silhouette": "rounded, readable at distance, oversized head, short limbs",
+    "shading": "soft stylized, warm rim light, subtle subsurface on nose and ears",
+    "forbidden": ["hyper realism", "gore", "realistic violence", "horror", "overly sharp geometry"]
+  },
+  "body_structure": {
+    "posture": "upright biped",
+    "proportions": {
+      "head_to_body_ratio": 1.15,
+      "torso_to_legs_ratio": 1.6,
+      "arm_length_ratio": 0.55,
+      "leg_length_ratio": 0.45,
+      "shoulder_width_units": 2.4,
+      "hip_width_units": 2.2,
+      "total_height_units": 6.0
+    },
+    "torso": {
+      "shape": "rounded barrel",
+      "belly": "soft convex",
+      "chest": "subtle"
+    },
+    "arms": {
+      "length": "short",
+      "hands": "four-fingered stylized paws",
+      "rest_pose": "relaxed in front of belly"
+    },
+    "legs": {
+      "length": "short",
+      "feet": "rounded webbed paws"
+    },
+    "tail": {
+      "present": false,
+      "note": "Capybaras have vestigial tails; omitted for silhouette readability."
+    }
+  },
+  "head_structure": {
+    "shape": "rounded rectangular block with soft edges",
+    "muzzle": {
+      "length_units": 0.55,
+      "shape": "blunt, wide"
+    },
+    "nose": {
+      "shape": "large rounded trapezoid",
+      "material": "wet glossy",
+      "color_ref": "fur_dark_brown"
+    },
+    "eyes": {
+      "shape": "large glossy ovals",
+      "iris": "solid black with single specular highlight",
+      "spacing_units": 0.9
+    },
+    "ears": {
+      "shape": "small rounded discs",
+      "placement": "high on skull, slightly outward"
+    },
+    "brows": "small, expressive, animatable",
+    "teeth": "two small front incisors, only visible on certain expressions"
+  },
+  "color_palette": {
+    "fur_primary": "#C97A3A",
+    "fur_shadow": "#8E4F23",
+    "fur_highlight": "#E3A267",
+    "nose_paws_dark": "#3E2A1F",
+    "muzzle_warm": "#D89A78",
+    "eye_black": "#0A0A0A",
+    "eye_highlight": "#FFFFFF"
+  },
+  "turnaround_views": {
+    "required": [
+      "front",
+      "front_3q_right",
+      "right",
+      "back_3q_right",
+      "back",
+      "back_3q_left",
+      "left",
+      "front_3q_left",
+      "top",
+      "top_3q_right",
+      "top_3q_left",
+      "bottom"
+    ],
+    "angle_step_degrees": 45,
+    "camera": {
+      "focal_length_mm": 85,
+      "framing": "full body, 10% headroom, neutral pose"
+    }
+  },
+  "closeups": {
+    "required": ["face_front", "face_profile", "ear", "muzzle", "nose", "eye", "front_paw", "back_paw"]
+  },
+  "rigging_guidelines": {
+    "skeleton": "biped with extra spine joints for belly squash",
+    "controls": ["root", "hips", "spine_01", "spine_02", "neck", "head", "jaw", "shoulders", "elbows", "wrists", "knees", "ankles"],
+    "deformation": "soft, cartoon squash-and-stretch enabled",
+    "facial_rig": "blendshape based"
+  },
+  "facial_controls": {
+    "blendshapes": [
+      "smile", "frown", "open_mouth", "tongue_out",
+      "brow_up_L", "brow_up_R", "brow_down_L", "brow_down_R",
+      "eye_blink_L", "eye_blink_R", "eye_wide", "eye_squint",
+      "cheek_puff", "nose_scrunch"
+    ],
+    "expression_presets": ["neutral", "happy", "determined", "surprised", "angry", "playful", "stealth"]
+  },
+  "attachment_points": {
+    "head_slot":       { "transform_hint": "top of skull, between ears" },
+    "face_slot":       { "transform_hint": "front of muzzle area, mask region" },
+    "chest_slot":      { "transform_hint": "upper torso front, vest mount" },
+    "back_slot":       { "transform_hint": "upper back, backpack/weapon mount" },
+    "waist_slot":      { "transform_hint": "belt line, hip center" },
+    "left_hand_slot":  { "transform_hint": "left paw grip" },
+    "right_hand_slot": { "transform_hint": "right paw grip" },
+    "feet_slot":       { "transform_hint": "both feet, boots/shoes" }
+  },
+  "accessory_rules": {
+    "must_declare_attachment_point": true,
+    "must_not_modify_base_geometry": true,
+    "must_preserve_silhouette_readability": true,
+    "must_be_child_safe": true,
+    "swappable_without_geometry_edits": true
+  },
+  "accessory_example": {
+    "id": "ninja_hood",
+    "attachment_point": "head_slot",
+    "scale": [1, 1, 1],
+    "rotation": [0, 0, 0],
+    "position_offset": [0, 0, 0],
+    "compatible_characters": ["all"]
+  },
+  "character_variants": [
+    {
+      "id": "capivini",
+      "name": "Capivini",
+      "role": "O Líder Estratégico",
+      "base": "capy_base",
+      "accessories": ["tactical_vest", "utility_belt", "shield_potion"],
+      "expression": "determined",
+      "animation_style": "confident",
+      "palette_overrides": {},
+      "icon": "🛡️"
+    },
+    {
+      "id": "capininja",
+      "name": "CapiNinja",
+      "role": "O Guerreiro Silencioso",
+      "base": "capy_base",
+      "accessories": ["ninja_hood", "face_mask", "katana_back", "shoulder_strap"],
+      "expression": "stealth",
+      "animation_style": "agile",
+      "palette_overrides": { "fur_primary": "#1F2A44" },
+      "icon": "🥷"
+    },
+    {
+      "id": "capirocket",
+      "name": "CapiRocket",
+      "role": "O Especialista em Explosivos",
+      "base": "capy_base",
+      "accessories": ["tactical_vest", "rocket_launcher", "ammo_belt"],
+      "expression": "determined",
+      "animation_style": "heavy",
+      "palette_overrides": {},
+      "icon": "🚀"
+    },
+    {
+      "id": "capizozo",
+      "name": "CapiZozo",
+      "role": "O Alívio Cômico",
+      "base": "capy_base",
+      "accessories": ["tactical_vest", "utility_belt"],
+      "expression": "playful",
+      "animation_style": "exaggerated",
+      "palette_overrides": {},
+      "icon": "😜"
+    }
+  ],
+  "export_requirements": {
+    "formats": ["glb", "fbx", "usdz"],
+    "textures": {
+      "resolution": 2048,
+      "color_space": "sRGB for albedo, linear for data maps",
+      "channels": ["albedo", "normal", "roughness", "ao"]
+    },
+    "lod": {
+      "lod0_tris_max": 30000,
+      "lod1_tris_max": 12000,
+      "lod2_tris_max": 5000
+    },
+    "naming_convention": "capy_{part}_{lod}.{ext}"
+  },
+  "critical_rule": "Do not create independent disconnected characters. Create reusable modular compositions from a shared canonical base."
+}

@@ -166,6 +166,33 @@ export type Database = {
         }
         Relationships: []
       }
+      early_access_items: {
+        Row: {
+          created_at: string
+          expira_em: string | null
+          id: string
+          item_id: string
+          item_tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expira_em?: string | null
+          id?: string
+          item_id: string
+          item_tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expira_em?: string | null
+          id?: string
+          item_id?: string
+          item_tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -666,6 +693,77 @@ export type Database = {
         }
         Relationships: []
       }
+      sorteio_participacoes: {
+        Row: {
+          created_at: string
+          id: string
+          sorteio_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sorteio_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sorteio_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sorteio_participacoes_sorteio_id_fkey"
+            columns: ["sorteio_id"]
+            isOneToOne: false
+            referencedRelation: "sorteios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sorteios: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          ganhadores: string[]
+          id: string
+          item_id: string
+          item_tipo: string
+          max_ganhadores: number
+          sorteado_em: string | null
+          status: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          ganhadores?: string[]
+          id?: string
+          item_id: string
+          item_tipo: string
+          max_ganhadores?: number
+          sorteado_em?: string | null
+          status?: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          ganhadores?: string[]
+          id?: string
+          item_id?: string
+          item_tipo?: string
+          max_ganhadores?: number
+          sorteado_em?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -877,6 +975,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_stats: {
         Row: {
           best_streak: number
@@ -910,6 +1029,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           win_streak?: number
+        }
+        Relationships: []
+      }
+      waves: {
+        Row: {
+          created_at: string
+          monstro_destaque: string | null
+          nome: string
+          release_date: string
+          status: string
+          tema: string | null
+          updated_at: string
+          wave: number
+        }
+        Insert: {
+          created_at?: string
+          monstro_destaque?: string | null
+          nome: string
+          release_date: string
+          status?: string
+          tema?: string | null
+          updated_at?: string
+          wave: number
+        }
+        Update: {
+          created_at?: string
+          monstro_destaque?: string | null
+          nome?: string
+          release_date?: string
+          status?: string
+          tema?: string | null
+          updated_at?: string
+          wave?: number
         }
         Relationships: []
       }
@@ -954,9 +1106,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderador" | "jogador_vip" | "jogador"
       game_status: "waiting" | "active" | "finished"
     }
     CompositeTypes: {
@@ -1085,6 +1244,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderador", "jogador_vip", "jogador"],
       game_status: ["waiting", "active", "finished"],
     },
   },

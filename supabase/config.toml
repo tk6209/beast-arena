@@ -1,1 +1,4 @@
 project_id = "ftlwkkjjpkocklaajavh"
+
+[functions.activate-waves]
+verify_jwt = false

@@ -1,6 +1,18 @@
 /* ─────────────────────────────────────────────
-   MONSTROS
+   CATÁLOGO v4 — fonte única de monstros, swarms, ondas
 ───────────────────────────────────────────── */
+import catalogJson from "./data/catalog.json";
+import type {
+  MonstroCatalog,
+  SwarmCatalog,
+  OndaCalendario,
+  StatusConteudo,
+} from "./types/catalog";
+
+export const CATALOG = catalogJson as any;
+export const ONDAS: OndaCalendario[] = CATALOG.admin_system.ondas_calendario;
+
+/* MonstroData mantém o shape consumido pelo engine + campos novos do catálogo */
 export interface MonstroData {
   id: string;
   nome: string;
@@ -13,9 +25,32 @@ export interface MonstroData {
   glow: string;
   hab: string;
   habD: string;
+  status?: StatusConteudo;
+  wave?: number;
+  wave_nome?: string;
+  release_date?: string;
+  elemento?: string;
+  raridade?: string;
+  destaque_mensal?: boolean;
+  early_access?: boolean;
+  sorteavel_admin?: boolean;
 }
 
-export const MONSTROS: Record<string, MonstroData> = {
+export const MONSTROS: Record<string, MonstroData> = Object.freeze(
+  (CATALOG.monstros as MonstroCatalog[]).reduce(
+    (acc, m) => {
+      acc[m.id] = m as MonstroData;
+      return acc;
+    },
+    {} as Record<string, MonstroData>,
+  ),
+) as Record<string, MonstroData>;
+
+/* Lista ordenada — útil para enumeração */
+export const MONSTROS_LISTA: MonstroData[] = CATALOG.monstros as MonstroData[];
+
+/* ─── PLACEHOLDER bloco removido ─── */
+const _OLD_MONSTROS_REMOVED = {
   panther: {
     id: "panther",
     nome: "Panther",
@@ -134,7 +169,7 @@ export const MONSTROS: Record<string, MonstroData> = {
     hab: "Maré Alta",
     habD: "Cura +8 HP por turno automaticamente",
   },
-  volt: {
+  _volt: {
     id: "volt",
     nome: "Volt",
     hp: 50,
@@ -147,7 +182,7 @@ export const MONSTROS: Record<string, MonstroData> = {
     hab: "Descarga Elétrica",
     habD: "Primeiro ataque de cada turno causa dano dobrado",
   },
-};
+}; // legado removido
 
 /* ─────────────────────────────────────────────
    PODERES
@@ -164,7 +199,7 @@ export interface PoderData {
   bg2: string;
 }
 
-export const PODERES: Record<string, PoderData> = {
+const _OLD_PODERES = {
   fogo: {
     id: "fogo",
     nome: "Fogo",
@@ -222,6 +257,16 @@ export const PODERES: Record<string, PoderData> = {
   },
 };
 
+export const PODERES: Record<string, PoderData> = Object.freeze(
+  (CATALOG.poderes as PoderData[]).reduce(
+    (acc, p) => {
+      acc[p.id] = p;
+      return acc;
+    },
+    {} as Record<string, PoderData>,
+  ),
+) as Record<string, PoderData>;
+
 /* ─────────────────────────────────────────────
    SWARMS
 ───────────────────────────────────────────── */
@@ -234,9 +279,15 @@ export interface SwarmData {
   efeito: string;
   valor: number;
   desc: string;
+  wave?: number;
+  wave_nome?: string;
+  release_date?: string;
+  status?: StatusConteudo;
+  early_access?: boolean;
+  sorteavel_admin?: boolean;
 }
 
-const SWARMS_JSON = `[
+const _OLD_SWARMS_JSON = `[
   {
     "id": "swarm_faisca",
     "nome": "Faísca",
@@ -369,7 +420,7 @@ const SWARMS_JSON = `[
   }
 ]`;
 
-export const SWARMS: SwarmData[] = JSON.parse(SWARMS_JSON);
+export const SWARMS: SwarmData[] = CATALOG.swarms as SwarmData[];
 
 /* ─────────────────────────────────────────────
    FRASES
