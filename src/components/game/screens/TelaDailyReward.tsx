@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { claimDailyReward } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -22,54 +23,31 @@ export default function TelaDailyReward({ user, onClose }: Props) {
   }, []);
 
   async function checkAndClaim() {
-    const { data } = await supabase
-      .from("daily_rewards")
-      .select("last_claim_date, streak")
-      .eq("user_id", user.id)
-      .single();
-
-    const today = new Date().toISOString().split("T")[0];
-
-    if (!data) {
-      // First time — create record
-      await supabase.from("daily_rewards").insert({ user_id: user.id, last_claim_date: today, streak: 1 });
-      const coins = STREAK_REWARDS[0];
-      await supabase.from("profiles").update({ coins: (await getCoins()) + coins }).eq("user_id", user.id);
-      setReward(coins);
-      setStreak(1);
-      setClaimed(true);
+    try {
+      const { data } = await claimDailyReward({ userId: user.id });
+      if (data?.alreadyClaimed) {
+        setAlreadyClaimed(true);
+      } else {
+        setClaimed(true);
+      }
+      setReward(data?.coins ?? 0);
+      setStreak(data?.streak ?? 1);
+    } catch {
+      const { data } = await supabase
+        .from("daily_rewards")
+        .select("last_claim_date, streak")
+        .eq("user_id", user.id)
+        .single();
+      const today = new Date().toISOString().split("T")[0];
+      if (data?.last_claim_date === today) {
+        setAlreadyClaimed(true);
+      }
+      setStreak(data?.streak ?? 1);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (data.last_claim_date === today) {
-      setAlreadyClaimed(true);
-      setStreak(data.streak);
-      setLoading(false);
-      return;
-    }
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-    const newStreak = data.last_claim_date === yesterdayStr ? data.streak + 1 : 1;
-    const coins = STREAK_REWARDS[Math.min(newStreak - 1, STREAK_REWARDS.length - 1)];
-
-    await supabase.from("daily_rewards").update({ last_claim_date: today, streak: newStreak }).eq("user_id", user.id);
-    const currentCoins = await getCoins();
-    await supabase.from("profiles").update({ coins: currentCoins + coins }).eq("user_id", user.id);
-
-    setReward(coins);
-    setStreak(newStreak);
-    setClaimed(true);
-    setLoading(false);
   }
 
-  async function getCoins() {
-    const { data } = await supabase.from("profiles").select("coins").eq("user_id", user.id).single();
-    return data?.coins || 0;
-  }
 
   if (loading) return null;
 

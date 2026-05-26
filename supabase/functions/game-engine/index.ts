@@ -924,6 +924,7 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     let isAuthenticated = false;
+    let requesterUserId: string | null = null;
     if (authHeader?.startsWith("Bearer ")) {
       const authSupabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
@@ -932,7 +933,10 @@ Deno.serve(async (req) => {
       );
       const token = authHeader.replace("Bearer ", "");
       const { data: claims, error: authError } = await authSupabase.auth.getClaims(token);
-      if (!authError && claims?.claims?.sub) isAuthenticated = true;
+      if (!authError && claims?.claims?.sub) {
+        isAuthenticated = true;
+        requesterUserId = claims.claims.sub as string;
+      }
     }
 
     if (payload?.modo === "multi" && !isAuthenticated) {
@@ -955,6 +959,22 @@ Deno.serve(async (req) => {
         .select("id").single();
       if (sessErr) throw new Error(`Erro ao criar sessão: ${sessErr.message}`);
       sessionId = newSess.id;
+    }
+
+
+    if (sessionId && action !== "init_game" && isAuthenticated && requesterUserId && payload?.slot !== undefined) {
+      const { data: slotRow } = await supabase
+        .from("game_players")
+        .select("player_slot")
+        .eq("session_id", sessionId)
+        .eq("user_id", requesterUserId)
+        .maybeSingle();
+
+      if (slotRow && slotRow.player_slot !== payload.slot) {
+        return new Response(JSON.stringify({ error: "Slot inválido para este usuário" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     let state: any = {};
@@ -1008,7 +1028,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("Engine error:", err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    return new Response(JSON.stringify({ error: "Erro interno do servidor", code: "GAME_ENGINE_INTERNAL" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

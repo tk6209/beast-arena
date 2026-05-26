@@ -7,6 +7,7 @@ import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { supabase } from "@/integrations/supabase/client";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
+import { recordBattleResult } from "@/game/serverApi";
 import { MONSTROS } from "@/game/data";
 import type { Jogador } from "@/game/engine";
 
@@ -197,59 +198,18 @@ export default function TelaResultado({
       if (xp >= curLvl * 100) { xp -= curLvl * 100; lvl++; setTimeout(() => { setShowLvlUp(true); setTimeout(() => setShowLvlUp(false), 2400); }, 2800); }
       setNewLevel(lvl); setNewXp(xp);
 
-      await supabase.from("profiles").update({ xp, coins: (prof?.coins || 0) + coinBase + sb, level: lvl }).eq("user_id", uid);
-      const ns = g ? curStreak : 0;
-      await supabase.from("user_stats").update({
-        total_wins: (stats?.total_wins || 0) + (g ? 1 : 0),
-        total_losses: (stats?.total_losses || 0) + (g ? 0 : 1),
-        win_streak: ns, best_streak: Math.max(stats?.best_streak || 0, ns),
-      }).eq("user_id", uid);
-
-      // Missions
-      const today = new Date().toISOString().split("T")[0];
-      const { data: ms } = await supabase.from("user_missions")
-        .select("*, daily_missions!inner(mission_type,target_value)")
-        .eq("user_id", uid).eq("assigned_date", today).eq("completed", false);
-      for (const m of (ms || [])) {
-        const type = (m as any).daily_missions?.mission_type;
-        const tgt = (m as any).daily_missions?.target_value || 1;
-        let inc = 0;
-        if (type === "wins" && g) inc = 1;
-        else if (type === "play_cards") inc = battleStats?.cardsPlayed || 0;
-        else if (type === "deal_damage") inc = battleStats?.damageDealt || 0;
-        else if (type === "evolutions") inc = battleStats?.evolutions || 0;
-        else if (type === "heal_cards") inc = battleStats?.healsUsed || 0;
-        if (inc > 0) {
-          const np = Math.min(m.progress + inc, tgt);
-          await supabase.from("user_missions").update({ progress: np, completed: np >= tgt }).eq("id", m.id);
-          if (np >= tgt) setTimeout(() => toast("🎯 Missão concluída! Colete no menu.", { duration: 4000 }), 4000);
-        }
-      }
-
-      // Achievements
-      const [{ data: achs }, { data: mine }] = await Promise.all([
-        supabase.from("achievements").select("*"),
-        supabase.from("user_achievements").select("achievement_id").eq("user_id", uid),
-      ]);
-      const have = new Set((mine || []).map((m: any) => m.achievement_id));
-      for (const a of (achs || [])) {
-        if (have.has(a.id)) continue;
-        let cur = 0;
-        if (a.requirement_type === "total_wins") cur = (stats?.total_wins || 0) + (g ? 1 : 0);
-        else if (a.requirement_type === "win_streak") cur = ns;
-        else if (a.requirement_type === "level") cur = lvl;
-        if (cur >= a.requirement_value) {
-          await supabase.from("user_achievements").insert({ user_id: uid, achievement_id: a.id });
-          setTimeout(() => toast(
-            <div style={{ display:"flex",gap:10,alignItems:"center" }}>
-              <span style={{ fontSize:30 }}>{a.emoji || "🏅"}</span>
-              <div>
-                <div style={{ fontFamily:"Bangers,cursive",fontSize:13,color:"#ffd54f",letterSpacing:1 }}>CONQUISTA DESBLOQUEADA!</div>
-                <div style={{ fontSize:12,fontWeight:700,color:"#e8f0ff" }}>{a.title}</div>
-              </div>
-            </div>, { duration: 6000 }
-          ), 4500);
-        }
+      try {
+        await recordBattleResult({
+          userId: uid,
+          won: g,
+          dificuldade,
+          coinBase,
+          xpGain,
+          battleStats,
+        });
+      } catch (err) {
+        console.warn("record_battle_result unavailable", err);
+        toast("⚠️ Progresso não sincronizado. Tente novamente em instantes.", { duration: 3500 });
       }
     } catch (e) { console.error(e); }
   }

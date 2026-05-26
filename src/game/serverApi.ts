@@ -39,18 +39,7 @@ export async function initGame(
 
 /** Save a card earned in battle to user collection */
 export async function saveCardDrop(userId: string, card: any): Promise<void> {
-  const { supabase } = await import("@/integrations/supabase/client");
-  const cardKey = `${card.nome}_${card.tipo}`.toLowerCase().replace(/\s/g, "_");
-  await supabase.from("user_cards").upsert({
-    user_id: userId,
-    card_key: cardKey,
-    card_data: card,
-    raridade: card.raridade || "comum",
-    quantity: 1,
-  }, {
-    onConflict: "user_id,card_key",
-    ignoreDuplicates: false,
-  });
+  return callEngine("save_card_drop", null, { userId, card });
 }
 
 /** Load player deck for a monster */
@@ -89,4 +78,37 @@ export async function passTurn(sessionId: string, slot: number) {
 
 export async function comboCards(sessionId: string, slot: number, cardId1: number, cardId2: number) {
   return callEngine("combo_cards", sessionId, { slot, cardId1, cardId2 });
+}
+
+export async function recordBattleResult(payload: {
+  userId: string;
+  won: boolean;
+  dificuldade: string;
+  coinBase: number;
+  xpGain: number;
+  battleStats?: any;
+}) {
+  return callEngine("record_battle_result", null, payload);
+}
+
+export async function purchaseShopItem(payload: {
+  userId: string;
+  itemId: string;
+  itemType: string;
+  itemKey: string;
+  quantity?: number;
+}) {
+  return callEngine("purchase_item", null, payload);
+}
+
+export async function claimDailyReward(payload: { userId: string }) {
+  return callEngine("claim_daily_reward", null, payload);
+}
+
+export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
+  return callEngine("claim_mission_reward", null, payload);
+}
+
+export async function acceptFriendRequest(payload: { requestId: string; senderId: string }) {
+  return callEngine("accept_friend_request", null, payload);
 }
