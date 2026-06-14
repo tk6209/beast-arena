@@ -17,6 +17,14 @@ export default defineConfig(({ mode }) => ({
     // Quebra o bundle único em chunks de vendor para cache de longo prazo e
     // um carregamento inicial mais leve.
     rollupOptions: {
+      // Multi-page build: o app principal (Beast Arena) e o protótipo standalone
+      // CapiRocket Dash são duas entradas HTML independentes, com bundles próprios.
+      // `main` (index.html) PRECISA ser listado explicitamente, senão o app
+      // principal some do build quando `input` vira um objeto.
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        capyrocket: path.resolve(__dirname, "capyrocket.html"),
+      },
       output: {
         manualChunks: {
           "react-vendor": ["react", "react-dom", "react-router-dom"],
