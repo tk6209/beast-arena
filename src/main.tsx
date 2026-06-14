@@ -18,8 +18,16 @@ const isPreviewHost =
   window.location.hostname.includes("id-preview--") ||
   window.location.hostname.includes("lovableproject.com");
 if (isPreviewHost || isInIframe) {
+  // Preview/iframe: nunca registra SW (evita cache obsoleto durante o dev no Lovable).
   navigator.serviceWorker?.getRegistrations().then((regs) => {
     regs.forEach((r) => r.unregister());
+  });
+} else if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  // Produção: SW de cache para carregamento instantâneo em visitas repetidas.
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* registro falhou (sem HTTPS, etc.) — app segue normal, só sem cache offline */
+    });
   });
 }
 
