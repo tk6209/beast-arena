@@ -24,6 +24,7 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   groundClamp(p);
 
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
+  if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
   p.animPhase += dt;
 
   // Corrida automática: avança o "mundo".

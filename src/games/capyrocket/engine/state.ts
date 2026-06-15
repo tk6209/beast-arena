@@ -1,5 +1,7 @@
 import {
   GROUND_Y,
+  HAZARD_MIN_GAP,
+  HAZARD_RND_GAP,
   MAX_LIVES,
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
@@ -20,6 +22,7 @@ function createPlayer(): Player {
     onGround: true,
     invuln: 0,
     animPhase: 0,
+    muzzle: 0,
   };
 }
 
@@ -30,14 +33,19 @@ export function createInitialState(): GameState {
     player: createPlayer(),
     enemies: [],
     bullets: [],
+    enemyBullets: [],
+    hazards: [],
     pickups: [],
     particles: [],
+    boss: null,
+    lastBossWave: 0,
     score: 0,
     combo: 0,
     lives: MAX_LIVES,
     shake: 0,
     fireCooldown: 0,
     pickupTimer: PICKUP_MIN_GAP + Math.random() * PICKUP_RND_GAP,
+    hazardTimer: HAZARD_MIN_GAP + Math.random() * HAZARD_RND_GAP,
     spawner: createSpawner(),
     highscore: loadHighscore(),
   };

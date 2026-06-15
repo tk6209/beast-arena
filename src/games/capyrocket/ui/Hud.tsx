@@ -10,8 +10,8 @@ export default function Hud({ snap }: { snap: HudSnapshot }) {
       </div>
 
       <div className="capy-hud__box" style={{ textAlign: "center" }}>
-        <div className="capy-hud__label">Onda</div>
-        <div className="capy-hud__value">{snap.wave}</div>
+        <div className="capy-hud__label">{snap.bossHp > 0 ? "⚠ Chefe" : "Onda"}</div>
+        <div className="capy-hud__value">{snap.bossHp > 0 ? "BOSS" : snap.wave}</div>
       </div>
 
       <div className="capy-hud__box" style={{ textAlign: "right" }}>

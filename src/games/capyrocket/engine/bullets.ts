@@ -1,4 +1,4 @@
-import { FIRE_INTERVAL, PLAYER_H, PLAYER_W, VIRT_W } from "./constants";
+import { FIRE_INTERVAL, MUZZLE_TIME, PLAYER_H, PLAYER_W, VIRT_W } from "./constants";
 import { makeBullet } from "./entities";
 import { capiSfx } from "../vendor/sfx";
 import type { GameState } from "./types";
@@ -12,7 +12,9 @@ export function updateBullets(state: GameState, dt: number): void {
   if (state.fireCooldown <= 0) {
     state.fireCooldown += FIRE_INTERVAL;
     const p = state.player;
-    state.bullets.push(makeBullet(p.x + PLAYER_W, p.y + PLAYER_H * 0.42));
+    // Cano do fuzil ~ no meio do corpo, à frente.
+    state.bullets.push(makeBullet(p.x + PLAYER_W + 6, p.y + PLAYER_H * 0.5));
+    p.muzzle = MUZZLE_TIME;
     capiSfx.shoot();
   }
 

@@ -1,16 +1,35 @@
 import {
+  BOSS_FIRE_INTERVAL,
+  BOSS_H,
+  BOSS_HP,
+  BOSS_W,
   BULLET_H,
   BULLET_SPEED,
   BULLET_W,
+  EBULLET_H,
+  EBULLET_SPEED,
+  EBULLET_W,
   ENEMY_H,
   ENEMY_HP,
   ENEMY_SPEED,
   ENEMY_W,
   GROUND_Y,
+  HAZARD_H,
+  HAZARD_W,
   PICKUP_H,
   PICKUP_W,
+  SHOOTER_FIRE_INTERVAL,
+  SHOOTER_H,
+  SHOOTER_HP,
+  SHOOTER_SPEED,
+  SHOOTER_W,
+  TANK_FIRE_INTERVAL,
+  TANK_H,
+  TANK_HP,
+  TANK_SPEED,
+  TANK_W,
 } from "./constants";
-import type { Bullet, Enemy, Particle, Pickup } from "./types";
+import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup } from "./types";
 
 export function makeBullet(x: number, y: number): Bullet {
   return { x, y, w: BULLET_W, h: BULLET_H, vx: BULLET_SPEED, life: 2 };
@@ -24,8 +43,65 @@ export function makeWalker(x: number): Enemy {
     h: ENEMY_H,
     vx: ENEMY_SPEED,
     hp: ENEMY_HP,
+    maxHp: ENEMY_HP,
     kind: "walker",
     dead: false,
+    fireCooldown: 0,
+    legPhase: 0,
+  };
+}
+
+export function makeShooter(x: number): Enemy {
+  return {
+    x,
+    y: GROUND_Y - SHOOTER_H,
+    w: SHOOTER_W,
+    h: SHOOTER_H,
+    vx: SHOOTER_SPEED,
+    hp: SHOOTER_HP,
+    maxHp: SHOOTER_HP,
+    kind: "shooter",
+    dead: false,
+    fireCooldown: SHOOTER_FIRE_INTERVAL * 0.6,
+    legPhase: 0,
+  };
+}
+
+export function makeTank(x: number): Enemy {
+  return {
+    x,
+    y: GROUND_Y - TANK_H,
+    w: TANK_W,
+    h: TANK_H,
+    vx: TANK_SPEED,
+    hp: TANK_HP,
+    maxHp: TANK_HP,
+    kind: "tank",
+    dead: false,
+    fireCooldown: TANK_FIRE_INTERVAL * 0.5,
+    legPhase: 0,
+  };
+}
+
+export function makeEnemyBullet(x: number, y: number): EnemyBullet {
+  return { x, y, w: EBULLET_W, h: EBULLET_H, vx: EBULLET_SPEED, life: 4 };
+}
+
+export function makeHazard(x: number): Hazard {
+  return { x, y: GROUND_Y - HAZARD_H, w: HAZARD_W, h: HAZARD_H, kind: "mina" };
+}
+
+export function makeBoss(x: number): Boss {
+  return {
+    x,
+    y: GROUND_Y - BOSS_H,
+    w: BOSS_W,
+    h: BOSS_H,
+    hp: BOSS_HP,
+    maxHp: BOSS_HP,
+    fireCooldown: BOSS_FIRE_INTERVAL,
+    entering: true,
+    phase: 0,
   };
 }
 
