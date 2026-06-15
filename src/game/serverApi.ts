@@ -108,3 +108,20 @@ export async function claimDailyReward(payload: { userId: string }) {
 export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
   return callEngine("claim_mission_reward", null, payload);
 }
+
+/** Accept a friend request: insert friendship + mark request accepted */
+export async function acceptFriendRequest(payload: { requestId: string; senderId: string }): Promise<void> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const [a, b] = [user.id, payload.senderId].sort();
+  const { error: insErr } = await supabase
+    .from("friendships")
+    .insert({ user_a: a, user_b: b });
+  if (insErr && !insErr.message.includes("duplicate")) throw insErr;
+  const { error: upErr } = await supabase
+    .from("friend_requests")
+    .update({ status: "accepted" })
+    .eq("id", payload.requestId);
+  if (upErr) throw upErr;
+}
