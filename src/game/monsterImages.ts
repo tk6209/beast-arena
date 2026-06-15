@@ -9,6 +9,12 @@ import phantomImg from "@/assets/monsters/phantom.png";
 import tsunamiImg from "@/assets/monsters/tsunami.png";
 import voltImg from "@/assets/monsters/volt.png";
 
+// Capynite heroes — single hero-card art reused for every angle (no turnaround yet)
+import capiviniImg from "@/assets/monsters/capivini.png";
+import capininjaImg from "@/assets/monsters/capininja.png";
+import capirocketImg from "@/assets/monsters/capirocket.png";
+import capizozoImg from "@/assets/monsters/capizozo.png";
+
 import pantherSideImg from "@/assets/monsters/panther-side.png";
 import bananaSideImg from "@/assets/monsters/banana-side.png";
 import macacoSideImg from "@/assets/monsters/macaco-side.png";
@@ -42,6 +48,10 @@ export const MONSTER_IMAGES: Record<string, string> = {
   phantom: phantomImg,
   tsunami: tsunamiImg,
   volt: voltImg,
+  capivini: capiviniImg,
+  capininja: capininjaImg,
+  capirocket: capirocketImg,
+  capizozo: capizozoImg,
 };
 
 export const MONSTER_IMAGES_SIDE: Record<string, string> = {
@@ -55,6 +65,10 @@ export const MONSTER_IMAGES_SIDE: Record<string, string> = {
   phantom: phantomSideImg,
   tsunami: tsunamiSideImg,
   volt: voltSideImg,
+  capivini: capiviniImg,
+  capininja: capininjaImg,
+  capirocket: capirocketImg,
+  capizozo: capizozoImg,
 };
 
 export const MONSTER_IMAGES_BACK: Record<string, string> = {
@@ -68,6 +82,10 @@ export const MONSTER_IMAGES_BACK: Record<string, string> = {
   phantom: phantomBackImg,
   tsunami: tsunamiBackImg,
   volt: voltBackImg,
+  capivini: capiviniImg,
+  capininja: capininjaImg,
+  capirocket: capirocketImg,
+  capizozo: capizozoImg,
 };
 
 /** Returns the correct image for a monster based on rotation angle (0-360) */
