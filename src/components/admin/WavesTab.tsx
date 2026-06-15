@@ -46,10 +46,11 @@ export default function WavesTab() {
   const ativarAgora = (wave: number) => updateStatus(wave, "ativo");
 
   const rodarCron = async () => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-waves`;
     try {
-      const r = await fetch(url, { method: "POST" });
-      const data = await r.json();
+      const { data, error } = await supabase.functions.invoke("activate-waves", {
+        method: "POST",
+      });
+      if (error) throw error;
       toast({
         title: "Cron executado",
         description: `Ativadas: ${data.activated} • Pré-lançamento: ${data.pre_launched}`,
