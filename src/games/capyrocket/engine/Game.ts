@@ -5,6 +5,8 @@ import { updateBullets } from "./bullets";
 import { aabbOverlap } from "./collision";
 import {
   BOSS_WAVE,
+  CRATE_MIN_GAP,
+  CRATE_RND_GAP,
   FIXED_DT,
   GROUND_Y,
   HAZARD_MIN_GAP,
@@ -14,11 +16,21 @@ import {
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
   PLAYER_SCREEN_X,
+  ROCKET_SPLASH,
   VIRT_H,
   VIRT_W,
 } from "./constants";
 import { updateEnemies, updateEnemyBullets, updateHazards } from "./enemies";
-import { makeBoss, makeHazard, makeShooter, makeStar, makeTank, makeWalker } from "./entities";
+import {
+  makeBoss,
+  makeHazard,
+  makeShooter,
+  makeStar,
+  makeTank,
+  makeWalker,
+  makeWeaponCrate,
+} from "./entities";
+import { CRATE_WEAPONS, activeWeapon } from "./weapons";
 import { InputManager } from "./input";
 import { spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
@@ -113,6 +125,8 @@ export class Game {
       phase: s.phase,
       highscore: s.highscore,
       bossHp: s.boss ? s.boss.hp / s.boss.maxHp : 0,
+      weapon: activeWeapon(s).name,
+      ammo: s.special ? s.special.ammo : 0,
     };
   }
 
@@ -127,6 +141,8 @@ export class Game {
       prev.wave !== snap.wave ||
       prev.phase !== snap.phase ||
       prev.highscore !== snap.highscore ||
+      prev.weapon !== snap.weapon ||
+      prev.ammo !== snap.ammo ||
       Math.abs(prev.bossHp - snap.bossHp) > 0.01;
     if (changed) {
       this.lastSnap = snap;
@@ -190,6 +206,13 @@ export class Game {
       this.spawnPickup();
     }
 
+    // Caixas de arma especial num timer próprio.
+    s.crateTimer -= dt;
+    if (s.crateTimer <= 0) {
+      s.crateTimer = CRATE_MIN_GAP + Math.random() * CRATE_RND_GAP;
+      this.spawnCrate();
+    }
+
     updateBullets(s, dt);
     updateEnemies(s, dt);
     updateEnemyBullets(s, dt);
@@ -197,6 +220,7 @@ export class Game {
     updateParticles(s, dt);
     for (const pk of s.pickups) pk.spin += dt * 3;
     s.pickups = s.pickups.filter((pk) => !pk.taken && pk.x > s.player.x - 200);
+    s.crates = s.crates.filter((c) => !c.taken && c.x > s.player.x - 200);
 
     this.handleCollisions();
 
@@ -230,40 +254,37 @@ export class Game {
     this.state.pickups.push(makeStar(aheadX, y));
   }
 
+  private spawnCrate(): void {
+    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 50;
+    const pick = CRATE_WEAPONS[(Math.random() * CRATE_WEAPONS.length) | 0];
+    this.state.crates.push(makeWeaponCrate(aheadX, pick.id as "shotgun" | "bazooka", pick.ammo));
+  }
+
   private handleCollisions(): void {
     const s = this.state;
     const playerRect = { x: s.player.x, y: s.player.y, w: s.player.w, h: s.player.h };
 
-    // Balas do jogador vs inimigos.
+    // Balas do jogador vs inimigos e chefe (foguete = explosão em área).
     for (const b of s.bullets) {
       if (b.life <= 0) continue;
+      let hitSomething = false;
       for (const e of s.enemies) {
         if (e.dead) continue;
-        if (aabbOverlap(b, e)) {
-          b.life = 0;
-          e.hp -= 1;
-          if (e.hp <= 0) {
-            e.dead = true;
-            registerKill(s);
-            spawnPoof(s, e.x + e.w / 2, e.y + e.h / 2);
-            capiSfx.poof();
-            s.shake = Math.max(s.shake, 6);
-          }
-          break;
-        }
+        if (aabbOverlap(b, e)) { hitSomething = true; break; }
       }
-    }
+      const hitBoss = s.boss && !s.boss.entering && aabbOverlap(b, s.boss);
+      if (!hitSomething && !hitBoss) continue;
 
-    // Balas do jogador vs chefe.
-    if (s.boss && !s.boss.entering) {
-      for (const b of s.bullets) {
-        if (b.life <= 0) continue;
-        if (aabbOverlap(b, s.boss)) {
-          b.life = 0;
-          s.boss.hp -= 1;
-          if (s.boss.hp <= 0) {
-            this.killBoss();
-            break;
+      b.life = 0;
+      if (b.kind === "rocket") {
+        this.explodeRocket(b.x + b.w / 2, b.y + b.h / 2, b.damage);
+      } else {
+        if (hitBoss) {
+          this.damageBoss(b.damage);
+        } else {
+          for (const e of s.enemies) {
+            if (e.dead) continue;
+            if (aabbOverlap(b, e)) { this.damageEnemy(e, b.damage); break; }
           }
         }
       }
@@ -306,6 +327,59 @@ export class Game {
         capiSfx.pickup();
       }
     }
+
+    // Jogador vs caixas de arma (coletadas correndo).
+    for (const c of s.crates) {
+      if (c.taken) continue;
+      if (aabbOverlap(playerRect, c)) {
+        c.taken = true;
+        s.special = { id: c.weapon, ammo: c.ammo };
+        s.fireCooldown = 0; // dispara já com a arma nova
+        spawnSparkle(s, c.x + c.w / 2, c.y + c.h / 2);
+        capiSfx.pickup();
+      }
+    }
+  }
+
+  private damageEnemy(e: { hp: number; dead: boolean; x: number; y: number; w: number; h: number }, dmg: number): void {
+    const s = this.state;
+    e.hp -= dmg;
+    if (e.hp <= 0) {
+      e.dead = true;
+      registerKill(s);
+      spawnPoof(s, e.x + e.w / 2, e.y + e.h / 2);
+      capiSfx.poof();
+      s.shake = Math.max(s.shake, 6);
+    }
+  }
+
+  private damageBoss(dmg: number): void {
+    const s = this.state;
+    if (!s.boss) return;
+    s.boss.hp -= dmg;
+    s.shake = Math.max(s.shake, 5);
+    if (s.boss.hp <= 0) this.killBoss();
+  }
+
+  /** Explosão da bazuca: dano em área a todos os inimigos no raio + chefe. */
+  private explodeRocket(cx: number, cy: number, dmg: number): void {
+    const s = this.state;
+    for (let i = 0; i < 5; i++) {
+      spawnPoof(s, cx + (Math.random() * 2 - 1) * 30, cy + (Math.random() * 2 - 1) * 30);
+    }
+    capiSfx.poof();
+    s.shake = Math.max(s.shake, 16);
+    for (const e of s.enemies) {
+      if (e.dead) continue;
+      const ex = e.x + e.w / 2;
+      const ey = e.y + e.h / 2;
+      if (Math.hypot(ex - cx, ey - cy) <= ROCKET_SPLASH) this.damageEnemy(e, dmg);
+    }
+    if (s.boss && !s.boss.entering) {
+      const bx = s.boss.x + s.boss.w / 2;
+      const by = s.boss.y + s.boss.h / 2;
+      if (Math.hypot(bx - cx, by - cy) <= ROCKET_SPLASH + 80) this.damageBoss(dmg);
+    }
   }
 
   private killBoss(): void {
@@ -328,6 +402,7 @@ export class Game {
     const s = this.state;
     s.lives -= 1;
     s.player.invuln = INVULN_TIME;
+    s.special = null; // perde a arma especial ao levar dano (estilo Metal Slug)
     resetCombo(s);
     s.shake = Math.max(s.shake, 12);
     capiSfx.hit();

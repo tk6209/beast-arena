@@ -1,4 +1,6 @@
 import {
+  CRATE_MIN_GAP,
+  CRATE_RND_GAP,
   GROUND_Y,
   HAZARD_MIN_GAP,
   HAZARD_RND_GAP,
@@ -36,6 +38,7 @@ export function createInitialState(): GameState {
     enemyBullets: [],
     hazards: [],
     pickups: [],
+    crates: [],
     particles: [],
     boss: null,
     lastBossWave: 0,
@@ -46,6 +49,8 @@ export function createInitialState(): GameState {
     fireCooldown: 0,
     pickupTimer: PICKUP_MIN_GAP + Math.random() * PICKUP_RND_GAP,
     hazardTimer: HAZARD_MIN_GAP + Math.random() * HAZARD_RND_GAP,
+    crateTimer: CRATE_MIN_GAP + Math.random() * CRATE_RND_GAP,
+    special: null,
     spawner: createSpawner(),
     highscore: loadHighscore(),
   };

@@ -17,12 +17,22 @@ export const JUMP_V = -940;
 export const RUN_SPEED = 320; // avanço do mundo
 export const FIXED_DT = 1 / 60;
 
-// Tiro automático do jogador.
+// Tiro automático do jogador (cadência base; cada arma sobrescreve).
 export const BULLET_SPEED = 820;
 export const BULLET_W = 20;
 export const BULLET_H = 6;
 export const FIRE_INTERVAL = 0.34;
 export const MUZZLE_TIME = 0.07;
+
+// ── Sistema de armas (estilo Metal Slug) ──
+// Tier permanente sobe com a pontuação (jornada). Caixas dão arma especial
+// temporária (munição) por cima, perdida ao levar dano.
+export const WEAPON_TIER_SCORE = [0, 2500, 7000]; // limiares: pistola, metralhadora, rifle pesado
+export const ROCKET_SPLASH = 86; // raio da explosão da bazuca
+export const CRATE_W = 38;
+export const CRATE_H = 34;
+export const CRATE_MIN_GAP = 9;
+export const CRATE_RND_GAP = 7;
 
 // Inimigos a pé (walker).
 export const ENEMY_W = 50;
@@ -88,17 +98,24 @@ export const COLORS = {
   groundTop: "#6b5536",
   groundBot: "#3d3020",
   groundLine: "#8a6e44",
-  // Capivara soldado.
-  fur: "#b9763f",
-  furDark: "#9a5e2e",
-  furLight: "#cf8c54",
-  helmet: "#5a6b3f",
-  helmetDark: "#46532f",
-  vest: "#4a5a36",
-  vestDark: "#36421f",
+  // Capivara — paleta CANÔNICA do Character OS (capy_base_360.json).
+  fur: "#C97A3A",
+  furDark: "#8E4F23",
+  furLight: "#E3A267",
+  muzzleWarm: "#D89A78",
+  nosePaws: "#3E2A1F",
+  // CapiRocket — colete tático de couro + cinto de munição.
+  vest: "#6e4a2c",
+  vestDark: "#4a3016",
+  strap: "#5a3c20",
+  ammo: "#d9b24a",
   gunMetal: "#3a3f47",
   gunDark: "#23262c",
+  rocketTip: "#e23b2e",
   muzzle: "#ffe9a3",
+  // Caixa de arma.
+  crate: "#7a5a2e",
+  crateLid: "#a07a3c",
   // Inimigos.
   enemy: "#7bdc8b",
   enemyDark: "#4fae62",

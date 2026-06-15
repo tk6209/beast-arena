@@ -23,6 +23,11 @@ export default function Hud({ snap }: { snap: HudSnapshot }) {
           </span>
         </div>
       </div>
+
+      <div className="capy-hud__weapon">
+        🔫 {snap.weapon}
+        {snap.ammo > 0 && <span className="capy-hud__ammo"> ×{snap.ammo}</span>}
+      </div>
     </div>
   );
 }
