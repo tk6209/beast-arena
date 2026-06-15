@@ -6,6 +6,8 @@ import {
   BULLET_H,
   BULLET_SPEED,
   BULLET_W,
+  CRATE_H,
+  CRATE_W,
   EBULLET_H,
   EBULLET_SPEED,
   EBULLET_W,
@@ -29,10 +31,28 @@ import {
   TANK_SPEED,
   TANK_W,
 } from "./constants";
-import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup } from "./types";
+import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup, WeaponCrate } from "./types";
 
-export function makeBullet(x: number, y: number): Bullet {
-  return { x, y, w: BULLET_W, h: BULLET_H, vx: BULLET_SPEED, life: 2 };
+export function makeBullet(
+  x: number,
+  y: number,
+  opts?: { vx?: number; vy?: number; damage?: number; kind?: "normal" | "rocket"; w?: number; h?: number },
+): Bullet {
+  return {
+    x,
+    y,
+    w: opts?.w ?? BULLET_W,
+    h: opts?.h ?? BULLET_H,
+    vx: opts?.vx ?? BULLET_SPEED,
+    vy: opts?.vy ?? 0,
+    life: 2,
+    damage: opts?.damage ?? 1,
+    kind: opts?.kind ?? "normal",
+  };
+}
+
+export function makeWeaponCrate(x: number, weapon: "shotgun" | "bazooka", ammo: number): WeaponCrate {
+  return { x, y: GROUND_Y - CRATE_H, w: CRATE_W, h: CRATE_H, weapon, ammo, taken: false };
 }
 
 export function makeWalker(x: number): Enemy {

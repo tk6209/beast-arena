@@ -95,6 +95,29 @@ body {
   text-shadow: 0 2px 0 #000;
 }
 
+/* Indicador de arma ativa */
+.capy-hud__weapon {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  font-family: "Oswald", sans-serif;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: #fff;
+  background: rgba(12, 16, 26, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 3px 12px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+
+.capy-hud__ammo {
+  color: #ffd166;
+  font-weight: 700;
+}
+
 /* ── Overlay de fim de jogo ── */
 .capy-overlay {
   position: absolute;

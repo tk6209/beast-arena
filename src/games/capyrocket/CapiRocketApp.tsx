@@ -13,6 +13,8 @@ const INITIAL_SNAP: HudSnapshot = {
   phase: "playing",
   highscore: 0,
   bossHp: 0,
+  weapon: "Pistola",
+  ammo: 0,
 };
 
 export default function CapiRocketApp() {

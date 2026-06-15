@@ -30,7 +30,17 @@ export interface Enemy extends Rect {
 
 export interface Bullet extends Rect {
   vx: number;
+  vy: number;
   life: number; // segundos restantes
+  damage: number;
+  kind: "normal" | "rocket";
+}
+
+// Caixa de arma — coletada correndo; concede uma arma especial temporária.
+export interface WeaponCrate extends Rect {
+  weapon: "shotgun" | "bazooka";
+  ammo: number;
+  taken: boolean;
 }
 
 // Projétil inimigo — viaja para a esquerda na altura do tronco; desvia-se pulando.
@@ -88,6 +98,7 @@ export interface GameState {
   enemyBullets: EnemyBullet[];
   hazards: Hazard[];
   pickups: Pickup[];
+  crates: WeaponCrate[];
   particles: Particle[];
   boss: Boss | null;
   lastBossWave: number;
@@ -98,6 +109,8 @@ export interface GameState {
   fireCooldown: number;
   pickupTimer: number;
   hazardTimer: number;
+  crateTimer: number;
+  special: { id: "shotgun" | "bazooka"; ammo: number } | null;
   spawner: SpawnerState;
   highscore: number;
 }
@@ -113,6 +126,8 @@ export interface HudSnapshot {
   phase: Phase;
   highscore: number;
   bossHp: number; // 0..1 (0 = sem chefe)
+  weapon: string; // nome da arma ativa
+  ammo: number; // munição da arma especial (0 = arma base)
 }
 
 export type SpawnCommand = { type: "enemy" };
