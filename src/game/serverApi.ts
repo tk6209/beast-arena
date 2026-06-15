@@ -39,18 +39,7 @@ export async function initGame(
 
 /** Save a card earned in battle to user collection */
 export async function saveCardDrop(userId: string, card: any): Promise<void> {
-  const { supabase } = await import("@/integrations/supabase/client");
-  const cardKey = `${card.nome}_${card.tipo}`.toLowerCase().replace(/\s/g, "_");
-  await supabase.from("user_cards").upsert({
-    user_id: userId,
-    card_key: cardKey,
-    card_data: card,
-    raridade: card.raridade || "comum",
-    quantity: 1,
-  }, {
-    onConflict: "user_id,card_key",
-    ignoreDuplicates: false,
-  });
+  return callEngine("save_card_drop", null, { userId, card });
 }
 
 /** Load player deck for a monster */

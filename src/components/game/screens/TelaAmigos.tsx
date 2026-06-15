@@ -3,6 +3,7 @@ import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { supabase } from "@/integrations/supabase/client";
+import { acceptFriendRequest } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -139,15 +140,14 @@ export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
   }
 
   async function acceptRequest(requestId: string, senderId: string) {
-    // Update request status
-    await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", requestId);
-
-    // Create friendship (canonical order)
-    const [a, b] = [user.id, senderId].sort();
-    await supabase.from("friendships").insert({ user_a: a, user_b: b });
-
-    loadRequests();
-    loadFriends();
+    try {
+      await acceptFriendRequest({ requestId, senderId });
+    } catch (_error) {
+      setMsg("Erro ao aceitar amizade.");
+      setTimeout(() => setMsg(""), 3000);
+      return;
+    }
+    await Promise.all([loadRequests(), loadFriends()]);
     setMsg("Amizade aceita! 🤝");
     setTimeout(() => setMsg(""), 3000);
   }
