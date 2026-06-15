@@ -12,6 +12,7 @@ const INITIAL_SNAP: HudSnapshot = {
   wave: 1,
   phase: "playing",
   highscore: 0,
+  bossHp: 0,
 };
 
 export default function CapiRocketApp() {

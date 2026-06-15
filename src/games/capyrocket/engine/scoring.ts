@@ -3,6 +3,7 @@ import type { GameState } from "./types";
 
 export const SCORE_KILL_BASE = 50;
 export const SCORE_PICKUP = 120;
+export const SCORE_BOSS = 2000;
 export const DIST_RATE = 12; // pontos por segundo correndo
 export const COMBO_CAP = 5;
 
@@ -25,6 +26,11 @@ export function registerKill(state: GameState): void {
 /** Coleta de estrela. */
 export function registerPickup(state: GameState): void {
   state.score += SCORE_PICKUP;
+}
+
+/** Bônus por derrotar o chefe. */
+export function registerBossKill(state: GameState): void {
+  state.score += SCORE_BOSS;
 }
 
 /** Combo zera ao levar dano. */
