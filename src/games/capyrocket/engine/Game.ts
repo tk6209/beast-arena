@@ -31,6 +31,7 @@ import {
   makeWeaponCrate,
 } from "./entities";
 import { CRATE_WEAPONS, activeWeapon } from "./weapons";
+import { bossForWave, getCharacter, type CharacterConfig } from "./characters";
 import { InputManager } from "./input";
 import { spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
@@ -55,8 +56,14 @@ type HudListener = (snap: HudSnapshot) => void;
  * Vive fora do React — o React só monta o canvas e lê o snapshot do HUD.
  */
 export class Game {
-  private state: GameState = createInitialState();
+  private character: CharacterConfig;
+  private state: GameState;
   private input = new InputManager();
+
+  constructor(characterId?: string) {
+    this.character = getCharacter(characterId ?? "peao");
+    this.state = createInitialState(this.character);
+  }
 
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -104,8 +111,14 @@ export class Game {
   }
 
   restart(): void {
-    resetState(this.state);
+    resetState(this.state, this.character);
     this.notify(true);
+  }
+
+  /** Troca o personagem ativo e recomeça (usado pela tela de seleção). */
+  setCharacter(characterId: string): void {
+    this.character = getCharacter(characterId);
+    this.restart();
   }
 
   /* ── HUD ── */
@@ -125,8 +138,10 @@ export class Game {
       phase: s.phase,
       highscore: s.highscore,
       bossHp: s.boss ? s.boss.hp / s.boss.maxHp : 0,
+      bossName: s.boss ? s.boss.name : "",
       weapon: activeWeapon(s).name,
       ammo: s.special ? s.special.ammo : 0,
+      charName: s.charName,
     };
   }
 
@@ -143,6 +158,8 @@ export class Game {
       prev.highscore !== snap.highscore ||
       prev.weapon !== snap.weapon ||
       prev.ammo !== snap.ammo ||
+      prev.bossName !== snap.bossName ||
+      prev.charName !== snap.charName ||
       Math.abs(prev.bossHp - snap.bossHp) > 0.01;
     if (changed) {
       this.lastSnap = snap;
@@ -179,9 +196,20 @@ export class Game {
     // Chefe a cada BOSS_WAVE ondas (uma vez por marco). Pausa spawns normais.
     if (!bossActive && s.spawner.wave % BOSS_WAVE === 0 && s.spawner.wave !== s.lastBossWave) {
       s.lastBossWave = s.spawner.wave;
-      s.boss = makeBoss(s.player.x + VIRT_W + 80);
+      s.boss = makeBoss(s.player.x + VIRT_W + 80, bossForWave(s.spawner.wave));
       s.enemies = [];
       s.hazards = [];
+    }
+
+    // Regeneração do Capi Curandeiro.
+    if (s.healEvery > 0 && s.lives < s.maxLives) {
+      s.healTimer -= dt;
+      if (s.healTimer <= 0) {
+        s.healTimer = s.healEvery;
+        s.lives += 1;
+        spawnSparkle(s, s.player.x + s.player.w / 2, s.player.y);
+        capiSfx.pickup();
+      }
     }
 
     if (bossActive) {
@@ -264,29 +292,37 @@ export class Game {
     const s = this.state;
     const playerRect = { x: s.player.x, y: s.player.y, w: s.player.w, h: s.player.h };
 
-    // Balas do jogador vs inimigos e chefe (foguete = explosão em área).
+    // Balas do jogador vs inimigos e chefe.
     for (const b of s.bullets) {
       if (b.life <= 0) continue;
-      let hitSomething = false;
+
+      // Foguete: explode em área no 1º contato.
+      if (b.kind === "rocket") {
+        let hit = false;
+        for (const e of s.enemies) {
+          if (!e.dead && aabbOverlap(b, e)) { hit = true; break; }
+        }
+        if (!hit && s.boss && !s.boss.entering && aabbOverlap(b, s.boss)) hit = true;
+        if (hit) {
+          b.life = 0;
+          this.explodeRocket(b.x + b.w / 2, b.y + b.h / 2, b.damage);
+        }
+        continue;
+      }
+
+      // Normal/perfurante: atravessa até `pierce` inimigos antes de sumir.
       for (const e of s.enemies) {
         if (e.dead) continue;
-        if (aabbOverlap(b, e)) { hitSomething = true; break; }
-      }
-      const hitBoss = s.boss && !s.boss.entering && aabbOverlap(b, s.boss);
-      if (!hitSomething && !hitBoss) continue;
-
-      b.life = 0;
-      if (b.kind === "rocket") {
-        this.explodeRocket(b.x + b.w / 2, b.y + b.h / 2, b.damage);
-      } else {
-        if (hitBoss) {
-          this.damageBoss(b.damage);
-        } else {
-          for (const e of s.enemies) {
-            if (e.dead) continue;
-            if (aabbOverlap(b, e)) { this.damageEnemy(e, b.damage); break; }
-          }
+        if (aabbOverlap(b, e)) {
+          this.damageEnemy(e, b.damage);
+          if (b.pierce > 0) b.pierce -= 1;
+          else { b.life = 0; break; }
         }
+      }
+      if (b.life > 0 && s.boss && !s.boss.entering && aabbOverlap(b, s.boss)) {
+        this.damageBoss(b.damage);
+        if (b.pierce > 0) b.pierce -= 1;
+        else b.life = 0;
       }
     }
 
@@ -400,6 +436,12 @@ export class Game {
 
   private damagePlayer(): void {
     const s = this.state;
+    // Esquiva: chance de ignorar o golpe (com um respiro de invulnerabilidade).
+    if (s.dodge > 0 && Math.random() < s.dodge) {
+      s.player.invuln = INVULN_TIME * 0.5;
+      spawnSparkle(s, s.player.x + s.player.w / 2, s.player.y + s.player.h / 2);
+      return;
+    }
     s.lives -= 1;
     s.player.invuln = INVULN_TIME;
     s.special = null; // perde a arma especial ao levar dano (estilo Metal Slug)

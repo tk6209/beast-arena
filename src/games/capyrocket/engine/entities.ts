@@ -36,7 +36,15 @@ import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup, Weapon
 export function makeBullet(
   x: number,
   y: number,
-  opts?: { vx?: number; vy?: number; damage?: number; kind?: "normal" | "rocket"; w?: number; h?: number },
+  opts?: {
+    vx?: number;
+    vy?: number;
+    damage?: number;
+    kind?: "normal" | "rocket";
+    w?: number;
+    h?: number;
+    pierce?: number;
+  },
 ): Bullet {
   return {
     x,
@@ -48,6 +56,7 @@ export function makeBullet(
     life: 2,
     damage: opts?.damage ?? 1,
     kind: opts?.kind ?? "normal",
+    pierce: opts?.pierce ?? 0,
   };
 }
 
@@ -111,7 +120,7 @@ export function makeHazard(x: number): Hazard {
   return { x, y: GROUND_Y - HAZARD_H, w: HAZARD_W, h: HAZARD_H, kind: "mina" };
 }
 
-export function makeBoss(x: number): Boss {
+export function makeBoss(x: number, def: { name: string; body: string; accent: string }): Boss {
   return {
     x,
     y: GROUND_Y - BOSS_H,
@@ -122,6 +131,9 @@ export function makeBoss(x: number): Boss {
     fireCooldown: BOSS_FIRE_INTERVAL,
     entering: true,
     phase: 0,
+    name: def.name,
+    body: def.body,
+    accent: def.accent,
   };
 }
 

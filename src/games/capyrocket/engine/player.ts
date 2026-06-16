@@ -11,9 +11,10 @@ import type { GameState, InputState } from "./types";
 export function updatePlayer(state: GameState, dt: number, input: InputState): void {
   const p = state.player;
 
-  if (input.jumpQueued && p.onGround) {
+  if (input.jumpQueued && p.jumpsUsed < p.maxJumps) {
     p.vy = JUMP_V;
     p.onGround = false;
+    p.jumpsUsed += 1;
     capiSfx.jump();
     hapticLight();
   }
@@ -22,6 +23,7 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   applyGravity(p, dt);
   integrateY(p, dt);
   groundClamp(p);
+  if (p.onGround) p.jumpsUsed = 0;
 
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);

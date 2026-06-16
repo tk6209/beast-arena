@@ -199,6 +199,125 @@ body {
   color: rgba(232, 238, 252, 0.6);
 }
 
+.capy-overlay__btn--ghost {
+  font-size: 18px;
+  padding: 10px 24px;
+  color: #fff;
+  background: linear-gradient(180deg, #3a4661 0%, #283044 100%);
+  box-shadow: 0 5px 0 #161c28, 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.capy-overlay__btn--ghost:active {
+  box-shadow: 0 2px 0 #161c28, 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Tela de seleção de personagem (CAPI WARS) ── */
+.capy-select {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 18%, rgba(30, 38, 60, 0.96) 0%, rgba(8, 10, 18, 0.98) 72%);
+  color: #fff;
+  animation: capyFade 0.25s ease;
+}
+
+.capy-select__head {
+  text-align: center;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.capy-select__title {
+  font-family: "Black Han Sans", "Bangers", sans-serif;
+  font-size: clamp(34px, 8vw, 60px);
+  line-height: 1;
+  color: #ffcf4a;
+  text-shadow: 0 4px 0 #000, 0 0 24px rgba(255, 207, 74, 0.5);
+  letter-spacing: 2px;
+}
+
+.capy-select__sub {
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(13px, 3vw, 18px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #9fb4d6;
+  margin-top: 4px;
+}
+
+.capy-select__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 820px;
+}
+
+.capy-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 12px 10px;
+  border: 2px solid #3f7bd6;
+  border-radius: 14px;
+  background: rgba(14, 19, 32, 0.7);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.1s ease;
+  touch-action: manipulation;
+}
+
+.capy-card:active {
+  transform: scale(0.96);
+  background: rgba(30, 40, 64, 0.9);
+}
+
+.capy-card__emoji {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border-radius: 50%;
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.capy-card__name {
+  font-family: "Black Han Sans", "Bangers", sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  color: #ffe08a;
+}
+
+.capy-card__role {
+  font-family: "Oswald", sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9fb4d6;
+}
+
+.capy-card__ability {
+  font-size: 12px;
+  line-height: 1.25;
+  color: rgba(232, 238, 252, 0.85);
+}
+
+.capy-select__hint {
+  margin-top: 14px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: rgba(232, 238, 252, 0.6);
+}
+
 /* ── Dica de toque inicial ── */
 .capy-start-hint {
   position: absolute;

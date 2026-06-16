@@ -1,8 +1,8 @@
 import { cameraX } from "./camera";
-import { drawCapiRocket } from "./capySprite";
+import { drawCapy } from "./capySprite";
+import { getCharacter } from "./characters";
 import { COLORS, GROUND_Y, VIRT_H, VIRT_W } from "./constants";
 import { capsule, drawStarAt, rrPath } from "./primitives";
-import { activeWeapon } from "./weapons";
 import type { Boss, Enemy, GameState } from "./types";
 
 /**
@@ -21,7 +21,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawCrates(ctx, state, camX);
   drawEnemies(ctx, state, camX);
   if (state.boss) drawBoss(ctx, state.boss, camX);
-  drawCapiRocket(ctx, state.player, activeWeapon(state).id);
+  drawCapy(ctx, state.player, getCharacter(state.charId), state.special ? state.special.id : null);
   drawBullets(ctx, state, camX);
   drawEnemyBullets(ctx, state, camX);
   drawParticles(ctx, state, camX);
@@ -214,7 +214,7 @@ function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, camX: number): void
   }
 
   const g = ctx.createLinearGradient(0, y, 0, y + boss.h);
-  g.addColorStop(0, COLORS.boss);
+  g.addColorStop(0, boss.body);
   g.addColorStop(1, COLORS.bossDark);
   rrPath(ctx, x + 10, y + 20, boss.w - 20, boss.h - 46, 16);
   ctx.fillStyle = g;
@@ -226,9 +226,9 @@ function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, camX: number): void
 
   const pulse = 0.6 + Math.abs(Math.sin(boss.phase * 3)) * 0.4;
   ctx.save();
-  ctx.shadowColor = COLORS.bossAccent;
+  ctx.shadowColor = boss.accent;
   ctx.shadowBlur = 22 * pulse;
-  ctx.fillStyle = COLORS.bossAccent;
+  ctx.fillStyle = boss.accent;
   ctx.beginPath();
   ctx.arc(x + boss.w * 0.42, y + boss.h * 0.42, 16, 0, Math.PI * 2);
   ctx.fill();
@@ -239,6 +239,14 @@ function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, camX: number): void
   ctx.fill();
   rrPath(ctx, x - 30, y + boss.h * 0.4 + 22, 44, 12, 4);
   ctx.fill();
+
+  // Nome do chefe acima da barra de vida.
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 13px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(boss.name.toUpperCase(), x + boss.w / 2, y - 22);
+  ctx.textAlign = "left";
 
   drawHpBar(ctx, x + 10, y - 16, boss.w - 20, boss.hp / boss.maxHp, true);
 }

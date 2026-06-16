@@ -12,14 +12,15 @@ export interface WeaponStats {
   spread: number; // dispersão vertical (px/s) dos projéteis
   kind: "normal" | "rocket";
   bulletSpeed: number;
+  pierce: number; // nº de inimigos que a bala atravessa (0 = para no 1º)
 }
 
 export const WEAPONS: Record<WeaponId, WeaponStats> = {
-  pistol: { id: "pistol", name: "Pistola", fireInterval: 0.34, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 820 },
-  mg: { id: "mg", name: "Metralhadora", fireInterval: 0.16, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 920 },
-  rifle: { id: "rifle", name: "Rifle Pesado", fireInterval: 0.15, damage: 2, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 1000 },
-  shotgun: { id: "shotgun", name: "Escopeta", fireInterval: 0.44, damage: 1, pellets: 3, spread: 150, kind: "normal", bulletSpeed: 760 },
-  bazooka: { id: "bazooka", name: "Bazuca", fireInterval: 0.72, damage: 6, pellets: 1, spread: 0, kind: "rocket", bulletSpeed: 560 },
+  pistol: { id: "pistol", name: "Pistola", fireInterval: 0.34, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 820, pierce: 0 },
+  mg: { id: "mg", name: "Metralhadora", fireInterval: 0.16, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 920, pierce: 0 },
+  rifle: { id: "rifle", name: "Rifle Pesado", fireInterval: 0.15, damage: 2, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 1000, pierce: 0 },
+  shotgun: { id: "shotgun", name: "Escopeta", fireInterval: 0.44, damage: 1, pellets: 3, spread: 150, kind: "normal", bulletSpeed: 760, pierce: 0 },
+  bazooka: { id: "bazooka", name: "Bazuca", fireInterval: 0.72, damage: 6, pellets: 1, spread: 0, kind: "rocket", bulletSpeed: 560, pierce: 0 },
 };
 
 // Tier permanente da jornada (sobe com a pontuação, nunca cai durante a run).
@@ -43,8 +44,17 @@ export function baseWeaponForScore(score: number): WeaponId {
   return BASE_TIERS[tierForScore(score)];
 }
 
-/** Arma ativa = especial (se tiver munição) sobrepõe o tier base da jornada. */
+/**
+ * Arma ativa: arma especial da caixa (se com munição) sobrepõe a arma-assinatura
+ * do personagem. Por cima, a "jornada" escala a arma com a pontuação — cadência
+ * um pouco melhor e +1 de dano no tier máximo (progressão para qualquer herói).
+ */
 export function activeWeapon(state: GameState): WeaponStats {
-  if (state.special && state.special.ammo > 0) return WEAPONS[state.special.id];
-  return WEAPONS[baseWeaponForScore(state.score)];
+  const base = state.special && state.special.ammo > 0 ? WEAPONS[state.special.id] : state.charWeapon;
+  const t = tierForScore(state.score);
+  return {
+    ...base,
+    fireInterval: base.fireInterval * (1 - 0.06 * t),
+    damage: base.damage + (t >= 2 ? 1 : 0),
+  };
 }

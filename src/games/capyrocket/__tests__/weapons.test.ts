@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { WEAPON_TIER_SCORE } from "../engine/constants";
-import { activeWeapon, baseWeaponForScore, tierForScore } from "../engine/weapons";
+import { WEAPONS, activeWeapon, baseWeaponForScore, tierForScore } from "../engine/weapons";
 import type { GameState } from "../engine/types";
 
 function fakeState(score: number, special: GameState["special"] = null): GameState {
-  return { score, special } as unknown as GameState;
+  return { score, special, charWeapon: WEAPONS.pistol } as unknown as GameState;
 }
 
 describe("armas", () => {
@@ -24,13 +24,19 @@ describe("armas", () => {
     }
   });
 
-  it("arma especial com munição sobrepõe o tier base", () => {
-    const s = fakeState(999999, { id: "bazooka", ammo: 3 });
+  it("arma especial com munição sobrepõe a arma-assinatura", () => {
+    const s = fakeState(0, { id: "bazooka", ammo: 3 });
     expect(activeWeapon(s).id).toBe("bazooka");
   });
 
-  it("sem munição, volta para a arma base da jornada", () => {
+  it("sem munição, usa a arma-assinatura do personagem", () => {
     const s = fakeState(0, { id: "shotgun", ammo: 0 });
     expect(activeWeapon(s).id).toBe("pistol");
+  });
+
+  it("a jornada melhora a cadência da arma ativa", () => {
+    const early = activeWeapon(fakeState(0));
+    const late = activeWeapon(fakeState(999999));
+    expect(late.fireInterval).toBeLessThan(early.fireInterval);
   });
 });

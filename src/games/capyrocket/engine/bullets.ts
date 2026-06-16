@@ -28,6 +28,7 @@ export function updateBullets(state: GameState, dt: number): void {
           vy,
           damage: w.damage,
           kind: w.kind,
+          pierce: w.pierce,
           w: w.kind === "rocket" ? 26 : undefined,
           h: w.kind === "rocket" ? 12 : undefined,
         }),

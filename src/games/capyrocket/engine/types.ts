@@ -1,6 +1,8 @@
 // Modelo de dados da engine — estrutura plana (sem hierarquia de classes) para
 // manter a lógica pura e testável.
 
+import type { WeaponStats } from "./weapons";
+
 export interface Rect {
   x: number;
   y: number;
@@ -14,6 +16,8 @@ export interface Player extends Rect {
   invuln: number; // segundos restantes de invulnerabilidade
   animPhase: number; // acumulador pra ciclo de corrida
   muzzle: number; // timer do flash do cano
+  jumpsUsed: number;
+  maxJumps: number; // 2 = pulo duplo (CapiNinja/Mágico etc.)
 }
 
 export type EnemyKind = "walker" | "shooter" | "tank";
@@ -34,6 +38,7 @@ export interface Bullet extends Rect {
   life: number; // segundos restantes
   damage: number;
   kind: "normal" | "rocket";
+  pierce: number; // inimigos restantes que ainda pode atravessar
 }
 
 // Caixa de arma — coletada correndo; concede uma arma especial temporária.
@@ -60,6 +65,9 @@ export interface Boss extends Rect {
   fireCooldown: number;
   entering: boolean;
   phase: number; // acumulador de animação
+  name: string;
+  body: string; // cor do corpo
+  accent: string; // cor de realce
 }
 
 export interface Pickup extends Rect {
@@ -111,6 +119,14 @@ export interface GameState {
   hazardTimer: number;
   crateTimer: number;
   special: { id: "shotgun" | "bazooka"; ammo: number } | null;
+  // Personagem selecionado.
+  charId: string;
+  charName: string;
+  charWeapon: WeaponStats;
+  dodge: number; // chance de ignorar dano
+  healEvery: number; // seg p/ recuperar vida (0 = não)
+  healTimer: number;
+  maxLives: number;
   spawner: SpawnerState;
   highscore: number;
 }
@@ -126,8 +142,10 @@ export interface HudSnapshot {
   phase: Phase;
   highscore: number;
   bossHp: number; // 0..1 (0 = sem chefe)
+  bossName: string; // nome do chefe ativo
   weapon: string; // nome da arma ativa
   ammo: number; // munição da arma especial (0 = arma base)
+  charName: string; // personagem em jogo
 }
 
 export type SpawnCommand = { type: "enemy" };
