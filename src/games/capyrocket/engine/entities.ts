@@ -31,6 +31,7 @@ import {
   TANK_SPEED,
   TANK_W,
 } from "./constants";
+import type { BossDef } from "./characters";
 import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup, WeaponCrate } from "./types";
 
 export function makeBullet(
@@ -120,7 +121,7 @@ export function makeHazard(x: number): Hazard {
   return { x, y: GROUND_Y - HAZARD_H, w: HAZARD_W, h: HAZARD_H, kind: "mina" };
 }
 
-export function makeBoss(x: number, def: { name: string; body: string; accent: string }): Boss {
+export function makeBoss(x: number, def: BossDef): Boss {
   return {
     x,
     y: GROUND_Y - BOSS_H,
@@ -134,6 +135,7 @@ export function makeBoss(x: number, def: { name: string; body: string; accent: s
     name: def.name,
     body: def.body,
     accent: def.accent,
+    kind: def.kind,
   };
 }
 

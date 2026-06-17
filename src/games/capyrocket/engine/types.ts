@@ -1,6 +1,7 @@
 // Modelo de dados da engine — estrutura plana (sem hierarquia de classes) para
 // manter a lógica pura e testável.
 
+import type { BossKind } from "./characters";
 import type { WeaponStats } from "./weapons";
 
 export interface Rect {
@@ -68,6 +69,7 @@ export interface Boss extends Rect {
   name: string;
   body: string; // cor do corpo
   accent: string; // cor de realce
+  kind: BossKind; // silhueta/adereços do chefe
 }
 
 export interface Pickup extends Rect {

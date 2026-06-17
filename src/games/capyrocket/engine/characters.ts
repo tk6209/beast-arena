@@ -155,21 +155,24 @@ export function getCharacter(id: string): CharacterConfig {
 }
 
 // Roster de chefes (CAPI WARS) — alternam por marco de onda.
+export type BossKind = "chief" | "general" | "maga" | "pirate" | "dragon" | "emperor" | "hydro";
+
 export interface BossDef {
   name: string;
   title: string;
   body: string;
   accent: string;
+  kind: BossKind;
 }
 
 export const BOSSES: BossDef[] = [
-  { name: "Chief Capivara", title: "Líder Tribal", body: "#8E5A2E", accent: "#d64a3a" },
-  { name: "General Capigrão", title: "Comandante de Guerra", body: "#9a7b3e", accent: "#caa24a" },
-  { name: "Maga Capira", title: "Mestra das Sombras", body: "#4a3a6b", accent: "#a25cff" },
-  { name: "Capitão Corpivara", title: "Pirata dos Rios", body: "#7a3a3a", accent: "#e0563a" },
-  { name: "Capi Dragão", title: "Fúria Incandescente", body: "#8a2f2f", accent: "#ff7a2a" },
-  { name: "Imperador Capibaron", title: "Soberano do Reino", body: "#8a6a3a", accent: "#ffcf4a" },
-  { name: "Hydro Capi", title: "Senhor das Águas", body: "#2f6a8a", accent: "#4ad6ff" },
+  { name: "Chief Capivara", title: "Líder Tribal", body: "#8E5A2E", accent: "#d64a3a", kind: "chief" },
+  { name: "General Capigrão", title: "Comandante de Guerra", body: "#9a7b3e", accent: "#caa24a", kind: "general" },
+  { name: "Maga Capira", title: "Mestra das Sombras", body: "#4a3a6b", accent: "#a25cff", kind: "maga" },
+  { name: "Capitão Corpivara", title: "Pirata dos Rios", body: "#7a3a3a", accent: "#e0563a", kind: "pirate" },
+  { name: "Capi Dragão", title: "Fúria Incandescente", body: "#8a2f2f", accent: "#ff7a2a", kind: "dragon" },
+  { name: "Imperador Capibaron", title: "Soberano do Reino", body: "#8a6a3a", accent: "#ffcf4a", kind: "emperor" },
+  { name: "Hydro Capi", title: "Senhor das Águas", body: "#2f6a8a", accent: "#4ad6ff", kind: "hydro" },
 ];
 
 export function bossForWave(wave: number): BossDef {

@@ -202,53 +202,312 @@ function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
 function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, camX: number): void {
   const x = boss.x - camX;
   const y = boss.y;
+  const w = boss.w;
+  const h = boss.h;
+  const cx = x + w * 0.5;
+  const feetY = y + h;
 
-  ctx.fillStyle = COLORS.bossDark;
-  rrPath(ctx, x, y + boss.h - 30, boss.w, 30, 10);
+  // Sombra.
+  ctx.fillStyle = "rgba(0,0,0,0.30)";
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY - 4, w * 0.44, 13, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#23262c";
-  for (let wx = x + 16; wx < x + boss.w - 10; wx += 26) {
-    ctx.beginPath();
-    ctx.arc(wx, y + boss.h - 15, 9, 0, Math.PI * 2);
-    ctx.fill();
-  }
 
-  const g = ctx.createLinearGradient(0, y, 0, y + boss.h);
-  g.addColorStop(0, boss.body);
-  g.addColorStop(1, COLORS.bossDark);
-  rrPath(ctx, x + 10, y + 20, boss.w - 20, boss.h - 46, 16);
+  const bob = Math.sin(boss.phase * 2) * 4;
+  ctx.save();
+  ctx.translate(0, bob);
+
+  const fur = boss.body;
+  const furDark = shadeHex(fur, -0.28);
+  const furLight = shadeHex(fur, 0.22);
+
+  // ── Corpo "barril" ──
+  const bodyTop = y + 58;
+  const g = ctx.createLinearGradient(0, bodyTop, 0, feetY);
+  g.addColorStop(0, furLight);
+  g.addColorStop(1, furDark);
+  rrPath(ctx, x + 24, bodyTop, w - 48, feetY - bodyTop, 30);
   ctx.fillStyle = g;
   ctx.fill();
+  // barriga clara
+  rrPath(ctx, x + 62, bodyTop + 16, w - 124, h - 100, 24);
+  ctx.fillStyle = furLight;
+  ctx.globalAlpha = 0.4;
+  ctx.fill();
+  ctx.globalAlpha = 1;
 
-  ctx.fillStyle = COLORS.bossDark;
-  rrPath(ctx, x + 24, y + 34, boss.w - 48, 18, 6);
+  // ── Braço da frente (em direção ao jogador) ──
+  ctx.fillStyle = furDark;
+  rrPath(ctx, x + 8, bodyTop + 18, 36, 62, 16);
+  ctx.fill();
+  ctx.fillStyle = COLORS.nosePaws;
+  ctx.beginPath();
+  ctx.ellipse(x + 26, bodyTop + 80, 13, 9, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // ── Cabeça grande (virada à esquerda) ──
+  const hx = x + 90;
+  const hy = y + 44;
+  rrPath(ctx, hx - 50, hy - 46, 100, 92, 34);
+  ctx.fillStyle = fur;
+  ctx.fill();
+  // orelha
+  ctx.fillStyle = furDark;
+  ctx.beginPath();
+  ctx.ellipse(hx + 28, hy - 38, 12, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // focinho à esquerda
+  rrPath(ctx, hx - 60, hy + 2, 48, 42, 18);
+  ctx.fillStyle = furLight;
+  ctx.fill();
+  // nariz
+  rrPath(ctx, hx - 60, hy + 8, 17, 15, 5);
+  ctx.fillStyle = COLORS.nosePaws;
+  ctx.fill();
+
+  // ── Olhos brilhantes (ameaçadores) ──
   const pulse = 0.6 + Math.abs(Math.sin(boss.phase * 3)) * 0.4;
   ctx.save();
   ctx.shadowColor = boss.accent;
-  ctx.shadowBlur = 22 * pulse;
+  ctx.shadowBlur = 16 * pulse;
   ctx.fillStyle = boss.accent;
+  for (const ex of [hx - 22, hx + 2]) {
+    ctx.beginPath();
+    ctx.ellipse(ex, hy - 4, 7, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.fillStyle = "#fff";
+  for (const ex of [hx - 22, hx + 2]) {
+    ctx.beginPath();
+    ctx.arc(ex + 2, hy - 7, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // sobrancelhas franzidas
+  ctx.strokeStyle = furDark;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.arc(x + boss.w * 0.42, y + boss.h * 0.42, 16, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(hx - 30, hy - 16);
+  ctx.lineTo(hx - 16, hy - 10);
+  ctx.moveTo(hx - 6, hy - 10);
+  ctx.lineTo(hx + 10, hy - 16);
+  ctx.stroke();
+
+  // ── Adereço único do chefe ──
+  drawBossCrown(ctx, boss.kind, hx, hy, boss.accent, boss.phase);
+
   ctx.restore();
 
-  ctx.fillStyle = COLORS.gunDark;
-  rrPath(ctx, x - 30, y + boss.h * 0.4, 44, 12, 4);
-  ctx.fill();
-  rrPath(ctx, x - 30, y + boss.h * 0.4 + 22, 44, 12, 4);
-  ctx.fill();
-
-  // Nome do chefe acima da barra de vida.
+  // ── Nome + barra de vida (sem bob) ──
   ctx.fillStyle = "#fff";
   ctx.font = "bold 13px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(boss.name.toUpperCase(), x + boss.w / 2, y - 22);
+  ctx.fillText(boss.name.toUpperCase(), cx, y - 22);
   ctx.textAlign = "left";
 
-  drawHpBar(ctx, x + 10, y - 16, boss.w - 20, boss.hp / boss.maxHp, true);
+  drawHpBar(ctx, x + 10, y - 16, w - 20, boss.hp / boss.maxHp, true);
+}
+
+/** Adereço/silhueta característico de cada chefe, desenhado sobre a cabeça. */
+function drawBossCrown(
+  ctx: CanvasRenderingContext2D,
+  kind: Boss["kind"],
+  hx: number,
+  hy: number,
+  accent: string,
+  phase: number,
+): void {
+  const top = hy - 46;
+  switch (kind) {
+    case "chief": {
+      // cocar tribal de penas
+      const colors = [accent, "#e8b04a", "#e8e2cf", "#e8b04a", accent];
+      for (let i = 0; i < 5; i++) {
+        const fx = hx - 40 + i * 20;
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.moveTo(fx, top + 6);
+        ctx.quadraticCurveTo(fx - 6, top - 30, fx, top - 40);
+        ctx.quadraticCurveTo(fx + 6, top - 30, fx, top + 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = shadeHex(accent, -0.2);
+      rrPath(ctx, hx - 46, top - 2, 92, 12, 5);
+      ctx.fill();
+      break;
+    }
+    case "general": {
+      // elmo de centurião com crista transversal
+      ctx.fillStyle = "#c7ccd6";
+      rrPath(ctx, hx - 48, top - 8, 96, 30, 14);
+      ctx.fill();
+      ctx.fillStyle = "#9aa1ad";
+      rrPath(ctx, hx - 48, top + 12, 96, 8, 3);
+      ctx.fill();
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(hx - 6, top - 8);
+      ctx.quadraticCurveTo(hx, top - 38, hx + 6, top - 8);
+      ctx.lineTo(hx + 6, top + 6);
+      ctx.lineTo(hx - 6, top + 6);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "maga": {
+      // capuz sombrio + cristal flutuante
+      ctx.fillStyle = shadeHex(accent, -0.55);
+      ctx.beginPath();
+      ctx.moveTo(hx - 52, hy + 8);
+      ctx.quadraticCurveTo(hx - 56, top - 34, hx + 4, top - 30);
+      ctx.quadraticCurveTo(hx + 40, top - 26, hx + 44, hy - 8);
+      ctx.quadraticCurveTo(hx + 6, top - 6, hx - 8, hy + 2);
+      ctx.quadraticCurveTo(hx - 30, top + 4, hx - 52, hy + 8);
+      ctx.closePath();
+      ctx.fill();
+      const f = 0.7 + Math.abs(Math.sin(phase * 3)) * 0.3;
+      ctx.save();
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 18 * f;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(hx - 64, top - 16);
+      ctx.lineTo(hx - 58, top - 30);
+      ctx.lineTo(hx - 52, top - 16);
+      ctx.lineTo(hx - 58, top - 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    case "pirate": {
+      // chapéu tricorne + caveira + tapa-olho
+      ctx.fillStyle = "#1c1f26";
+      ctx.beginPath();
+      ctx.moveTo(hx - 58, top + 4);
+      ctx.quadraticCurveTo(hx, top - 40, hx + 58, top + 4);
+      ctx.quadraticCurveTo(hx, top - 8, hx - 58, top + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#e8e2cf";
+      ctx.beginPath();
+      ctx.arc(hx, top - 14, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1c1f26";
+      ctx.beginPath();
+      ctx.arc(hx - 3, top - 15, 1.6, 0, Math.PI * 2);
+      ctx.arc(hx + 3, top - 15, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+      // tapa-olho
+      ctx.fillStyle = "#15171c";
+      ctx.beginPath();
+      ctx.ellipse(hx + 2, hy - 4, 9, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "dragon": {
+      // chifres + crista espinhosa + brilho de fogo no focinho
+      ctx.fillStyle = "#d8d2c4";
+      for (const dir of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(hx + dir * 30, top + 6);
+        ctx.quadraticCurveTo(hx + dir * 54, top - 18, hx + dir * 40, top - 34);
+        ctx.quadraticCurveTo(hx + dir * 40, top - 12, hx + dir * 20, top + 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = shadeHex(accent, -0.1);
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(hx + i * 12 - 6, top + 4);
+        ctx.lineTo(hx + i * 12, top - 14);
+        ctx.lineTo(hx + i * 12 + 6, top + 4);
+        ctx.closePath();
+        ctx.fill();
+      }
+      const f = 0.6 + Math.abs(Math.sin(phase * 4)) * 0.4;
+      ctx.save();
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 20 * f;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(hx - 52, hy + 18, 5 * f, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    case "emperor": {
+      // coroa dourada com joias + gola de arminho
+      ctx.fillStyle = "#f0f0f0";
+      rrPath(ctx, hx - 52, hy + 30, 104, 16, 8);
+      ctx.fill();
+      ctx.fillStyle = "#cfd4dc";
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(hx - 40 + i * 20, hy + 34, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffcf4a";
+      ctx.beginPath();
+      ctx.moveTo(hx - 44, top + 8);
+      for (let i = 0; i <= 4; i++) {
+        const px = hx - 44 + i * 22;
+        ctx.lineTo(px - 11, top - 18);
+        ctx.lineTo(px, top + 8);
+      }
+      ctx.lineTo(hx + 44, top + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#e0563a";
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(hx - 33 + i * 22, top + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+    case "hydro": {
+      // crista de água/gelo + brilho frio
+      const f = 0.6 + Math.abs(Math.sin(phase * 2.5)) * 0.4;
+      ctx.save();
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 16 * f;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(hx - 30, top + 8);
+      ctx.quadraticCurveTo(hx - 24, top - 30, hx - 6, top - 10);
+      ctx.quadraticCurveTo(hx, top - 36, hx + 10, top - 12);
+      ctx.quadraticCurveTo(hx + 26, top - 32, hx + 30, top + 8);
+      ctx.quadraticCurveTo(hx, top - 6, hx - 30, top + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.beginPath();
+      ctx.arc(hx + 4, top - 14, 3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+  }
+}
+
+/** Clareia/escurece um hex (#rrggbb) por um fator -1..1. */
+function shadeHex(hex: string, f: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  let r = (n >> 16) & 255;
+  let gc = (n >> 8) & 255;
+  let b = n & 255;
+  const k = f < 0 ? 1 + f : 1;
+  const add = f > 0 ? f * 255 : 0;
+  r = Math.max(0, Math.min(255, Math.round(r * k + add)));
+  gc = Math.max(0, Math.min(255, Math.round(gc * k + add)));
+  b = Math.max(0, Math.min(255, Math.round(b * k + add)));
+  return `#${((r << 16) | (gc << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
 function drawHpBar(
