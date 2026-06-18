@@ -78,6 +78,12 @@ export interface Pickup extends Rect {
   taken: boolean;
 }
 
+// Refém — capivara amarrada à espera de resgate (corre até ele para libertar).
+export interface Prisoner extends Rect {
+  freed: boolean;
+  bob: number; // acumulador de animação
+}
+
 export interface Particle {
   x: number;
   y: number;
@@ -109,6 +115,7 @@ export interface GameState {
   hazards: Hazard[];
   pickups: Pickup[];
   crates: WeaponCrate[];
+  prisoners: Prisoner[];
   particles: Particle[];
   boss: Boss | null;
   lastBossWave: number;
@@ -120,6 +127,8 @@ export interface GameState {
   pickupTimer: number;
   hazardTimer: number;
   crateTimer: number;
+  prisonerTimer: number;
+  rescued: number;
   special: { id: "shotgun" | "bazooka"; ammo: number } | null;
   // Personagem selecionado.
   charId: string;
@@ -148,6 +157,7 @@ export interface HudSnapshot {
   weapon: string; // nome da arma ativa
   ammo: number; // munição da arma especial (0 = arma base)
   charName: string; // personagem em jogo
+  rescued: number; // reféns resgatados
 }
 
 export type SpawnCommand = { type: "enemy" };

@@ -16,6 +16,9 @@ import {
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
   PLAYER_SCREEN_X,
+  PRISONER_BONUS,
+  PRISONER_MIN_GAP,
+  PRISONER_RND_GAP,
   ROCKET_SPLASH,
   VIRT_H,
   VIRT_W,
@@ -24,6 +27,7 @@ import { updateEnemies, updateEnemyBullets, updateHazards } from "./enemies";
 import {
   makeBoss,
   makeHazard,
+  makePrisoner,
   makeShooter,
   makeStar,
   makeTank,
@@ -142,6 +146,7 @@ export class Game {
       weapon: activeWeapon(s).name,
       ammo: s.special ? s.special.ammo : 0,
       charName: s.charName,
+      rescued: s.rescued,
     };
   }
 
@@ -160,6 +165,7 @@ export class Game {
       prev.ammo !== snap.ammo ||
       prev.bossName !== snap.bossName ||
       prev.charName !== snap.charName ||
+      prev.rescued !== snap.rescued ||
       Math.abs(prev.bossHp - snap.bossHp) > 0.01;
     if (changed) {
       this.lastSnap = snap;
@@ -241,6 +247,14 @@ export class Game {
       this.spawnCrate();
     }
 
+    // Refém (Capi prisioneiro) num timer próprio — não durante o chefe.
+    s.prisonerTimer -= dt;
+    if (s.prisonerTimer <= 0) {
+      s.prisonerTimer = PRISONER_MIN_GAP + Math.random() * PRISONER_RND_GAP;
+      if (!bossActive && s.spawner.wave >= 2) this.spawnPrisoner();
+    }
+    for (const pr of s.prisoners) pr.bob += dt;
+
     updateBullets(s, dt);
     updateEnemies(s, dt);
     updateEnemyBullets(s, dt);
@@ -249,6 +263,7 @@ export class Game {
     for (const pk of s.pickups) pk.spin += dt * 3;
     s.pickups = s.pickups.filter((pk) => !pk.taken && pk.x > s.player.x - 200);
     s.crates = s.crates.filter((c) => !c.taken && c.x > s.player.x - 200);
+    s.prisoners = s.prisoners.filter((pr) => !pr.freed && pr.x > s.player.x - 200);
 
     this.handleCollisions();
 
@@ -286,6 +301,11 @@ export class Game {
     const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 50;
     const pick = CRATE_WEAPONS[(Math.random() * CRATE_WEAPONS.length) | 0];
     this.state.crates.push(makeWeaponCrate(aheadX, pick.id as "shotgun" | "bazooka", pick.ammo));
+  }
+
+  private spawnPrisoner(): void {
+    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 60;
+    this.state.prisoners.push(makePrisoner(aheadX));
   }
 
   private handleCollisions(): void {
@@ -372,6 +392,23 @@ export class Game {
         s.special = { id: c.weapon, ammo: c.ammo };
         s.fireCooldown = 0; // dispara já com a arma nova
         spawnSparkle(s, c.x + c.w / 2, c.y + c.h / 2);
+        capiSfx.pickup();
+      }
+    }
+
+    // Jogador vs reféns (resgate: bônus + arma especial, estilo Metal Slug).
+    for (const pr of s.prisoners) {
+      if (pr.freed) continue;
+      if (aabbOverlap(playerRect, pr)) {
+        pr.freed = true;
+        s.rescued += 1;
+        s.score += PRISONER_BONUS;
+        const drop = CRATE_WEAPONS[(Math.random() * CRATE_WEAPONS.length) | 0];
+        s.special = { id: drop.id as "shotgun" | "bazooka", ammo: drop.ammo };
+        s.fireCooldown = 0;
+        spawnSparkle(s, pr.x + pr.w / 2, pr.y + 8);
+        spawnSparkle(s, pr.x + pr.w / 2, pr.y + 24);
+        s.shake = Math.max(s.shake, 8);
         capiSfx.pickup();
       }
     }

@@ -18,6 +18,7 @@ const INITIAL_SNAP: HudSnapshot = {
   weapon: "Pistola",
   ammo: 0,
   charName: "",
+  rescued: 0,
 };
 
 export default function CapiRocketApp() {

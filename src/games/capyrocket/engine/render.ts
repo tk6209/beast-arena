@@ -19,6 +19,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawHazards(ctx, state, camX);
   drawPickups(ctx, state, camX);
   drawCrates(ctx, state, camX);
+  drawPrisoners(ctx, state, camX);
   drawEnemies(ctx, state, camX);
   if (state.boss) drawBoss(ctx, state.boss, camX);
   drawCapy(ctx, state.player, getCharacter(state.charId), state.special ? state.special.id : null);
@@ -195,6 +196,90 @@ function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
   ctx.fillStyle = COLORS.gunDark;
   rrPath(ctx, x - 22, y + 10, 34, 8, 3);
   ctx.fill();
+}
+
+/* ── Reféns (Capi prisioneiro) ── */
+
+function drawPrisoners(ctx: CanvasRenderingContext2D, state: GameState, camX: number): void {
+  for (const pr of state.prisoners) {
+    if (pr.freed) continue;
+    const x = pr.x - camX;
+    const y = pr.y;
+    const cx = x + pr.w / 2;
+    const bob = Math.sin(pr.bob * 6) * 1.5;
+
+    // sombra
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(cx, y + pr.h, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // estaca atrás
+    ctx.fillStyle = "#5a4326";
+    rrPath(ctx, cx - 3, y - 12, 6, pr.h + 12, 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(0, bob);
+
+    // corpo
+    rrPath(ctx, x + 4, y + 17, pr.w - 8, pr.h - 17, 9);
+    ctx.fillStyle = COLORS.fur;
+    ctx.fill();
+    // cabeça
+    rrPath(ctx, x + 3, y, pr.w - 6, 22, 9);
+    ctx.fillStyle = COLORS.fur;
+    ctx.fill();
+    // focinho
+    rrPath(ctx, x + 8, y + 9, pr.w - 16, 11, 5);
+    ctx.fillStyle = COLORS.muzzleWarm;
+    ctx.fill();
+    // olhos preocupados
+    ctx.fillStyle = COLORS.nosePaws;
+    ctx.beginPath();
+    ctx.arc(cx - 5, y + 7, 2, 0, Math.PI * 2);
+    ctx.arc(cx + 5, y + 7, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // braços levantados (amarrados na estaca)
+    ctx.strokeStyle = COLORS.furDark;
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x + 7, y + 22);
+    ctx.lineTo(cx - 2, y - 8);
+    ctx.moveTo(x + pr.w - 7, y + 22);
+    ctx.lineTo(cx + 2, y - 8);
+    ctx.stroke();
+
+    // corda
+    ctx.strokeStyle = "#d8c089";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y + 30);
+    ctx.lineTo(x + pr.w - 4, y + 34);
+    ctx.moveTo(x + 4, y + 38);
+    ctx.lineTo(x + pr.w - 4, y + 34);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // balão "SOS" pulsante
+    const a = 0.5 + 0.5 * Math.sin(pr.bob * 6);
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.45 * a;
+    ctx.fillStyle = "#ffe08a";
+    rrPath(ctx, cx - 16, y - 34, 32, 16, 5);
+    ctx.fill();
+    ctx.fillStyle = "#11151f";
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("SOS", cx, y - 25);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  }
 }
 
 /* ── Chefe ── */

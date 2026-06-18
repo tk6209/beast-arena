@@ -25,6 +25,7 @@ export function drawCapy(
   const onGround = p.onGround;
   const fur = rec.palette;
   const accent = rec.accentColor;
+  const outline = shade(fur.furDark, -0.35); // contorno escuro (estilo pintura)
 
   // Sombra.
   ctx.fillStyle = "rgba(0,0,0,0.28)";
@@ -43,19 +44,28 @@ export function drawCapy(
   drawLeg(ctx, -5, step, fur.furDark);
   drawLeg(ctx, 7, -step, fur.fur);
 
-  // ── Tronco "barril" ──
-  const g = ctx.createLinearGradient(0, -52, 0, -20);
+  // ── Tronco "barril" com volume ──
+  const g = ctx.createLinearGradient(-16, -54, 14, -20);
   g.addColorStop(0, fur.furLight);
-  g.addColorStop(1, fur.fur);
+  g.addColorStop(0.55, fur.fur);
+  g.addColorStop(1, fur.furDark);
   rrPath(ctx, -16, -52, 32, 34, 13);
   ctx.fillStyle = g;
   ctx.fill();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.stroke();
   // barriga clara
   rrPath(ctx, -9, -42, 19, 22, 9);
   ctx.fillStyle = fur.furLight;
   ctx.globalAlpha = 0.5;
   ctx.fill();
   ctx.globalAlpha = 1;
+  // sombra de contato sob o tronco (oclusão)
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  rrPath(ctx, -14, -23, 28, 6, 3);
+  ctx.fill();
 
   // ── Acessório: peitoral/roupa na cor de realce do personagem ──
   rrPath(ctx, -16, -52, 32, 15, 11);
@@ -75,43 +85,93 @@ export function drawCapy(
   // Bandoleira de munição (só nos que carregam explosivos — Bombardeiro).
   if (rec.held === "bomb" || special === "bazooka") drawBandolier(ctx);
 
-  // ── Cabeça (grande, base canônica) ──
-  rrPath(ctx, -17, -88, 35, 38, 15);
-  ctx.fillStyle = fur.fur;
-  ctx.fill();
-  // orelha
+  // ── Orelha (atrás da cabeça) ──
+  rrPath(ctx, -14, -92, 12, 12, 5);
   ctx.fillStyle = fur.furDark;
-  ctx.beginPath();
-  ctx.ellipse(-10, -86, 5.5, 5.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  // focinho largo
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.fillStyle = shade(COLORS.muzzleWarm, -0.1);
+  ctx.beginPath();
+  ctx.ellipse(-8, -86, 3.5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── Cabeça (grande) com volume pintado ──
+  const headGrad = ctx.createRadialGradient(-7, -82, 3, -1, -70, 36);
+  headGrad.addColorStop(0, fur.furLight);
+  headGrad.addColorStop(0.6, fur.fur);
+  headGrad.addColorStop(1, fur.furDark);
+  rrPath(ctx, -17, -88, 35, 38, 15);
+  ctx.fillStyle = headGrad;
+  ctx.fill();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+  // luz de borda no topo
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  ctx.beginPath();
+  ctx.ellipse(-5, -83, 9, 4.5, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+  // tufos de pelo na bochecha
+  ctx.fillStyle = fur.furDark;
+  for (const [tx, ty, tr] of [[-15, -57, 4], [-12, -52, 3.4], [16, -55, 3.2]] as const) {
+    ctx.beginPath();
+    ctx.arc(tx, ty, tr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── Focinho largo com volume ──
+  const snoutGrad = ctx.createLinearGradient(0, -76, 0, -50);
+  snoutGrad.addColorStop(0, shade(COLORS.muzzleWarm, 0.12));
+  snoutGrad.addColorStop(1, shade(COLORS.muzzleWarm, -0.16));
   rrPath(ctx, 12, -74, 22, 22, 10);
-  ctx.fillStyle = COLORS.muzzleWarm;
+  ctx.fillStyle = snoutGrad;
   ctx.fill();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2;
+  ctx.stroke();
   // nariz
-  rrPath(ctx, 27, -68, 11, 10, 4);
+  rrPath(ctx, 26, -69, 13, 11, 5);
   ctx.fillStyle = COLORS.nosePaws;
   ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  // narinas
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
   ctx.beginPath();
-  ctx.arc(30, -66, 1.6, 0, Math.PI * 2);
+  ctx.ellipse(30, -64, 1.3, 2.1, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(35, -64, 1.3, 2.1, -0.2, 0, Math.PI * 2);
   ctx.fill();
-  // olho
-  ctx.fillStyle = COLORS.nosePaws;
+  // brilho úmido no nariz
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
   ctx.beginPath();
-  ctx.ellipse(8, -70, 4.5, 5.5, 0, 0, Math.PI * 2);
+  ctx.arc(29, -67, 1.5, 0, Math.PI * 2);
   ctx.fill();
+
+  // ── Olho grande e expressivo ──
+  const eyeGrad = ctx.createRadialGradient(9, -72, 0.5, 8, -69, 6.5);
+  eyeGrad.addColorStop(0, "#4a3526");
+  eyeGrad.addColorStop(1, "#140d08");
+  ctx.fillStyle = eyeGrad;
+  ctx.beginPath();
+  ctx.ellipse(8, -70, 5, 6.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // catchlights
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(9.5, -72, 1.6, 0, Math.PI * 2);
+  ctx.arc(9.6, -72.4, 2.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.beginPath();
+  ctx.arc(6.4, -67.6, 1.1, 0, Math.PI * 2);
   ctx.fill();
   // sobrancelha determinada
-  ctx.strokeStyle = COLORS.nosePaws;
+  ctx.strokeStyle = outline;
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(2, -78);
-  ctx.lineTo(13, -75);
+  ctx.moveTo(2, -79);
+  ctx.lineTo(14, -75.5);
   ctx.stroke();
 
   // ── Acessório de cabeça por personagem ──

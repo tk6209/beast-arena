@@ -53,4 +53,26 @@ describe("simulação headless", () => {
     expect(bossDied).toBe(true);
     expect(game.state.score).toBeGreaterThan(scoreBefore);
   });
+
+  it("resgatar um refém concede bônus e arma especial (estilo Metal Slug)", () => {
+    const game = new Game() as unknown as {
+      update: (dt: number) => void;
+      state: {
+        player: { x: number; y: number; w: number; h: number };
+        prisoners: Array<{ x: number; y: number; w: number; h: number; freed: boolean; bob: number }>;
+        rescued: number;
+        score: number;
+        special: unknown;
+      };
+    };
+
+    const p = game.state.player;
+    game.state.prisoners.push({ x: p.x, y: p.y, w: 30, h: 48, freed: false, bob: 0 });
+    const scoreBefore = game.state.score;
+    game.update(1 / 60);
+
+    expect(game.state.rescued).toBe(1);
+    expect(game.state.score).toBeGreaterThanOrEqual(scoreBefore + 500);
+    expect(game.state.special).not.toBeNull();
+  });
 });

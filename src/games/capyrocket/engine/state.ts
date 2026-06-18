@@ -9,6 +9,8 @@ import {
   PICKUP_RND_GAP,
   PLAYER_H,
   PLAYER_W,
+  PRISONER_MIN_GAP,
+  PRISONER_RND_GAP,
 } from "./constants";
 import { loadHighscore } from "./scoring";
 import { createSpawner } from "./spawner";
@@ -41,6 +43,7 @@ export function createInitialState(character: CharacterConfig = CHARACTERS[0]): 
     hazards: [],
     pickups: [],
     crates: [],
+    prisoners: [],
     particles: [],
     boss: null,
     lastBossWave: 0,
@@ -52,6 +55,8 @@ export function createInitialState(character: CharacterConfig = CHARACTERS[0]): 
     pickupTimer: PICKUP_MIN_GAP + Math.random() * PICKUP_RND_GAP,
     hazardTimer: HAZARD_MIN_GAP + Math.random() * HAZARD_RND_GAP,
     crateTimer: CRATE_MIN_GAP + Math.random() * CRATE_RND_GAP,
+    prisonerTimer: PRISONER_MIN_GAP + Math.random() * PRISONER_RND_GAP,
+    rescued: 0,
     special: null,
     charId: character.id,
     charName: character.name,

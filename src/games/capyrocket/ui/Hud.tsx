@@ -27,6 +27,7 @@ export default function Hud({ snap }: { snap: HudSnapshot }) {
       <div className="capy-hud__weapon">
         🔫 {snap.weapon}
         {snap.ammo > 0 && <span className="capy-hud__ammo"> ×{snap.ammo}</span>}
+        {snap.rescued > 0 && <span className="capy-hud__ammo"> · 🆘 {snap.rescued}</span>}
       </div>
     </div>
   );

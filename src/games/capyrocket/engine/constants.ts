@@ -81,6 +81,13 @@ export const PICKUP_H = 34;
 export const PICKUP_MIN_GAP = 5;
 export const PICKUP_RND_GAP = 4;
 
+// Refém (Capi prisioneiro) — resgate clássico de Metal Slug: bônus + arma.
+export const PRISONER_W = 30;
+export const PRISONER_H = 48;
+export const PRISONER_MIN_GAP = 15;
+export const PRISONER_RND_GAP = 12;
+export const PRISONER_BONUS = 500;
+
 // Regras.
 export const MAX_LIVES = 3;
 export const INVULN_TIME = 1.4;
