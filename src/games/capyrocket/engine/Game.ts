@@ -19,7 +19,6 @@ import {
   PRISONER_MIN_GAP,
   PRISONER_RND_GAP,
   ROCKET_SPLASH,
-  RUN_SPEED,
   VIRT_H,
   VIRT_W,
 } from "./constants";
@@ -204,9 +203,6 @@ export class Game {
     s.time += dt;
     updatePlayer(s, dt, this.input.state);
     addDistance(s, dt);
-
-    // Scroll constante da câmera (estilo Metal Slug) — independente do input.
-    s.camX += RUN_SPEED * dt;
 
     const bossActive = !!s.boss;
 
