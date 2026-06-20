@@ -62,7 +62,7 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   let speed = RUN_SPEED;
   if (input.moveX === 1) speed = RUN_SPEED * 1.6;
   else if (input.moveX === -1) speed = RUN_SPEED * 0.25; // freia, não recua
-  if (crouching) speed *= 0.5;
+  if (p.crouchT > 0.1) speed *= (1 - 0.5 * p.crouchT);
   p.x += speed * dt;
 }
 
