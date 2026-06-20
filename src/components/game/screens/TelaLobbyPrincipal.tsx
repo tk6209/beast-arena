@@ -98,6 +98,7 @@ export default function TelaLobbyPrincipal({
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[#0a0a0a] flex items-center justify-center p-2 sm:p-3 overflow-hidden select-none font-['Barlow']">
+      <h1 className="sr-only">Beast Arena Lobby</h1>
       {/* Landscape container */}
       <div className="relative w-full h-full max-w-[1280px] max-h-[720px] bg-[#0a0a0a] border-[6px] sm:border-8 border-black rounded-[24px] sm:rounded-[40px] overflow-hidden flex shadow-[0_0_50px_rgba(0,0,0,0.6)]">
 
