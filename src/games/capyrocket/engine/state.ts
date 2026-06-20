@@ -29,6 +29,9 @@ function createPlayer(maxJumps: number): Player {
     muzzle: 0,
     jumpsUsed: 0,
     maxJumps,
+    crouchT: 0,
+    airT: 0,
+    landImpact: 0,
   };
 }
 
