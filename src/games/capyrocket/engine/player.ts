@@ -1,4 +1,4 @@
-import { GROUND_Y, JUMP_V, PLAYER_H, PLAYER_W, RUN_SPEED, VIRT_W } from "./constants";
+import { GROUND_Y, JUMP_V, PLAYER_H, PLAYER_SCREEN_X, PLAYER_W, RUN_SPEED, VIRT_W } from "./constants";
 import { applyGravity, groundClamp, integrateY } from "./physics";
 import { hapticLight } from "../vendor/haptic";
 import { capiSfx } from "../vendor/sfx";
