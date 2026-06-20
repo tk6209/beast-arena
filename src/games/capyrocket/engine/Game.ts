@@ -19,7 +19,6 @@ import {
   PRISONER_MIN_GAP,
   PRISONER_RND_GAP,
   ROCKET_SPLASH,
-  RUN_SPEED,
   VIRT_H,
   VIRT_W,
 } from "./constants";
