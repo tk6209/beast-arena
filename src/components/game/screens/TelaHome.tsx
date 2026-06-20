@@ -65,6 +65,8 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
       transition:"background 1.8s ease" }}>
       <style>{CSS}</style>
 
+      <h1 className="sr-only">Beast Arena — Monster Card Battle</h1>
+
       {/* Noise */}
       <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
         backgroundImage:NOISE_BG,backgroundSize:"200px 200px",
