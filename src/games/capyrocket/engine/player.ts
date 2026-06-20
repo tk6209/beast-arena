@@ -1,4 +1,4 @@
-import { JUMP_V, RUN_SPEED } from "./constants";
+import { GROUND_Y, JUMP_V, PLAYER_H, RUN_SPEED } from "./constants";
 import { applyGravity, groundClamp, integrateY } from "./physics";
 import { hapticLight } from "../vendor/haptic";
 import { capiSfx } from "../vendor/sfx";
@@ -11,7 +11,17 @@ import type { GameState, InputState } from "./types";
 export function updatePlayer(state: GameState, dt: number, input: InputState): void {
   const p = state.player;
 
-  if (input.jumpQueued && p.jumpsUsed < p.maxJumps) {
+  // Agachar reduz a altura (desvia de tiros altos). Só no chão.
+  const crouching = input.crouch && p.onGround;
+  const targetH = crouching ? Math.round(PLAYER_H * 0.55) : PLAYER_H;
+  if (p.h !== targetH) {
+    const wasOnGround = p.onGround;
+    p.h = targetH;
+    if (wasOnGround) p.y = GROUND_Y - p.h;
+  }
+
+  // Pulo cancela o agachado.
+  if (input.jumpQueued && !crouching && p.jumpsUsed < p.maxJumps) {
     p.vy = JUMP_V;
     p.onGround = false;
     p.jumpsUsed += 1;
@@ -29,6 +39,12 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
   p.animPhase += dt;
 
-  // Corrida automática: avança o "mundo".
-  p.x += RUN_SPEED * dt;
+  // Corrida automática + modificador do jogador (recuar / acelerar). Agachado
+  // anda mais devagar.
+  let speed = RUN_SPEED;
+  if (input.moveX === 1) speed = RUN_SPEED * 1.6;
+  else if (input.moveX === -1) speed = -RUN_SPEED * 0.6;
+  if (crouching) speed *= 0.45;
+  p.x += speed * dt;
+  if (p.x < 0) p.x = 0;
 }

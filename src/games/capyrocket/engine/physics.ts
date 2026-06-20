@@ -1,4 +1,4 @@
-import { GRAVITY, GROUND_Y, PLAYER_H } from "./constants";
+import { GRAVITY, GROUND_Y } from "./constants";
 import type { Player } from "./types";
 
 /** Aplica gravidade à velocidade vertical. */
@@ -13,7 +13,7 @@ export function integrateY(p: Player, dt: number): void {
 
 /** Prende o jogador ao chão; ao aterrissar zera vy e marca onGround. */
 export function groundClamp(p: Player): void {
-  const feetMax = GROUND_Y - PLAYER_H;
+  const feetMax = GROUND_Y - p.h;
   if (p.y >= feetMax) {
     p.y = feetMax;
     p.vy = 0;
