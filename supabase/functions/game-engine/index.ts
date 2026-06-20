@@ -962,7 +962,14 @@ Deno.serve(async (req) => {
     }
 
 
-    if (sessionId && action !== "init_game" && isAuthenticated && requesterUserId && payload?.slot !== undefined) {
+    // Enforce slot ownership for state-mutating actions on existing sessions.
+    const MUTATING_ACTIONS = new Set(["choose_power", "play_card", "pass_turn", "combo_cards"]);
+    if (sessionId && MUTATING_ACTIONS.has(action) && payload?.slot !== undefined) {
+      if (!isAuthenticated || !requesterUserId) {
+        return new Response(JSON.stringify({ error: "Autenticação necessária" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { data: slotRow } = await supabase
         .from("game_players")
         .select("slot, state_json")
@@ -970,7 +977,7 @@ Deno.serve(async (req) => {
         .filter("state_json->>user_id", "eq", requesterUserId)
         .maybeSingle();
 
-      if (slotRow && slotRow.slot !== payload.slot) {
+      if (!slotRow || slotRow.slot !== payload.slot) {
         return new Response(JSON.stringify({ error: "Slot inválido para este usuário" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
