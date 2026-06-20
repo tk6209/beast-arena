@@ -17,26 +17,16 @@ export function updateBullets(state: GameState, dt: number, input?: InputState):
     const w = activeWeapon(state);
     state.fireCooldown += w.fireInterval;
 
-    // Direção da mira: setas mantidas; senão usa a direção em que o herói está virado.
-    const aimX = input?.aimX ?? 0;
-    const aimY = input?.aimY ?? 0;
-    let dx = aimX;
-    let dy = aimY;
-    if (dx === 0 && dy === 0) {
-      dx = p.facingX;
-      dy = 0;
-    }
-    const mag = Math.hypot(dx, dy) || 1;
-    const ndx = dx / mag;
-    const ndy = dy / mag;
+    // Mira sempre horizontal, na direção em que o herói está virado.
+    // (Agachar reduz a altura mas o tiro sai sempre na horizontal padrão.)
+    const ndx = input?.aimX === -1 ? -1 : input?.aimX === 1 ? 1 : p.facingX;
+    const ndy = 0;
     const muzzleX = p.x + PLAYER_W / 2 + ndx * (PLAYER_W / 2 + 6);
-    const muzzleY = p.y + PLAYER_H * 0.5 + ndy * (PLAYER_H * 0.4);
+    const muzzleY = p.y + PLAYER_H * 0.5;
     const n = w.pellets;
     for (let i = 0; i < n; i++) {
-      // Espalhamento perpendicular à direção da mira.
-      const spread = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;
-      const vx = ndx * w.bulletSpeed + -ndy * spread;
-      const vy = ndy * w.bulletSpeed + ndx * spread;
+      const vy = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;
+      const vx = ndx * w.bulletSpeed;
       state.bullets.push(
         makeBullet(muzzleX, muzzleY, {
           vx,
