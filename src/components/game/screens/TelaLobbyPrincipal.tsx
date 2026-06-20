@@ -260,7 +260,7 @@ function RailIcon({ children, onClick, active, danger, tooltip, className = "" }
       ? "bg-white text-[#ff5722] hover:bg-red-50"
       : "bg-white text-black hover:bg-[#ffeb3b]";
   return (
-    <button onClick={onClick} className={`group relative ${className}`}>
+    <button onClick={onClick} aria-label={tooltip} className={`group relative ${className}`}>
       <div className={`${base} ${variant}`}>{children}</div>
       {tooltip && (
         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-[#ffeb3b] text-[10px] font-['Bebas_Neue'] tracking-widest rounded border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
