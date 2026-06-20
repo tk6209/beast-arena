@@ -10,23 +10,42 @@ interface InputCallbacks {
  * Game.queueJump) escrevem na mesma ação. Enter/R reiniciam no game-over.
  */
 export class InputManager {
-  readonly state: InputState = { jumpQueued: false, moveX: 0, crouch: false };
+  readonly state: InputState = {
+    jumpQueued: false,
+    moveX: 0,
+    crouch: false,
+    aimX: 0,
+    aimY: 0,
+  };
   private cb: InputCallbacks | null = null;
   private left = false;
   private right = false;
+  private up = false;
+  private down = false;
 
   private recomputeMoveX(): void {
     this.state.moveX = this.right && !this.left ? 1 : this.left && !this.right ? -1 : 0;
+    this.state.aimX = this.right && !this.left ? 1 : this.left && !this.right ? -1 : 0;
+  }
+
+  private recomputeAimY(): void {
+    this.state.aimY = this.down && !this.up ? 1 : this.up && !this.down ? -1 : 0;
+    this.state.crouch = this.down;
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
     switch (e.code) {
       case "Space":
-      case "ArrowUp":
       case "KeyW":
         if (e.repeat) return;
         e.preventDefault();
         this.cb?.onJump();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (!this.up && !e.repeat) this.cb?.onJump();
+        this.up = true;
+        this.recomputeAimY();
         break;
       case "ArrowLeft":
       case "KeyA":
@@ -43,7 +62,8 @@ export class InputManager {
       case "ArrowDown":
       case "KeyS":
         e.preventDefault();
-        this.state.crouch = true;
+        this.down = true;
+        this.recomputeAimY();
         break;
       case "Enter":
       case "KeyR":
@@ -65,9 +85,14 @@ export class InputManager {
         this.right = false;
         this.recomputeMoveX();
         break;
+      case "ArrowUp":
+        this.up = false;
+        this.recomputeAimY();
+        break;
       case "ArrowDown":
       case "KeyS":
-        this.state.crouch = false;
+        this.down = false;
+        this.recomputeAimY();
         break;
     }
   };
@@ -83,8 +108,12 @@ export class InputManager {
     window.removeEventListener("keyup", this.onKeyUp);
     this.left = false;
     this.right = false;
+    this.up = false;
+    this.down = false;
     this.state.moveX = 0;
     this.state.crouch = false;
+    this.state.aimX = 0;
+    this.state.aimY = 0;
     this.cb = null;
   }
 }
