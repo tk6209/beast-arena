@@ -19,6 +19,12 @@ export interface Player extends Rect {
   muzzle: number; // timer do flash do cano
   jumpsUsed: number;
   maxJumps: number; // 2 = pulo duplo (CapiNinja/Mágico etc.)
+  /** 0 = em pé, 1 = totalmente agachado. Interpolado para transição suave. */
+  crouchT: number;
+  /** 0 = no chão, 1 = totalmente no ar. Interpolado para o tuck do pulo. */
+  airT: number;
+  /** Última velocidade vertical antes do contato com o chão (impacto). */
+  landImpact: number;
 }
 
 export type EnemyKind = "walker" | "shooter" | "tank";

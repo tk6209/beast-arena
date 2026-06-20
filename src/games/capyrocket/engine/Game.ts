@@ -318,7 +318,22 @@ export class Game {
 
   private handleCollisions(): void {
     const s = this.state;
-    const playerRect = { x: s.player.x, y: s.player.y, w: s.player.w, h: s.player.h };
+    // Hitbox com inset para perdoar acertos "de raspão" no avanço contínuo
+    // (e respeitar a forma redonda do agachado, que é mais largo que alto).
+    const insetX = 6;
+    const insetY = 4;
+    const playerRect = {
+      x: s.player.x + insetX,
+      y: s.player.y + insetY,
+      w: s.player.w - insetX * 2,
+      h: s.player.h - insetY,
+    };
+
+    // Shake/haptic de aterrissagem.
+    if (s.player.landImpact > 0.35) {
+      s.shake = Math.max(s.shake, 5 * s.player.landImpact);
+      s.player.landImpact = 0;
+    }
 
     // Balas do jogador vs inimigos e chefe.
     for (const b of s.bullets) {
