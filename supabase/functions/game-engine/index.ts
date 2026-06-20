@@ -939,8 +939,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (payload?.modo === "multi" && !isAuthenticated) {
-      return new Response(JSON.stringify({ error: "Autenticação necessária para multiplayer" }), {
+    // Require authentication for all engine calls to prevent anonymous DB writes/flooding.
+    if (!isAuthenticated) {
+      return new Response(JSON.stringify({ error: "Autenticação necessária" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
