@@ -40,6 +40,7 @@ export function createInitialState(character: CharacterConfig = CHARACTERS[0]): 
     phase: "playing",
     time: 0,
     player: createPlayer(character.jumps),
+    camX: 0,
     enemies: [],
     bullets: [],
     enemyBullets: [],

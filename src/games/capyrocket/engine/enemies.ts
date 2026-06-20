@@ -14,7 +14,7 @@ import type { GameState } from "./types";
  * atrasados.
  */
 export function updateEnemies(state: GameState, dt: number): void {
-  const onScreenLimit = state.player.x + VIRT_W * 0.95;
+  const onScreenLimit = state.camX + VIRT_W * 0.95;
   for (const e of state.enemies) {
     e.x += e.vx * dt;
     e.legPhase += dt * 10;
@@ -30,7 +30,7 @@ export function updateEnemies(state: GameState, dt: number): void {
     }
   }
   state.enemies = state.enemies.filter(
-    (e) => !e.dead && e.x > state.player.x - 260,
+    (e) => !e.dead && e.x > state.camX - 260,
   );
 }
 
@@ -41,11 +41,11 @@ export function updateEnemyBullets(state: GameState, dt: number): void {
     b.life -= dt;
   }
   state.enemyBullets = state.enemyBullets.filter(
-    (b) => b.life > 0 && b.x > state.player.x - 200 && b.x < state.player.x + VIRT_W,
+    (b) => b.life > 0 && b.x > state.camX - 200 && b.x < state.camX + VIRT_W + 80,
   );
 }
 
 /** Descarta obstáculos de chão que já ficaram para trás. */
 export function updateHazards(state: GameState): void {
-  state.hazards = state.hazards.filter((h) => h.x > state.player.x - 200);
+  state.hazards = state.hazards.filter((h) => h.x > state.camX - 200);
 }
