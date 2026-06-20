@@ -39,6 +39,7 @@ import { InputManager } from "./input";
 import { spawnLandingBurst, spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
 import { draw } from "./render";
+import { drawDebugOverlay } from "./debugOverlay";
 import {
   addDistance,
   bestScore,
@@ -62,6 +63,7 @@ export class Game {
   private character: CharacterConfig;
   private state: GameState;
   private input = new InputManager();
+  private debug = true;
 
   constructor(characterId?: string) {
     this.character = getCharacter(characterId ?? "peao");
@@ -85,6 +87,7 @@ export class Game {
     this.ctx = canvas.getContext("2d");
     this.resize();
     window.addEventListener("resize", this.resize);
+    window.addEventListener("keydown", this.onDebugKey);
     this.input.attach({
       onJump: () => this.queueJump(),
       onRestart: () => this.restart(),
@@ -97,11 +100,19 @@ export class Game {
   destroy(): void {
     cancelAnimationFrame(this.animId);
     window.removeEventListener("resize", this.resize);
+    window.removeEventListener("keydown", this.onDebugKey);
     this.input.detach();
     this.listeners.clear();
     this.canvas = null;
     this.ctx = null;
   }
+
+  private onDebugKey = (e: KeyboardEvent): void => {
+    if (e.code === "F3") {
+      e.preventDefault();
+      this.debug = !this.debug;
+    }
+  };
 
   /* ── input vindo do React/teclado ── */
 
@@ -567,5 +578,6 @@ export class Game {
     ctx.clip();
 
     draw(ctx, this.state);
+    if (this.debug) drawDebugOverlay(ctx, this.state, this.input.state);
   }
 }
