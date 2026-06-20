@@ -105,9 +105,6 @@ export function drawCapy(
   rrPath(ctx, -14, -92, 12, 12, 5);
   ctx.fillStyle = fur.furDark;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
   ctx.fillStyle = shade(COLORS.muzzleWarm, -0.1);
   ctx.beginPath();
   ctx.ellipse(-8, -86, 3.5, 4, 0, 0, Math.PI * 2);
@@ -121,10 +118,6 @@ export function drawCapy(
   rrPath(ctx, -17, -88, 35, 38, 15);
   ctx.fillStyle = headGrad;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.stroke();
   // luz de borda no topo
   ctx.fillStyle = "rgba(255,255,255,0.16)";
   ctx.beginPath();
@@ -145,9 +138,6 @@ export function drawCapy(
   rrPath(ctx, 12, -74, 22, 22, 10);
   ctx.fillStyle = snoutGrad;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2;
-  ctx.stroke();
   // nariz
   rrPath(ctx, 26, -69, 13, 11, 5);
   ctx.fillStyle = COLORS.nosePaws;
@@ -181,14 +171,7 @@ export function drawCapy(
   ctx.beginPath();
   ctx.arc(6.4, -67.6, 1.1, 0, Math.PI * 2);
   ctx.fill();
-  // sobrancelha determinada
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(2, -79);
-  ctx.lineTo(14, -75.5);
-  ctx.stroke();
+  // Expressão neutra/amistosa (sem sobrancelha "brava" — fiel à base 360).
 
   // ── Acessório de cabeça por personagem ──
   drawHeadgear(ctx, rec.headgear, accent);
@@ -217,13 +200,24 @@ export function drawCapy(
   ctx.restore();
 }
 
-function drawLeg(ctx: CanvasRenderingContext2D, hipX: number, step: number, color: string): void {
-  const footX = hipX + step * 11;
-  const lift = Math.max(0, step) * 7;
-  capsule(ctx, hipX, -22, footX, -3 - lift, 9, color);
+function drawLeg(
+  ctx: CanvasRenderingContext2D,
+  hipX: number,
+  step: number,
+  color: string,
+  airTuck = 0,
+  crouchT = 0,
+): void {
+  // No ar, pernas recolhidas (footY sobe, footX volta para o centro do quadril).
+  // Agachado, footY também sobe (pernas dobradas embaixo do corpo).
+  const tuck = Math.max(airTuck, crouchT * 0.7);
+  const footX = hipX + step * 11 * (1 - tuck);
+  const lift = Math.max(0, step) * 7 * (1 - tuck);
+  const footY = -3 - lift + tuck * 12;
+  capsule(ctx, hipX, -22 + tuck * 6, footX, footY, 9, color);
   ctx.fillStyle = COLORS.nosePaws;
   ctx.beginPath();
-  ctx.ellipse(footX, -3 - lift, 6, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(footX, footY, 6, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
