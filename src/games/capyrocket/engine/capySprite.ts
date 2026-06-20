@@ -35,9 +35,10 @@ export function drawCapy(
   // Sombra (encolhe quando está no ar, aumenta quando agacha).
   const shadowAlpha = 0.28 * (1 - 0.55 * airT);
   const shadowW = p.w * (0.5 + 0.15 * crouchT - 0.2 * airT);
+  // Sombra projetada no chão (não sobe com o personagem no ar).
   ctx.fillStyle = `rgba(0,0,0,${shadowAlpha.toFixed(3)})`;
   ctx.beginPath();
-  ctx.ellipse(cx, GROUND_Y_VISUAL_OFFSET(feetY, airT, p.h), Math.max(8, shadowW), 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, feetY + 2 + (p.y < (feetY - p.h) ? 0 : 0), Math.max(8, shadowW), 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
@@ -53,8 +54,8 @@ export function drawCapy(
   const airTuck = airT * 0.9; // recolhe as pernas no pulo
 
   // ── Pernas (curtas, paleta canônica) ──
-  drawLeg(ctx, -5, step, fur.furDark);
-  drawLeg(ctx, 7, -step, fur.fur);
+  drawLeg(ctx, -5, runStep, fur.furDark, airTuck, crouchT);
+  drawLeg(ctx, 7, -runStep, fur.fur, airTuck, crouchT);
 
   // ── Tronco "barril" com volume ──
   const g = ctx.createLinearGradient(-16, -54, 14, -20);
@@ -64,10 +65,13 @@ export function drawCapy(
   rrPath(ctx, -16, -52, 32, 34, 13);
   ctx.fillStyle = g;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
+  // Linha interna suave (sem outline duro — referência tem shading 3D).
+  ctx.strokeStyle = softLine;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.35;
   ctx.lineJoin = "round";
   ctx.stroke();
+  ctx.globalAlpha = 1;
   // barriga clara
   rrPath(ctx, -9, -42, 19, 22, 9);
   ctx.fillStyle = fur.furLight;
