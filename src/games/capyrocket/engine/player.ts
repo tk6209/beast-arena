@@ -1,4 +1,4 @@
-import { GROUND_Y, JUMP_V, PLAYER_H, PLAYER_W, RUN_SPEED } from "./constants";
+import { GROUND_Y, JUMP_V, PLAYER_H, PLAYER_W, RUN_SPEED, VIRT_W } from "./constants";
 import { applyGravity, groundClamp, integrateY } from "./physics";
 import { hapticLight } from "../vendor/haptic";
 import { capiSfx } from "../vendor/sfx";
@@ -57,13 +57,22 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
-  // Runner: o mundo só anda PARA FRENTE. Setas mudam o ritmo (segurar para
-  // trás freia; segurar para frente acelera), mas nunca revertem o progresso.
+  // Estilo Metal Slug: a CÂMERA rola a ritmo constante (em Game.ts). As setas
+  // só deslocam o herói DENTRO da tela — nunca alteram o scroll do mundo.
+  // Base = velocidade da câmera (RUN_SPEED) → herói parado na tela.
+  // Avançar → desliza para a direita; recuar → desliza para a esquerda.
+  const drift = 180;
   let speed = RUN_SPEED;
-  if (input.moveX === 1) speed = RUN_SPEED * 1.6;
-  else if (input.moveX === -1) speed = RUN_SPEED * 0.25; // freia, não recua
-  if (p.crouchT > 0.1) speed *= (1 - 0.5 * p.crouchT);
+  if (input.moveX === 1) speed = RUN_SPEED + drift;
+  else if (input.moveX === -1) speed = RUN_SPEED - drift;
+  if (p.crouchT > 0.1) speed -= drift * 0.35 * p.crouchT;
   p.x += speed * dt;
+
+  // Clamp na "tela visível": o herói não sai do quadro nem cai atrás da borda.
+  const minX = state.camX + 40;
+  const maxX = state.camX + VIRT_W - p.w - 60;
+  if (p.x < minX) p.x = minX;
+  else if (p.x > maxX) p.x = maxX;
 }
 
 function approach(current: number, target: number, step: number): number {

@@ -15,11 +15,11 @@ import {
   PICKUP_H,
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
-  PLAYER_SCREEN_X,
   PRISONER_BONUS,
   PRISONER_MIN_GAP,
   PRISONER_RND_GAP,
   ROCKET_SPLASH,
+  RUN_SPEED,
   VIRT_H,
   VIRT_W,
 } from "./constants";
@@ -37,7 +37,7 @@ import {
 import { CRATE_WEAPONS, activeWeapon } from "./weapons";
 import { bossForWave, getCharacter, type CharacterConfig } from "./characters";
 import { InputManager } from "./input";
-import { spawnPoof, spawnSparkle, updateParticles } from "./particles";
+import { spawnLandingBurst, spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
 import { draw } from "./render";
 import {
@@ -205,12 +205,15 @@ export class Game {
     updatePlayer(s, dt, this.input.state);
     addDistance(s, dt);
 
+    // Scroll constante da câmera (estilo Metal Slug) — independente do input.
+    s.camX += RUN_SPEED * dt;
+
     const bossActive = !!s.boss;
 
     // Chefe a cada BOSS_WAVE ondas (uma vez por marco). Pausa spawns normais.
     if (!bossActive && s.spawner.wave % BOSS_WAVE === 0 && s.spawner.wave !== s.lastBossWave) {
       s.lastBossWave = s.spawner.wave;
-      s.boss = makeBoss(s.player.x + VIRT_W + 80, bossForWave(s.spawner.wave));
+      s.boss = makeBoss(s.camX + VIRT_W + 80, bossForWave(s.spawner.wave));
       s.enemies = [];
       s.hazards = [];
     }
@@ -269,9 +272,9 @@ export class Game {
     updateHazards(s);
     updateParticles(s, dt);
     for (const pk of s.pickups) pk.spin += dt * 3;
-    s.pickups = s.pickups.filter((pk) => !pk.taken && pk.x > s.player.x - 200);
-    s.crates = s.crates.filter((c) => !c.taken && c.x > s.player.x - 200);
-    s.prisoners = s.prisoners.filter((pr) => !pr.freed && pr.x > s.player.x - 200);
+    s.pickups = s.pickups.filter((pk) => !pk.taken && pk.x > s.camX - 200);
+    s.crates = s.crates.filter((c) => !c.taken && c.x > s.camX - 200);
+    s.prisoners = s.prisoners.filter((pr) => !pr.freed && pr.x > s.camX - 200);
 
     this.handleCollisions();
 
@@ -281,7 +284,7 @@ export class Game {
   /** Escolhe o tipo de inimigo conforme a onda (dificuldade crescente). */
   private spawnEnemy(): void {
     const wave = this.state.spawner.wave;
-    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 40;
+    const aheadX = this.state.camX + VIRT_W + 40;
     const roll = Math.random();
     let enemy: Enemy;
     if (wave >= 3 && roll < 0.22) {
@@ -295,24 +298,24 @@ export class Game {
   }
 
   private spawnHazard(): void {
-    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 50;
+    const aheadX = this.state.camX + VIRT_W + 50;
     this.state.hazards.push(makeHazard(aheadX));
   }
 
   private spawnPickup(): void {
-    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 60;
+    const aheadX = this.state.camX + VIRT_W + 60;
     const y = GROUND_Y - PICKUP_H - (50 + Math.random() * 120);
     this.state.pickups.push(makeStar(aheadX, y));
   }
 
   private spawnCrate(): void {
-    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 50;
+    const aheadX = this.state.camX + VIRT_W + 50;
     const pick = CRATE_WEAPONS[(Math.random() * CRATE_WEAPONS.length) | 0];
     this.state.crates.push(makeWeaponCrate(aheadX, pick.id as "shotgun" | "bazooka", pick.ammo));
   }
 
   private spawnPrisoner(): void {
-    const aheadX = this.state.player.x + (VIRT_W - PLAYER_SCREEN_X) + 60;
+    const aheadX = this.state.camX + VIRT_W + 60;
     this.state.prisoners.push(makePrisoner(aheadX));
   }
 
@@ -329,9 +332,15 @@ export class Game {
       h: s.player.h - insetY,
     };
 
-    // Shake/haptic de aterrissagem.
+    // Shake + VFX (poeira + anel neon ciano) de aterrissagem.
     if (s.player.landImpact > 0.35) {
       s.shake = Math.max(s.shake, 5 * s.player.landImpact);
+      spawnLandingBurst(
+        s,
+        s.player.x + s.player.w / 2,
+        s.player.y + s.player.h,
+        0.6 + s.player.landImpact,
+      );
       s.player.landImpact = 0;
     }
 

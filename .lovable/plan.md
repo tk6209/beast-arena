@@ -1,58 +1,67 @@
-## Beast Arena — Integração do Catálogo v4 + Sistema de Ondas/Admin
+## Objetivo
 
-### Parte 1 — Catálogo v4
-- Copiar `beast_arena_catalog_v4_final.json` para `src/game/data/catalog.json`
-- Criar `src/game/types/catalog.ts` com tipos
-- Criar `src/game/data/index.ts` exportando `CATALOG`, `MONSTROS`, `SWARMS`, `CARTAS`, `ONDAS`, `PODERES`
-- Manter `src/game/data.ts` (engine/frases/helpers/`novaMao`/`IA_PRESETS`) — apenas trocar a fonte de `MONSTROS`/`SWARMS` pelo JSON, preservando o shape consumido
+Tornar o avanço do mundo **constante** como no Metal Slug: a câmera sempre rola para frente no mesmo ritmo. As setas / gestos só mudam **a posição do herói dentro da tela**, nunca a velocidade do cenário. Acrescentar VFX de aterrissagem (poeira + anel neon) e simplificar a câmera (sem look-ahead variável — o efeito de aceleração agora vem do herói deslizando para frente na tela).
 
-### Parte 2 — Tabela `waves` + cron + hook de onda ativa
-- Migration: tabela `waves` (RLS leitura pública, escrita admin)
-- Seed dos 13 registros via `supabase--insert`
-- Edge function `activate-waves` + cron diário `0 1 * * *`
-- `src/hooks/useWaveAtiva.ts` — Supabase Realtime em `waves`, expõe `{ waveAtual, waveNome, proximaOnda, loading }` globalmente via Context
+## Mudanças
 
-### Parte 3 — RBAC seguro + tabelas admin
-Padrão Lovable: tabela `user_roles` + enum `app_role` + `has_role()` SECURITY DEFINER (não JWT claim).
-- Migrations: enum `app_role`, `user_roles`, `has_role`, `sorteios`, `sorteio_participacoes`, `early_access_items`
-- Hooks: `useUserRole`, `useCatalog`, `usePlayerAccess`
+### 1. Câmera com scroll constante (`GameState.camX`)
 
-### Parte 4 — Filtragem da seleção
-Jogador comum vê só monstros `status='ativo'` (15 da Onda 0) + seus early_access individuais. Admin/mod vê tudo com `StatusBadge`.
-Aplicar `usePlayerAccess` em: TelaMonstro, TelaDeckBuilder, TelaColecao, TelaLoja, IA do matchmaking.
+- Adicionar `camX: number` em `GameState` (estado inicial 0).
+- No loop de update do `Game.ts`, durante `phase === "playing"`, avançar `s.camX += RUN_SPEED * dt`.
+- `cameraX(state)` passa a retornar `state.camX` (não mais `player.x - PLAYER_SCREEN_X`).
+- Adicionar `worldFrontier(state)` = `state.camX + VIRT_W` para spawnar à frente da câmera.
+- Reset zera `camX`.
 
-### Parte 5 — Painel Admin
-- Rota `/admin` protegida
-- `AdminPanel` com abas: Ondas, Sorteios, Conteúdo
-- Edge function `executar-sorteio` (embaralha, grava ganhadores, popula `early_access_items`)
+### 2. Movimento do herói relativo à câmera
 
-### Parte 6 — StatusBadge
-- `src/components/ui/StatusBadge.tsx` com tokens do design system
-- Inserido nos cards das 4 telas — visível apenas para admin/mod
+`player.ts`:
+- Velocidade base do herói = `RUN_SPEED` (igual à câmera → fica centralizado por padrão).
+- `moveX === 1` → herói anda **+180 px/s** mais rápido que a câmera (desliza para frente na tela).
+- `moveX === -1` → herói anda **−180 px/s** mais devagar (desliza para trás).
+- Agachado: velocidade do herói reduz, mas câmera continua.
+- Clamp do herói na "tela" segura: `[camX + 40, camX + VIRT_W − w − 60]`. Se ficar para trás demais, é empurrado pela borda esquerda (sem game over) — feedback claro de que não se pode parar.
 
-### Parte 7 — WaveBanner (novo)
-- `src/components/game/WaveBanner.tsx` exibido na tela principal (TelaHome / TelaLobbyPrincipal)
-- Lê de `useWaveAtiva()` a `proximaOnda` (onda com `status='pre_lancamento'` e menor `release_date` > hoje)
-- Calcula countdown em dias até `release_date`
-- Texto: `🔥 Nova onda chegando em X dias: [wave_nome]` (estilo neon cyan #00e5ff conforme design system Beast)
-- Renderização condicional:
-  - Só aparece se existir onda em `pre_lancamento`
-  - Oculto para admin (`isAdmin === true`) — admin não precisa ver
-  - Mostrado para jogador comum e jogador_vip
-- Auto-atualiza diariamente (recalcula countdown ao montar; opcional `setInterval` a cada hora)
-- Animação sutil de pulse/glow para chamar atenção sem ser intrusivo
+### 3. Spawning e cleanup referem `camX`, não `player.x`
 
-### Ordem de deploy
-1. catalog.json + tipos + `src/game/data/index.ts` + ajuste em `data.ts`
-2. Migrations (waves, app_role, user_roles, has_role, sorteios, participacoes, early_access)
-3. Seed de `waves` (insert tool)
-4. Hooks (`useUserRole`, `useWaveAtiva`, `useCatalog`, `usePlayerAccess`)
-5. Edge functions `activate-waves` (+cron) e `executar-sorteio`
-6. AdminPanel + rota
-7. Filtro nas telas + StatusBadge
-8. WaveBanner na tela principal
-9. Teste completo do fluxo
+Substituir nas funções de spawn (`spawnEnemy/Hazard/Pickup/Crate/Prisoner`) e nos filtros de cleanup (`pickups/crates/prisoners/enemies/hazards/bullets/enemyBullets`):
 
-### Confirmações pendentes
-1. **Promoção a admin**: posso promover automaticamente o `user_id` da sessão logada no preview?
-2. **Tela do banner**: prefere o WaveBanner em `TelaHome`, `TelaLobbyPrincipal`, ou ambas?
+- `player.x + (VIRT_W − PLAYER_SCREEN_X) + N` → `state.camX + VIRT_W + N`
+- `player.x − 200` → `state.camX − 200`
+- `onScreenLimit` (em `enemies.ts`) → `state.camX + VIRT_W * 0.95`
+- Boss target em `boss.ts` e `Game.ts`: `state.camX + (VIRT_W − BOSS_W − 70)`
+
+Colisões, sombra e desenho do herói continuam usando `player.x` (posição real no mundo).
+
+### 4. VFX de aterrissagem (neon + poeira)
+
+Em `Game.ts handleCollisions`, quando `s.player.landImpact > 0.35`:
+- Mantém o `shake` (já existente).
+- Spawn **dust burst**: 8 partículas brancas/areia laterais ao pé do herói (vx ±200, vy negativo curto), 0.35s.
+- Spawn **anel neon ciano**: 14 partículas radiais coloridas `#00e5ff/#7fd0e0` brotando horizontalmente (vy ~0) — visual puro, sem interferir em hitbox.
+- Adicionar `spawnLandingBurst(state, x, y, force)` em `particles.ts`.
+
+### 5. Limpeza do código de câmera
+
+- Remover o comentário desatualizado em `camera.ts` e o `look-ahead`/landing-shake já está em outro lugar.
+- `types.ts`: comentário do `player.x` → "posição do herói no mundo (separada do scroll constante da câmera)".
+
+## Arquivos editados
+
+- `src/games/capyrocket/engine/types.ts` — adicionar `camX` em `GameState`.
+- `src/games/capyrocket/engine/state.ts` — `camX: 0` no init/reset.
+- `src/games/capyrocket/engine/camera.ts` — retornar `state.camX`.
+- `src/games/capyrocket/engine/Game.ts` — avançar `camX` no loop; trocar `player.x` por `camX` em spawn/cleanup; chamar `spawnLandingBurst` no impacto.
+- `src/games/capyrocket/engine/player.ts` — velocidade do herói = base ± offset; clamp em `[camX+40, camX+VIRT_W−w−60]`.
+- `src/games/capyrocket/engine/enemies.ts` — usar `state.camX` em frontier/cleanup.
+- `src/games/capyrocket/engine/bullets.ts` — cleanup baseado em `state.camX`.
+- `src/games/capyrocket/engine/boss.ts` — target baseado em `state.camX`.
+- `src/games/capyrocket/engine/particles.ts` — nova `spawnLandingBurst`.
+
+## Critérios de aceite
+
+- Segurar → faz o herói deslizar para a direita na tela; câmera continua igual.
+- Segurar ← faz o herói deslizar para a esquerda; câmera continua igual.
+- Soltar → herói volta gradualmente ao centro (porque sua velocidade volta = RUN_SPEED).
+- Cenário, hills, prédios, chão e inimigos rolam **sempre no mesmo ritmo**, independentemente do input.
+- Pular e cair gera anel ciano + poeira no chão; impacto sacode a tela mas não atinge nada.
+- Nenhuma colisão muda; hitbox/pose do agachar inalterados.

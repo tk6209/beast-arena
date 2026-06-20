@@ -51,6 +51,6 @@ export function updateBullets(state: GameState, dt: number): void {
   }
 
   state.bullets = state.bullets.filter(
-    (b) => b.life > 0 && b.x < state.player.x + VIRT_W,
+    (b) => b.life > 0 && b.x < state.camX + VIRT_W + 80,
   );
 }

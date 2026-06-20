@@ -114,7 +114,9 @@ export type Phase = "playing" | "gameover";
 export interface GameState {
   phase: Phase;
   time: number;
-  player: Player; // player.x é o progresso no mundo (a câmera deriva dele)
+  player: Player; // posição do herói no mundo (separada do scroll constante da câmera)
+  /** Scroll da câmera no mundo (avança a ritmo constante — estilo Metal Slug). */
+  camX: number;
   enemies: Enemy[];
   bullets: Bullet[];
   enemyBullets: EnemyBullet[];
