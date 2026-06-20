@@ -19,6 +19,7 @@ import {
   PRISONER_MIN_GAP,
   PRISONER_RND_GAP,
   ROCKET_SPLASH,
+  RUN_SPEED,
   VIRT_H,
   VIRT_W,
 } from "./constants";
@@ -39,7 +40,6 @@ import { InputManager } from "./input";
 import { spawnLandingBurst, spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
 import { draw } from "./render";
-import { drawDebugOverlay } from "./debugOverlay";
 import {
   addDistance,
   bestScore,
@@ -63,7 +63,6 @@ export class Game {
   private character: CharacterConfig;
   private state: GameState;
   private input = new InputManager();
-  private debug = true;
 
   constructor(characterId?: string) {
     this.character = getCharacter(characterId ?? "peao");
@@ -87,7 +86,6 @@ export class Game {
     this.ctx = canvas.getContext("2d");
     this.resize();
     window.addEventListener("resize", this.resize);
-    window.addEventListener("keydown", this.onDebugKey);
     this.input.attach({
       onJump: () => this.queueJump(),
       onRestart: () => this.restart(),
@@ -100,19 +98,11 @@ export class Game {
   destroy(): void {
     cancelAnimationFrame(this.animId);
     window.removeEventListener("resize", this.resize);
-    window.removeEventListener("keydown", this.onDebugKey);
     this.input.detach();
     this.listeners.clear();
     this.canvas = null;
     this.ctx = null;
   }
-
-  private onDebugKey = (e: KeyboardEvent): void => {
-    if (e.code === "F3") {
-      e.preventDefault();
-      this.debug = !this.debug;
-    }
-  };
 
   /* ── input vindo do React/teclado ── */
 
@@ -214,6 +204,9 @@ export class Game {
     s.time += dt;
     updatePlayer(s, dt, this.input.state);
     addDistance(s, dt);
+
+    // Câmera runner: avança sozinha a ritmo constante.
+    s.camX += RUN_SPEED * dt;
 
     const bossActive = !!s.boss;
 
@@ -578,6 +571,5 @@ export class Game {
     ctx.clip();
 
     draw(ctx, this.state);
-    if (this.debug) drawDebugOverlay(ctx, this.state, this.input.state);
   }
 }

@@ -62,9 +62,8 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
-  // Padrão Metal Slug: o herói anda livremente para os dois lados a uma
-  // velocidade própria. A câmera só avança quando ele empurra para a direita
-  // (one-way scroll — nunca retrocede), e o herói nunca sai pela esquerda.
+  // Modo runner: a câmera avança sozinha (em Game.ts). As setas só deslocam o
+  // herói DENTRO da tela; ele não pode ficar para trás da borda esquerda.
   let speed = RUN_SPEED;
   if (p.crouchT > 0.1) speed *= 1 - 0.45 * p.crouchT; // anda mais lento agachado
   p.x += input.moveX * speed * dt;
@@ -73,10 +72,6 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   const maxX = state.camX + VIRT_W - p.w - 24;
   if (p.x < minX) p.x = minX;
   else if (p.x > maxX) p.x = maxX;
-
-  // Câmera segue o herói à direita do trilho fixo (PLAYER_SCREEN_X) e nunca recua.
-  const targetCam = p.x - PLAYER_SCREEN_X;
-  if (targetCam > state.camX) state.camX = targetCam;
 }
 
 function approach(current: number, target: number, step: number): number {
