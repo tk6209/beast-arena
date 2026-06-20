@@ -8,6 +8,7 @@ import {
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
   PLAYER_H,
+  PLAYER_SCREEN_X,
   PLAYER_W,
   PRISONER_MIN_GAP,
   PRISONER_RND_GAP,
@@ -18,7 +19,7 @@ import type { GameState, Player } from "./types";
 
 function createPlayer(maxJumps: number): Player {
   return {
-    x: 0,
+    x: PLAYER_SCREEN_X,
     y: GROUND_Y - PLAYER_H,
     w: PLAYER_W,
     h: PLAYER_H,
