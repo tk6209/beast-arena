@@ -144,6 +144,10 @@ export interface GameState {
 
 export interface InputState {
   jumpQueued: boolean;
+  /** -1 = recuar, 0 = corrida automática, 1 = avançar mais rápido. */
+  moveX: -1 | 0 | 1;
+  /** Mantém o herói agachado (desvia de tiros altos, ocupa menos espaço). */
+  crouch: boolean;
 }
 
 export interface HudSnapshot {
