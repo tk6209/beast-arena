@@ -39,12 +39,11 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
   p.animPhase += dt;
 
-  // Corrida automática + modificador do jogador (recuar / acelerar). Agachado
-  // anda mais devagar.
+  // Runner: o mundo só anda PARA FRENTE. Setas mudam o ritmo (segurar para
+  // trás freia; segurar para frente acelera), mas nunca revertem o progresso.
   let speed = RUN_SPEED;
   if (input.moveX === 1) speed = RUN_SPEED * 1.6;
-  else if (input.moveX === -1) speed = -RUN_SPEED * 0.6;
-  if (crouching) speed *= 0.45;
+  else if (input.moveX === -1) speed = RUN_SPEED * 0.25; // freia, não recua
+  if (crouching) speed *= 0.5;
   p.x += speed * dt;
-  if (p.x < 0) p.x = 0;
 }
