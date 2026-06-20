@@ -62,14 +62,17 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
-  // Modo runner: a câmera avança sozinha (em Game.ts). As setas só deslocam o
-  // herói DENTRO da tela; ele não pode ficar para trás da borda esquerda.
-  let speed = RUN_SPEED;
-  if (p.crouchT > 0.1) speed *= 1 - 0.45 * p.crouchT; // anda mais lento agachado
-  p.x += input.moveX * speed * dt;
+  // Modo runner: a câmera avança sozinha (em Game.ts), continuamente. O herói
+  // se move livremente DENTRO do quadro — pode recuar até a borda esquerda da
+  // câmera (limite máximo de retorno) e avançar até a borda direita.
+  // Velocidade própria um pouco maior que a câmera para o recuo/avanço serem
+  // claros sem fazer o jogador "grudar" na parede.
+  const walkSpeed = RUN_SPEED * 1.35 * (1 - 0.4 * p.crouchT);
+  p.x += input.moveX * walkSpeed * dt;
 
-  const minX = state.camX + 24;
-  const maxX = state.camX + VIRT_W - p.w - 24;
+  // Margens internas (espaço de respiro nas bordas da tela).
+  const minX = state.camX + 16;
+  const maxX = state.camX + VIRT_W - p.w - 16;
   if (p.x < minX) p.x = minX;
   else if (p.x > maxX) p.x = maxX;
 }
