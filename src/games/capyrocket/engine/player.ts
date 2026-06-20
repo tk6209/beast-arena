@@ -54,6 +54,11 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
 
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
+
+  // Latch da direção para qual o herói está virado — usado para tiro e sprite.
+  if (input.aimX === 1 || input.moveX === 1) p.facingX = 1;
+  else if (input.aimX === -1 || input.moveX === -1) p.facingX = -1;
+
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 

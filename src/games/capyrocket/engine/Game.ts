@@ -266,7 +266,7 @@ export class Game {
     }
     for (const pr of s.prisoners) pr.bob += dt;
 
-    updateBullets(s, dt);
+    updateBullets(s, dt, this.input.state);
     updateEnemies(s, dt);
     updateEnemyBullets(s, dt);
     updateHazards(s);

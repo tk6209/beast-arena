@@ -25,6 +25,8 @@ export interface Player extends Rect {
   airT: number;
   /** Última velocidade vertical antes do contato com o chão (impacto). */
   landImpact: number;
+  /** Direção para a qual o herói está virado (-1 esq, 1 dir). Persiste depois de soltar a tecla. */
+  facingX: -1 | 1;
 }
 
 export type EnemyKind = "walker" | "shooter" | "tank";
@@ -156,6 +158,10 @@ export interface InputState {
   moveX: -1 | 0 | 1;
   /** Mantém o herói agachado (desvia de tiros altos, ocupa menos espaço). */
   crouch: boolean;
+  /** Direção de mira horizontal (-1 esquerda, 0 nenhuma, 1 direita) baseada nas setas mantidas. */
+  aimX: -1 | 0 | 1;
+  /** Direção de mira vertical (-1 cima, 0 frente, 1 baixo) baseada nas setas mantidas. */
+  aimY: -1 | 0 | 1;
 }
 
 export interface HudSnapshot {

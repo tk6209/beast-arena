@@ -33,6 +33,7 @@ function createPlayer(maxJumps: number): Player {
     crouchT: 0,
     airT: 0,
     landImpact: 0,
+    facingX: 1,
   };
 }
 

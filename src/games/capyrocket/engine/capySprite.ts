@@ -47,7 +47,8 @@ export function drawCapy(
   const bob = (1 - airT) * (1 - crouchT * 0.6) * -Math.abs(Math.sin(t * 16)) * 3;
   ctx.translate(0, bob);
   // Aplica squash & stretch global.
-  ctx.scale(stretchX, squashY);
+  // Espelha horizontalmente quando o herói está virado para a esquerda.
+  ctx.scale(stretchX * (p.facingX < 0 ? -1 : 1), squashY);
 
   // Pernas: ciclo de corrida no chão; recolhidas no ar; quase paradas agachado.
   const runStep = Math.sin(t * 16) * (1 - airT) * (1 - crouchT);
