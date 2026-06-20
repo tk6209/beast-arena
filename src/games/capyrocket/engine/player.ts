@@ -62,22 +62,21 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
-  // Estilo Metal Slug: a CÂMERA rola a ritmo constante (em Game.ts). As setas
-  // só deslocam o herói DENTRO da tela — nunca alteram o scroll do mundo.
-  // Base = velocidade da câmera (RUN_SPEED) → herói parado na tela.
-  // Avançar → desliza para a direita; recuar → desliza para a esquerda.
-  const drift = 180;
+  // Padrão Metal Slug: o herói anda livremente para os dois lados a uma
+  // velocidade própria. A câmera só avança quando ele empurra para a direita
+  // (one-way scroll — nunca retrocede), e o herói nunca sai pela esquerda.
   let speed = RUN_SPEED;
-  if (input.moveX === 1) speed = RUN_SPEED + drift;
-  else if (input.moveX === -1) speed = RUN_SPEED - drift;
-  if (p.crouchT > 0.1) speed -= drift * 0.35 * p.crouchT;
-  p.x += speed * dt;
+  if (p.crouchT > 0.1) speed *= 1 - 0.45 * p.crouchT; // anda mais lento agachado
+  p.x += input.moveX * speed * dt;
 
-  // Clamp na "tela visível": o herói não sai do quadro nem cai atrás da borda.
-  const minX = state.camX + 40;
-  const maxX = state.camX + VIRT_W - p.w - 60;
+  const minX = state.camX + 24;
+  const maxX = state.camX + VIRT_W - p.w - 24;
   if (p.x < minX) p.x = minX;
   else if (p.x > maxX) p.x = maxX;
+
+  // Câmera segue o herói à direita do trilho fixo (PLAYER_SCREEN_X) e nunca recua.
+  const targetCam = p.x - PLAYER_SCREEN_X;
+  if (targetCam > state.camX) state.camX = targetCam;
 }
 
 function approach(current: number, target: number, step: number): number {

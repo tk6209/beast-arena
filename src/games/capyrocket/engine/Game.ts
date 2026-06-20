@@ -205,9 +205,6 @@ export class Game {
     updatePlayer(s, dt, this.input.state);
     addDistance(s, dt);
 
-    // Scroll constante da câmera (estilo Metal Slug) — independente do input.
-    s.camX += RUN_SPEED * dt;
-
     const bossActive = !!s.boss;
 
     // Chefe a cada BOSS_WAVE ondas (uma vez por marco). Pausa spawns normais.
