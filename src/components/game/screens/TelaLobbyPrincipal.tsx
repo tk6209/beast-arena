@@ -98,6 +98,7 @@ export default function TelaLobbyPrincipal({
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[#0a0a0a] flex items-center justify-center p-2 sm:p-3 overflow-hidden select-none font-['Barlow']">
+      <h1 className="sr-only">Beast Arena Lobby</h1>
       {/* Landscape container */}
       <div className="relative w-full h-full max-w-[1280px] max-h-[720px] bg-[#0a0a0a] border-[6px] sm:border-8 border-black rounded-[24px] sm:rounded-[40px] overflow-hidden flex shadow-[0_0_50px_rgba(0,0,0,0.6)]">
 
@@ -260,7 +261,7 @@ function RailIcon({ children, onClick, active, danger, tooltip, className = "" }
       ? "bg-white text-[#ff5722] hover:bg-red-50"
       : "bg-white text-black hover:bg-[#ffeb3b]";
   return (
-    <button onClick={onClick} className={`group relative ${className}`}>
+    <button onClick={onClick} aria-label={tooltip} className={`group relative ${className}`}>
       <div className={`${base} ${variant}`}>{children}</div>
       {tooltip && (
         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-[#ffeb3b] text-[10px] font-['Bebas_Neue'] tracking-widest rounded border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">

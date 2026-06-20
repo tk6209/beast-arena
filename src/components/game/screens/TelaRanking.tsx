@@ -114,6 +114,7 @@ export default function TelaRanking({ userId, onVoltar }: Props) {
       ...pageBg(),
       background: "linear-gradient(180deg, #060a14 0%, #0a1628 40%, #0d1b2e 100%)",
     }}>
+      <h1 className="sr-only">Player Ranking</h1>
       <ChromeNoise />
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
