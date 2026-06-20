@@ -114,6 +114,14 @@ export class Game {
     this.input.state.jumpQueued = true;
   }
 
+  setMoveX(dir: -1 | 0 | 1): void {
+    this.input.state.moveX = dir;
+  }
+
+  setCrouch(on: boolean): void {
+    this.input.state.crouch = on;
+  }
+
   restart(): void {
     resetState(this.state, this.character);
     this.notify(true);
