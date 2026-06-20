@@ -7,6 +7,9 @@ import { CHARACTERS } from "../engine/characters";
 export default function CharacterSelect({ onSelect }: { onSelect: (id: string) => void }) {
   return (
     <div className="capy-select">
+      <a className="capy-select__back" href="/">
+        ← Jogos
+      </a>
       <div className="capy-select__head">
         <div className="capy-select__title">CAPI WARS</div>
         <div className="capy-select__sub">Escolha seu herói capivara</div>

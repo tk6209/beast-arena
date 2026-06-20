@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
+import GameSelect from "./pages/GameSelect.tsx";
 import OrientationGate from "./components/game/OrientationGate";
 
 // Rotas secundárias carregadas sob demanda — fora do bundle inicial do jogo.
@@ -22,7 +23,9 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={null}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              {/* Menu inicial: escolha entre os jogos antes de começar. */}
+              <Route path="/" element={<GameSelect />} />
+              <Route path="/beast-arena" element={<Index />} />
               <Route path="/admin" element={<AdminPanel />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
