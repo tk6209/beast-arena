@@ -22,23 +22,35 @@ export function drawCapy(
   const cx = PLAYER_SCREEN_X + p.w / 2;
   const feetY = p.y + p.h;
   const t = p.animPhase;
-  const onGround = p.onGround;
   const fur = rec.palette;
   const accent = rec.accentColor;
-  const outline = shade(fur.furDark, -0.35); // contorno escuro (estilo pintura)
+  // Linhas internas suaves (sem contorno duro — referência tem shading 3D).
+  const softLine = shade(fur.furDark, -0.15);
+  const crouchT = p.crouchT;
+  const airT = p.airT;
+  // Squash & stretch baseado no agachamento.
+  const squashY = 1 - 0.35 * crouchT;
+  const stretchX = 1 + 0.18 * crouchT;
 
-  // Sombra.
-  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  // Sombra (encolhe quando está no ar, aumenta quando agacha).
+  const shadowAlpha = 0.28 * (1 - 0.55 * airT);
+  const shadowW = p.w * (0.5 + 0.15 * crouchT - 0.2 * airT);
+  ctx.fillStyle = `rgba(0,0,0,${shadowAlpha.toFixed(3)})`;
   ctx.beginPath();
-  ctx.ellipse(cx, feetY + 2, p.w * 0.5, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, GROUND_Y_VISUAL_OFFSET(feetY, airT, p.h), Math.max(8, shadowW), 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
   ctx.translate(cx, feetY);
-  const bob = onGround ? -Math.abs(Math.sin(t * 16)) * 3 : 0;
+  // Bob da corrida — diminui agachado, some no ar.
+  const bob = (1 - airT) * (1 - crouchT * 0.6) * -Math.abs(Math.sin(t * 16)) * 3;
   ctx.translate(0, bob);
+  // Aplica squash & stretch global.
+  ctx.scale(stretchX, squashY);
 
-  const step = onGround ? Math.sin(t * 16) : -0.7;
+  // Pernas: ciclo de corrida no chão; recolhidas no ar; quase paradas agachado.
+  const runStep = Math.sin(t * 16) * (1 - airT) * (1 - crouchT);
+  const airTuck = airT * 0.9; // recolhe as pernas no pulo
 
   // ── Pernas (curtas, paleta canônica) ──
   drawLeg(ctx, -5, step, fur.furDark);
