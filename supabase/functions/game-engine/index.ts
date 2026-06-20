@@ -965,12 +965,12 @@ Deno.serve(async (req) => {
     if (sessionId && action !== "init_game" && isAuthenticated && requesterUserId && payload?.slot !== undefined) {
       const { data: slotRow } = await supabase
         .from("game_players")
-        .select("player_slot")
+        .select("slot, state_json")
         .eq("session_id", sessionId)
-        .eq("user_id", requesterUserId)
+        .filter("state_json->>user_id", "eq", requesterUserId)
         .maybeSingle();
 
-      if (slotRow && slotRow.player_slot !== payload.slot) {
+      if (slotRow && slotRow.slot !== payload.slot) {
         return new Response(JSON.stringify({ error: "Slot inválido para este usuário" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -1015,7 +1015,7 @@ Deno.serve(async (req) => {
       for (const evt of (result.events || [])) {
         await supabase.from("game_events").insert({
           session_id: sessionId,
-          player_slot: payload.slot ?? 0,
+          player_slot: payload?.slot ?? 0,
           event_type: evt.type,
           payload_json: evt,
         });
