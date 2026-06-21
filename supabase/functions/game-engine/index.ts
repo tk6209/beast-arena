@@ -973,9 +973,9 @@ Deno.serve(async (req) => {
       }
       const { data: slotRow } = await supabase
         .from("game_players")
-        .select("slot, state_json")
+        .select("slot, user_id")
         .eq("session_id", sessionId)
-        .filter("state_json->>user_id", "eq", requesterUserId)
+        .eq("user_id", requesterUserId)
         .maybeSingle();
 
       if (!slotRow || slotRow.slot !== payload.slot) {
