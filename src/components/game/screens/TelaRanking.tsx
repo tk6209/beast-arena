@@ -66,7 +66,7 @@ export default function TelaRanking({ userId, onVoltar }: Props) {
       if (data) {
         const userIds = data.map(d => d.user_id);
         const [{ data: profiles }, { data: stats }] = await Promise.all([
-          supabase.from("profiles").select("user_id, display_name").in("user_id", userIds),
+          supabase.rpc("get_public_profiles", { _user_ids: userIds }),
           supabase.from("user_stats").select("user_id, favorite_monster").in("user_id", userIds),
         ]);
         const nameMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || []);

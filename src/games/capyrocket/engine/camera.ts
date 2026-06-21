@@ -1,9 +1,12 @@
-import { PLAYER_SCREEN_X } from "./constants";
 import type { GameState } from "./types";
 
-/** Offset da câmera no mundo (o jogador fica fixo em PLAYER_SCREEN_X na tela). */
+/**
+ * Offset da câmera no mundo. Avança em ritmo CONSTANTE (estilo Metal Slug):
+ * o cenário sempre rola para a frente no mesmo passo, independentemente do
+ * que o jogador faça. As setas só deslocam o herói DENTRO da tela.
+ */
 export function cameraX(state: GameState): number {
-  return state.player.x - PLAYER_SCREEN_X;
+  return state.camX;
 }
 
 /** Converte uma coordenada-x do mundo para a tela, dado o offset da câmera. */

@@ -22,27 +22,41 @@ export function drawCapy(
   const cx = PLAYER_SCREEN_X + p.w / 2;
   const feetY = p.y + p.h;
   const t = p.animPhase;
-  const onGround = p.onGround;
   const fur = rec.palette;
   const accent = rec.accentColor;
-  const outline = shade(fur.furDark, -0.35); // contorno escuro (estilo pintura)
+  // Linhas internas suaves (sem contorno duro — referência tem shading 3D).
+  const softLine = shade(fur.furDark, -0.15);
+  const crouchT = p.crouchT;
+  const airT = p.airT;
+  // Squash & stretch baseado no agachamento.
+  const squashY = 1 - 0.35 * crouchT;
+  const stretchX = 1 + 0.18 * crouchT;
 
-  // Sombra.
-  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  // Sombra (encolhe quando está no ar, aumenta quando agacha).
+  const shadowAlpha = 0.28 * (1 - 0.55 * airT);
+  const shadowW = p.w * (0.5 + 0.15 * crouchT - 0.2 * airT);
+  // Sombra projetada no chão (não sobe com o personagem no ar).
+  ctx.fillStyle = `rgba(0,0,0,${shadowAlpha.toFixed(3)})`;
   ctx.beginPath();
-  ctx.ellipse(cx, feetY + 2, p.w * 0.5, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, feetY + 2 + (p.y < (feetY - p.h) ? 0 : 0), Math.max(8, shadowW), 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
   ctx.translate(cx, feetY);
-  const bob = onGround ? -Math.abs(Math.sin(t * 16)) * 3 : 0;
+  // Bob da corrida — diminui agachado, some no ar.
+  const bob = (1 - airT) * (1 - crouchT * 0.6) * -Math.abs(Math.sin(t * 16)) * 3;
   ctx.translate(0, bob);
+  // Aplica squash & stretch global.
+  // Espelha horizontalmente quando o herói está virado para a esquerda.
+  ctx.scale(stretchX * (p.facingX < 0 ? -1 : 1), squashY);
 
-  const step = onGround ? Math.sin(t * 16) : -0.7;
+  // Pernas: ciclo de corrida no chão; recolhidas no ar; quase paradas agachado.
+  const runStep = Math.sin(t * 16) * (1 - airT) * (1 - crouchT);
+  const airTuck = airT * 0.9; // recolhe as pernas no pulo
 
   // ── Pernas (curtas, paleta canônica) ──
-  drawLeg(ctx, -5, step, fur.furDark);
-  drawLeg(ctx, 7, -step, fur.fur);
+  drawLeg(ctx, -5, runStep, fur.furDark, airTuck, crouchT);
+  drawLeg(ctx, 7, -runStep, fur.fur, airTuck, crouchT);
 
   // ── Tronco "barril" com volume ──
   const g = ctx.createLinearGradient(-16, -54, 14, -20);
@@ -52,10 +66,13 @@ export function drawCapy(
   rrPath(ctx, -16, -52, 32, 34, 13);
   ctx.fillStyle = g;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
+  // Linha interna suave (sem outline duro — referência tem shading 3D).
+  ctx.strokeStyle = softLine;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.35;
   ctx.lineJoin = "round";
   ctx.stroke();
+  ctx.globalAlpha = 1;
   // barriga clara
   rrPath(ctx, -9, -42, 19, 22, 9);
   ctx.fillStyle = fur.furLight;
@@ -89,9 +106,6 @@ export function drawCapy(
   rrPath(ctx, -14, -92, 12, 12, 5);
   ctx.fillStyle = fur.furDark;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
   ctx.fillStyle = shade(COLORS.muzzleWarm, -0.1);
   ctx.beginPath();
   ctx.ellipse(-8, -86, 3.5, 4, 0, 0, Math.PI * 2);
@@ -105,10 +119,6 @@ export function drawCapy(
   rrPath(ctx, -17, -88, 35, 38, 15);
   ctx.fillStyle = headGrad;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.stroke();
   // luz de borda no topo
   ctx.fillStyle = "rgba(255,255,255,0.16)";
   ctx.beginPath();
@@ -129,9 +139,6 @@ export function drawCapy(
   rrPath(ctx, 12, -74, 22, 22, 10);
   ctx.fillStyle = snoutGrad;
   ctx.fill();
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 2;
-  ctx.stroke();
   // nariz
   rrPath(ctx, 26, -69, 13, 11, 5);
   ctx.fillStyle = COLORS.nosePaws;
@@ -165,14 +172,7 @@ export function drawCapy(
   ctx.beginPath();
   ctx.arc(6.4, -67.6, 1.1, 0, Math.PI * 2);
   ctx.fill();
-  // sobrancelha determinada
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(2, -79);
-  ctx.lineTo(14, -75.5);
-  ctx.stroke();
+  // Expressão neutra/amistosa (sem sobrancelha "brava" — fiel à base 360).
 
   // ── Acessório de cabeça por personagem ──
   drawHeadgear(ctx, rec.headgear, accent);
@@ -201,13 +201,24 @@ export function drawCapy(
   ctx.restore();
 }
 
-function drawLeg(ctx: CanvasRenderingContext2D, hipX: number, step: number, color: string): void {
-  const footX = hipX + step * 11;
-  const lift = Math.max(0, step) * 7;
-  capsule(ctx, hipX, -22, footX, -3 - lift, 9, color);
+function drawLeg(
+  ctx: CanvasRenderingContext2D,
+  hipX: number,
+  step: number,
+  color: string,
+  airTuck = 0,
+  crouchT = 0,
+): void {
+  // No ar, pernas recolhidas (footY sobe, footX volta para o centro do quadril).
+  // Agachado, footY também sobe (pernas dobradas embaixo do corpo).
+  const tuck = Math.max(airTuck, crouchT * 0.7);
+  const footX = hipX + step * 11 * (1 - tuck);
+  const lift = Math.max(0, step) * 7 * (1 - tuck);
+  const footY = -3 - lift + tuck * 12;
+  capsule(ctx, hipX, -22 + tuck * 6, footX, footY, 9, color);
   ctx.fillStyle = COLORS.nosePaws;
   ctx.beginPath();
-  ctx.ellipse(footX, -3 - lift, 6, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(footX, footY, 6, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 

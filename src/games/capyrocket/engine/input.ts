@@ -10,20 +10,89 @@ interface InputCallbacks {
  * Game.queueJump) escrevem na mesma ação. Enter/R reiniciam no game-over.
  */
 export class InputManager {
-  readonly state: InputState = { jumpQueued: false };
+  readonly state: InputState = {
+    jumpQueued: false,
+    moveX: 0,
+    crouch: false,
+    aimX: 0,
+    aimY: 0,
+  };
   private cb: InputCallbacks | null = null;
+  private left = false;
+  private right = false;
+  private up = false;
+  private down = false;
+
+  private recomputeMoveX(): void {
+    this.state.moveX = this.right && !this.left ? 1 : this.left && !this.right ? -1 : 0;
+    this.state.aimX = this.right && !this.left ? 1 : this.left && !this.right ? -1 : 0;
+  }
+
+  private recomputeAimY(): void {
+    this.state.aimY = this.down && !this.up ? 1 : this.up && !this.down ? -1 : 0;
+    this.state.crouch = this.down;
+  }
+
   private onKeyDown = (e: KeyboardEvent) => {
-    if (e.repeat) return;
     switch (e.code) {
       case "Space":
-      case "ArrowUp":
       case "KeyW":
+        if (e.repeat) return;
         e.preventDefault();
         this.cb?.onJump();
         break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (!this.up && !e.repeat) this.cb?.onJump();
+        this.up = true;
+        this.recomputeAimY();
+        break;
+      case "ArrowLeft":
+      case "KeyA":
+        e.preventDefault();
+        this.left = true;
+        this.recomputeMoveX();
+        break;
+      case "ArrowRight":
+      case "KeyD":
+        e.preventDefault();
+        this.right = true;
+        this.recomputeMoveX();
+        break;
+      case "ArrowDown":
+      case "KeyS":
+        e.preventDefault();
+        this.down = true;
+        this.recomputeAimY();
+        break;
       case "Enter":
       case "KeyR":
+        if (e.repeat) return;
         this.cb?.onRestart();
+        break;
+    }
+  };
+
+  private onKeyUp = (e: KeyboardEvent) => {
+    switch (e.code) {
+      case "ArrowLeft":
+      case "KeyA":
+        this.left = false;
+        this.recomputeMoveX();
+        break;
+      case "ArrowRight":
+      case "KeyD":
+        this.right = false;
+        this.recomputeMoveX();
+        break;
+      case "ArrowUp":
+        this.up = false;
+        this.recomputeAimY();
+        break;
+      case "ArrowDown":
+      case "KeyS":
+        this.down = false;
+        this.recomputeAimY();
         break;
     }
   };
@@ -31,10 +100,20 @@ export class InputManager {
   attach(cb: InputCallbacks): void {
     this.cb = cb;
     window.addEventListener("keydown", this.onKeyDown, { passive: false });
+    window.addEventListener("keyup", this.onKeyUp);
   }
 
   detach(): void {
     window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
+    this.left = false;
+    this.right = false;
+    this.up = false;
+    this.down = false;
+    this.state.moveX = 0;
+    this.state.crouch = false;
+    this.state.aimX = 0;
+    this.state.aimY = 0;
     this.cb = null;
   }
 }

@@ -19,6 +19,14 @@ export interface Player extends Rect {
   muzzle: number; // timer do flash do cano
   jumpsUsed: number;
   maxJumps: number; // 2 = pulo duplo (CapiNinja/Mágico etc.)
+  /** 0 = em pé, 1 = totalmente agachado. Interpolado para transição suave. */
+  crouchT: number;
+  /** 0 = no chão, 1 = totalmente no ar. Interpolado para o tuck do pulo. */
+  airT: number;
+  /** Última velocidade vertical antes do contato com o chão (impacto). */
+  landImpact: number;
+  /** Direção para a qual o herói está virado (-1 esq, 1 dir). Persiste depois de soltar a tecla. */
+  facingX: -1 | 1;
 }
 
 export type EnemyKind = "walker" | "shooter" | "tank";
@@ -108,7 +116,9 @@ export type Phase = "playing" | "gameover";
 export interface GameState {
   phase: Phase;
   time: number;
-  player: Player; // player.x é o progresso no mundo (a câmera deriva dele)
+  player: Player; // posição do herói no mundo (separada do scroll constante da câmera)
+  /** Scroll da câmera no mundo (avança a ritmo constante — estilo Metal Slug). */
+  camX: number;
   enemies: Enemy[];
   bullets: Bullet[];
   enemyBullets: EnemyBullet[];
@@ -144,6 +154,14 @@ export interface GameState {
 
 export interface InputState {
   jumpQueued: boolean;
+  /** -1 = recuar, 0 = corrida automática, 1 = avançar mais rápido. */
+  moveX: -1 | 0 | 1;
+  /** Mantém o herói agachado (desvia de tiros altos, ocupa menos espaço). */
+  crouch: boolean;
+  /** Direção de mira horizontal (-1 esquerda, 0 nenhuma, 1 direita) baseada nas setas mantidas. */
+  aimX: -1 | 0 | 1;
+  /** Direção de mira vertical (-1 cima, 0 frente, 1 baixo) baseada nas setas mantidas. */
+  aimY: -1 | 0 | 1;
 }
 
 export interface HudSnapshot {

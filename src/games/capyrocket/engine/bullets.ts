@@ -2,14 +2,14 @@ import { MUZZLE_TIME, PLAYER_H, PLAYER_W, VIRT_W } from "./constants";
 import { makeBullet } from "./entities";
 import { activeWeapon } from "./weapons";
 import { capiSfx } from "../vendor/sfx";
-import type { GameState } from "./types";
+import type { GameState, InputState } from "./types";
 
 /**
  * Tiro automático: a capivara dispara pra frente conforme a arma ATIVA (tier da
  * jornada ou arma especial da caixa). Suporta tiro espalhado (escopeta) e
  * foguete (bazuca). Consome munição da arma especial.
  */
-export function updateBullets(state: GameState, dt: number): void {
+export function updateBullets(state: GameState, dt: number, input?: InputState): void {
   const p = state.player;
   state.fireCooldown -= dt;
 
@@ -17,14 +17,22 @@ export function updateBullets(state: GameState, dt: number): void {
     const w = activeWeapon(state);
     state.fireCooldown += w.fireInterval;
 
-    const muzzleX = p.x + PLAYER_W + 6;
+    // Mira sempre horizontal, na MESMA direção em que o sprite está virado:
+    // atira sempre pra FRENTE do personagem. Como `facingX` só vira pra -1
+    // enquanto o jogador segura ←, o tiro sai pra trás somente quando o herói
+    // realmente está olhando pra trás.
+    const ndx: 1 | -1 = p.facingX === -1 ? -1 : 1;
+    const ndy = 0;
+    // Muzzle sempre na ponta frontal do sprite (lado para onde olha).
+    const muzzleX = p.x + PLAYER_W / 2 + ndx * (PLAYER_W / 2 + 8);
     const muzzleY = p.y + PLAYER_H * 0.5;
     const n = w.pellets;
     for (let i = 0; i < n; i++) {
       const vy = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;
+      const vx = ndx * w.bulletSpeed;
       state.bullets.push(
         makeBullet(muzzleX, muzzleY, {
-          vx: w.bulletSpeed,
+          vx,
           vy,
           damage: w.damage,
           kind: w.kind,
@@ -51,6 +59,11 @@ export function updateBullets(state: GameState, dt: number): void {
   }
 
   state.bullets = state.bullets.filter(
-    (b) => b.life > 0 && b.x < state.player.x + VIRT_W,
+    (b) =>
+      b.life > 0 &&
+      b.x < state.camX + VIRT_W + 200 &&
+      b.x > state.camX - 200 &&
+      b.y > -200 &&
+      b.y < 900,
   );
 }

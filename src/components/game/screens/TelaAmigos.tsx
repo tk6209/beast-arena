@@ -73,9 +73,7 @@ export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
     if (friendIds.length === 0) { setFriends([]); return; }
 
     const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, public_id, level")
-      .in("user_id", friendIds);
+      .rpc("get_public_profiles", { _user_ids: friendIds });
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
     setFriends(data.map(f => ({
@@ -95,9 +93,7 @@ export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
 
     const userIds = [...new Set(data.flatMap(r => [r.sender_id, r.receiver_id]))];
     const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, public_id, level")
-      .in("user_id", userIds);
+      .rpc("get_public_profiles", { _user_ids: userIds });
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
     setRequests(data.map(r => ({
@@ -112,13 +108,10 @@ export default function TelaAmigos({ user, onVoltar, onConvidar }: Props) {
     setLoading(true);
     const q = searchQuery.trim();
 
-    // Search by public_id or display_name
+    // Search by public_id or display_name (via SECURITY DEFINER RPC that
+    // only exposes safe fields — no coins/gems/xp leakage).
     const { data } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, public_id, level")
-      .or(`public_id.ilike.%${q}%,display_name.ilike.%${q}%`)
-      .neq("user_id", user.id)
-      .limit(10);
+      .rpc("search_public_profiles", { _q: q, _exclude: user.id });
 
     setSearchResults((data || []) as FriendProfile[]);
     setLoading(false);

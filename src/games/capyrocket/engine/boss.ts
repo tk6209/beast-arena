@@ -1,8 +1,9 @@
 import {
   BOSS_FIRE_INTERVAL,
-  BOSS_HOLD_AHEAD,
+  BOSS_W,
   EBULLET_Y,
   GROUND_Y,
+  VIRT_W,
 } from "./constants";
 import { makeEnemyBullet } from "./entities";
 import type { GameState } from "./types";
@@ -18,8 +19,8 @@ export function updateBoss(state: GameState, dt: number): void {
 
   boss.phase += dt;
 
-  // Posição-alvo: ancorada à frente do jogador (acompanha a câmera).
-  const targetX = state.player.x + BOSS_HOLD_AHEAD;
+  // Posição-alvo: ancorada à frente da CÂMERA (scroll constante).
+  const targetX = state.camX + VIRT_W - BOSS_W - 70;
   if (boss.entering) {
     boss.x += (targetX - boss.x) * Math.min(1, dt * 1.8);
     if (Math.abs(boss.x - targetX) < 6) boss.entering = false;

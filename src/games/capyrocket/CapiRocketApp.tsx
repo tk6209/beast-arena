@@ -71,7 +71,13 @@ export default function CapiRocketApp() {
           <>
             <Hud snap={snap} />
 
-            {snap.phase === "playing" && <TapLayer onTap={handleTap} />}
+            {snap.phase === "playing" && (
+              <TapLayer
+                onTap={handleTap}
+                onMove={(d) => gameRef.current?.setMoveX(d)}
+                onCrouch={(c) => gameRef.current?.setCrouch(c)}
+              />
+            )}
 
             {snap.phase === "playing" && !started && (
               <div className="capy-start-hint">Toque para PULAR</div>
