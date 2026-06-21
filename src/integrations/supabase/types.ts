@@ -1106,35 +1106,19 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          display_name: string | null
-          id: string | null
-          level: number | null
-          public_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          display_name?: string | null
-          id?: string | null
-          level?: number | null
-          public_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          display_name?: string | null
-          id?: string | null
-          level?: number | null
-          public_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_public_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          level: number
+          public_id: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1145,6 +1129,16 @@ export type Database = {
       is_session_participant: {
         Args: { _session_id: string }
         Returns: boolean
+      }
+      search_public_profiles: {
+        Args: { _exclude?: string; _q: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          level: number
+          public_id: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
