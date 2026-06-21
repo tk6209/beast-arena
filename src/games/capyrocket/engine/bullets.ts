@@ -17,13 +17,14 @@ export function updateBullets(state: GameState, dt: number, input?: InputState):
     const w = activeWeapon(state);
     state.fireCooldown += w.fireInterval;
 
-    // Mira sempre horizontal. Em modo runner (Metal Slug), o padrão é atirar
-    // PRA FRENTE (direita). Só dispara pra trás quando o jogador está ativamente
-    // segurando esquerda — assim os tiros nunca saem "de trás" quando o herói
-    // está parado ou andando pra frente.
-    const ndx = input?.aimX === -1 ? -1 : 1;
+    // Mira sempre horizontal, na MESMA direção em que o sprite está virado:
+    // atira sempre pra FRENTE do personagem. Como `facingX` só vira pra -1
+    // enquanto o jogador segura ←, o tiro sai pra trás somente quando o herói
+    // realmente está olhando pra trás.
+    const ndx: 1 | -1 = p.facingX === -1 ? -1 : 1;
     const ndy = 0;
-    const muzzleX = p.x + PLAYER_W / 2 + ndx * (PLAYER_W / 2 + 6);
+    // Muzzle sempre na ponta frontal do sprite (lado para onde olha).
+    const muzzleX = p.x + PLAYER_W / 2 + ndx * (PLAYER_W / 2 + 8);
     const muzzleY = p.y + PLAYER_H * 0.5;
     const n = w.pellets;
     for (let i = 0; i < n; i++) {
