@@ -326,6 +326,7 @@ export type Database = {
           slot: number
           state_json: Json | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -338,6 +339,7 @@ export type Database = {
           slot: number
           state_json?: Json | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -350,6 +352,7 @@ export type Database = {
           slot?: number
           state_json?: Json | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1103,7 +1106,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          display_name: string | null
+          id: string | null
+          level: number | null
+          public_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          display_name?: string | null
+          id?: string | null
+          level?: number | null
+          public_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          display_name?: string | null
+          id?: string | null
+          level?: number | null
+          public_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
