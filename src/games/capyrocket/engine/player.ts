@@ -55,24 +55,24 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
 
-  // Latch da direção para qual o herói está virado — usado para tiro e sprite.
-  if (input.aimX === 1 || input.moveX === 1) p.facingX = 1;
-  else if (input.aimX === -1 || input.moveX === -1) p.facingX = -1;
+  // Latch da direção para qual o herói está virado — usado para sprite.
+  // Padrão runner: vira pra esquerda só enquanto o jogador está ativamente
+  // segurando esquerda; caso contrário volta a olhar pra frente (direita).
+  if (input.moveX === -1 || input.aimX === -1) p.facingX = -1;
+  else p.facingX = 1;
 
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
-  // Modo runner: a câmera avança sozinha (em Game.ts), continuamente. O herói
-  // se move livremente DENTRO do quadro — pode recuar até a borda esquerda da
-  // câmera (limite máximo de retorno) e avançar até a borda direita.
-  // Velocidade própria um pouco maior que a câmera para o recuo/avanço serem
-  // claros sem fazer o jogador "grudar" na parede.
-  const walkSpeed = RUN_SPEED * 1.35 * (1 - 0.4 * p.crouchT);
+  // Modo runner Metal Slug: a câmera avança sozinha (em Game.ts). O herói
+  // anda LIVREMENTE dentro do quadro — bem mais rápido que a câmera, então
+  // o recuo e o avanço respondem na hora. Pode ir até as bordas visíveis.
+  const walkSpeed = RUN_SPEED * 2.6 * (1 - 0.35 * p.crouchT);
   p.x += input.moveX * walkSpeed * dt;
 
-  // Margens internas (espaço de respiro nas bordas da tela).
-  const minX = state.camX + 16;
-  const maxX = state.camX + VIRT_W - p.w - 16;
+  // Margens internas mínimas (só pra não cortar o sprite na borda).
+  const minX = state.camX + 8;
+  const maxX = state.camX + VIRT_W - p.w - 8;
   if (p.x < minX) p.x = minX;
   else if (p.x > maxX) p.x = maxX;
 }
