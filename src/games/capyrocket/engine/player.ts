@@ -65,14 +65,14 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);
 
   // Modo runner Metal Slug: a câmera avança sozinha (em Game.ts). O herói
-  // anda LIVREMENTE dentro do quadro — bem mais rápido que a câmera, então
-  // o recuo e o avanço respondem na hora. Pode ir até as bordas visíveis.
-  const walkSpeed = RUN_SPEED * 2.6 * (1 - 0.35 * p.crouchT);
+  // anda LIVREMENTE em toda a largura do quadro — velocidade bem maior que a
+  // câmera para o controle ser responsivo. Limite só na borda visível pra
+  // não sair da tela.
+  const walkSpeed = RUN_SPEED * 3 * (1 - 0.35 * p.crouchT);
   p.x += input.moveX * walkSpeed * dt;
 
-  // Margens internas mínimas (só pra não cortar o sprite na borda).
-  const minX = state.camX + 8;
-  const maxX = state.camX + VIRT_W - p.w - 8;
+  const minX = state.camX;
+  const maxX = state.camX + VIRT_W - p.w;
   if (p.x < minX) p.x = minX;
   else if (p.x > maxX) p.x = maxX;
 }
