@@ -4,11 +4,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
 import GameSelect from "./pages/GameSelect.tsx";
 import OrientationGate from "./components/game/OrientationGate";
 
-// Rotas secundárias carregadas sob demanda — fora do bundle inicial do jogo.
+// Rotas pesadas carregadas sob demanda — o menu inicial (/) abre leve, sem
+// puxar o bundle do jogo de cartas até o jogador escolher Beast Arena.
+const Index = lazy(() => import("./pages/Index.tsx"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
