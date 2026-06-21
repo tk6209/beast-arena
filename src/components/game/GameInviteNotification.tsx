@@ -50,16 +50,14 @@ export default function GameInviteNotification({ userId, onAccept }: Props) {
       if (new Date(inv.expires_at) < new Date()) {
         return;
       }
-      // Get inviter name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", inv.inviter_id)
-        .single();
+      // Get inviter public profile (safe fields only).
+      const { data: profiles } = await supabase
+        .rpc("get_public_profiles", { _user_ids: [inv.inviter_id] });
+      const inviterName = profiles?.[0]?.display_name || "Jogador";
 
       setInvite({
         ...inv,
-        inviter_name: profile?.display_name || "Jogador",
+        inviter_name: inviterName,
       });
     }
   }

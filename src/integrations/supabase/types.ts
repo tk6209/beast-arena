@@ -326,6 +326,7 @@ export type Database = {
           slot: number
           state_json: Json | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -338,6 +339,7 @@ export type Database = {
           slot: number
           state_json?: Json | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -350,6 +352,7 @@ export type Database = {
           slot?: number
           state_json?: Json | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1106,6 +1109,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          level: number
+          public_id: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1116,6 +1129,16 @@ export type Database = {
       is_session_participant: {
         Args: { _session_id: string }
         Returns: boolean
+      }
+      search_public_profiles: {
+        Args: { _exclude?: string; _q: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          level: number
+          public_id: string
+          user_id: string
+        }[]
       }
     }
     Enums: {

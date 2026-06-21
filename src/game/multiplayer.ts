@@ -88,6 +88,9 @@ export async function entrarComoJogador(
     const { data: auth } = await supabase.auth.getUser();
     resolvedUserId = auth?.user?.id;
   }
+  if (!resolvedUserId) {
+    throw new Error("Você precisa estar autenticado para entrar na sala.");
+  }
   const { data, error } = await supabase
     .from("game_players")
     .insert({
@@ -97,7 +100,8 @@ export async function entrarComoJogador(
       monster_id: monsterId,
       hp,
       max_hp: maxHp,
-      state_json: resolvedUserId ? { user_id: resolvedUserId } : {},
+      user_id: resolvedUserId,
+      state_json: { user_id: resolvedUserId },
     })
     .select()
     .single();
