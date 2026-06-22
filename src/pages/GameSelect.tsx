@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import capiArt from "@/assets/monsters/capirocket.png";
 import drakoArt from "@/assets/monsters/drako.png";
-import herosBg from "@/assets/capy_herois_360.png";
+import herosBg from "@/assets/capy_herois_360.webp";
 
 /**
  * Menu inicial: o jogador escolhe qual jogo abrir antes de começar.
