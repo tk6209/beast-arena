@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import capiArt from "@/assets/monsters/capirocket.png";
 import drakoArt from "@/assets/monsters/drako.png";
+import herosBg from "@/assets/capy_herois_360.png";
 
 /**
  * Menu inicial: o jogador escolhe qual jogo abrir antes de começar.
@@ -11,7 +12,19 @@ export default function GameSelect() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-b from-[#0b0f1a] via-[#10131f] to-[#05070d] text-white flex flex-col items-center justify-center px-5 py-8">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#05070d] text-white flex flex-col items-center justify-center px-5 py-8">
+      {/* Fundo: mosaico dos heróis capivara, esmaecido. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.14]"
+        style={{ backgroundImage: `url(${herosBg})` }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0b0f1a]/85 via-[#10131f]/88 to-[#05070d]/95"
+      />
+
+      <div className="relative z-10 flex w-full flex-col items-center">
       <header className="text-center mb-7">
         <h1
           className="text-5xl sm:text-6xl font-black tracking-wide"
@@ -72,6 +85,7 @@ export default function GameSelect() {
       </div>
 
       <footer className="mt-9 text-xs text-slate-500">Capynite • {new Date().getFullYear()}</footer>
+      </div>
     </div>
   );
 }
