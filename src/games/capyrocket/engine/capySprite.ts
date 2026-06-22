@@ -1,5 +1,6 @@
 import type { CharacterConfig, Headgear, HeldWeapon } from "./characters";
-import { COLORS, PLAYER_SCREEN_X } from "./constants";
+import { COLORS, PLAYER_H, PLAYER_SCREEN_X } from "./constants";
+import { getHeroImage } from "./heroSprites";
 import { capsule, drawBurst, rrPath } from "./primitives";
 import type { Player } from "./types";
 
@@ -49,6 +50,32 @@ export function drawCapy(
   // Aplica squash & stretch global.
   // Espelha horizontalmente quando o herói está virado para a esquerda.
   ctx.scale(stretchX * (p.facingX < 0 ? -1 : 1), squashY);
+
+  // ── Sprite REAL (arte da folha CAPI WARS) ──
+  // Usa a imagem do herói; cai no desenho procedural só enquanto carrega.
+  const heroImg = getHeroImage(rec.sprite);
+  if (heroImg) {
+    const targetH = PLAYER_H * 1.18;
+    const sc = targetH / heroImg.naturalHeight;
+    const w = heroImg.naturalWidth * sc;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(heroImg, -w / 2, -targetH, w, targetH);
+    // Flash do disparo na frente (lado para onde olha — local +x).
+    if (p.muzzle > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = heldFlash(rec.held, special);
+      drawBurst(ctx, w / 2 - 2, -targetH * 0.46, 10);
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(w / 2 - 2, -targetH * 0.46, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+    return;
+  }
 
   // Pernas: ciclo de corrida no chão; recolhidas no ar; quase paradas agachado.
   const runStep = Math.sin(t * 16) * (1 - airT) * (1 - crouchT);

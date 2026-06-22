@@ -1,6 +1,11 @@
 import type { WeaponStats } from "./weapons";
+import capiviniSprite from "../assets/heroes/capivini.png";
+import capininjaSprite from "../assets/heroes/capininja.png";
+import capirocketSprite from "../assets/heroes/capirocket.png";
+import capizozoSprite from "../assets/heroes/capizozo.png";
 
-// Receita de acessórios do sprite (composição modular sobre a base canônica).
+// Receita de acessórios usada APENAS no fallback procedural (quando o sprite
+// real ainda não carregou). Os personagens em jogo usam a arte real (sprite).
 export type Headgear =
   | "headband"
   | "hood"
@@ -18,11 +23,12 @@ export interface CharacterConfig {
   role: string; // descrição curta (papel)
   ability: string; // texto da habilidade para a tela de seleção
   emoji: string;
-  // Visual (sobre a base canônica capivara).
+  sprite: string; // arte real (PNG) — usada em jogo e na seleção
+  // Visual de fallback (base canônica procedural).
   palette: { fur: string; furDark: string; furLight: string };
   headgear: Headgear;
   held: HeldWeapon;
-  accentColor: string; // cor de roupa/realce
+  accentColor: string; // cor de roupa/realce (HUD/seleção)
   // Arma-assinatura (sempre ativa, salvo caixa especial por cima).
   weapon: WeaponStats;
   // Passivas.
@@ -32,121 +38,82 @@ export interface CharacterConfig {
   healEvery: number; // seg p/ recuperar 1 vida (0 = não cura)
 }
 
-// Paleta canônica padrão (capivara laranja).
+// Paleta canônica padrão (capivara laranja) — fallback procedural.
 const FUR = { fur: "#C97A3A", furDark: "#8E4F23", furLight: "#E3A267" };
 
+/**
+ * Roster CAPI WARS — os quatro heróis canônicos da folha "Capy-Heróis 360".
+ * A arte real (sprite) é usada em jogo; cada herói tem arma-assinatura e
+ * habilidade passiva próprias.
+ */
 export const CHARACTERS: CharacterConfig[] = [
   {
-    id: "peao",
-    name: "Capi Peão",
-    role: "Infantaria Básica",
-    ability: "Equilibrado: lança rápida e confiável.",
-    emoji: "🗡️",
+    id: "capivini",
+    name: "Capivini",
+    role: "Líder Estratégico",
+    ability: "Líder durão: +1 vida e tiros perfurantes.",
+    emoji: "🛡️",
+    sprite: capiviniSprite,
     palette: FUR,
     headgear: "headband",
     held: "spear",
     accentColor: "#3f7bd6",
-    weapon: { id: "rifle", name: "Lança", fireInterval: 0.3, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 900, pierce: 0 },
-    lives: 3,
-    jumps: 1,
-    dodge: 0,
-    healEvery: 0,
-  },
-  {
-    id: "arqueiro",
-    name: "Capi Arqueiro",
-    role: "Ataque à Distância",
-    ability: "Cadência altíssima: chuva de flechas.",
-    emoji: "🏹",
-    palette: FUR,
-    headgear: "hood",
-    held: "bow",
-    accentColor: "#2f7bd6",
-    weapon: { id: "mg", name: "Arco", fireInterval: 0.16, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 1000, pierce: 0 },
-    lives: 3,
-    jumps: 1,
-    dodge: 0,
-    healEvery: 0,
-  },
-  {
-    id: "lancador",
-    name: "Capi Lançador",
-    role: "Dano à Distância",
-    ability: "Lanças perfurantes: atravessam vários inimigos.",
-    emoji: "🔱",
-    palette: FUR,
-    headgear: "headband",
-    held: "javelin",
-    accentColor: "#5a93e0",
-    weapon: { id: "rifle", name: "Lança Perfurante", fireInterval: 0.4, damage: 2, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 1020, pierce: 3 },
-    lives: 3,
-    jumps: 1,
-    dodge: 0,
-    healEvery: 0,
-  },
-  {
-    id: "cavaleiro",
-    name: "Capi Cavaleiro",
-    role: "Tanque / Corpo a Corpo",
-    ability: "Blindado: 4 vidas e golpes fortes de curto alcance.",
-    emoji: "🛡️",
-    palette: FUR,
-    headgear: "knight",
-    held: "sword",
-    accentColor: "#c9ccd6",
-    weapon: { id: "rifle", name: "Espada", fireInterval: 0.28, damage: 3, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 760, pierce: 1 },
+    weapon: { id: "rifle", name: "Rifle Tático", fireInterval: 0.26, damage: 2, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 980, pierce: 1 },
     lives: 4,
     jumps: 1,
     dodge: 0,
     healEvery: 0,
   },
   {
-    id: "bombardeiro",
-    name: "Capi Bombardeiro",
-    role: "Dano em Área",
+    id: "capininja",
+    name: "Capininja",
+    role: "Guerreiro Silencioso",
+    ability: "Ágil: cadência altíssima, pulo duplo e esquiva.",
+    emoji: "🥷",
+    sprite: capininjaSprite,
+    palette: FUR,
+    headgear: "bandana",
+    held: "sword",
+    accentColor: "#3a4d8c",
+    weapon: { id: "mg", name: "Shuriken", fireInterval: 0.14, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 1040, pierce: 0 },
+    lives: 3,
+    jumps: 2,
+    dodge: 0.25,
+    healEvery: 0,
+  },
+  {
+    id: "capirocket",
+    name: "Capirocket",
+    role: "Especialista em Explosivos",
     ability: "Explosivos: cada tiro detona em área.",
-    emoji: "💣",
+    emoji: "🚀",
+    sprite: capirocketSprite,
     palette: FUR,
     headgear: "goggles",
     held: "bomb",
-    accentColor: "#7a5a2e",
-    weapon: { id: "bazooka", name: "Bombas", fireInterval: 0.6, damage: 4, pellets: 1, spread: 0, kind: "rocket", bulletSpeed: 620, pierce: 0 },
+    accentColor: "#c0622e",
+    weapon: { id: "bazooka", name: "Bazuca", fireInterval: 0.62, damage: 4, pellets: 1, spread: 0, kind: "rocket", bulletSpeed: 620, pierce: 0 },
     lives: 3,
     jumps: 1,
     dodge: 0,
     healEvery: 0,
   },
   {
-    id: "curandeiro",
-    name: "Capi Curandeiro",
-    role: "Suporte / Cura",
-    ability: "Regeneração: recupera 1 vida a cada 12s.",
-    emoji: "✚",
+    id: "capizozo",
+    name: "Capizozo",
+    role: "Alívio Cômico",
+    ability: "Caótico: dispara um leque de projéteis e regenera devagar.",
+    emoji: "😜",
+    sprite: capizozoSprite,
     palette: FUR,
-    headgear: "leaves",
+    headgear: "headband",
     held: "staff_heal",
-    accentColor: "#4faf5a",
-    weapon: { id: "mg", name: "Cajado", fireInterval: 0.24, damage: 1, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 880, pierce: 0 },
+    accentColor: "#e0a02e",
+    weapon: { id: "shotgun", name: "Estrelas", fireInterval: 0.4, damage: 1, pellets: 3, spread: 150, kind: "normal", bulletSpeed: 840, pierce: 0 },
     lives: 3,
     jumps: 1,
     dodge: 0,
-    healEvery: 12,
-  },
-  {
-    id: "magico",
-    name: "Capi Mágico",
-    role: "Dano Mágico",
-    ability: "Magia perfurante de alto dano + esquiva 20%.",
-    emoji: "✦",
-    palette: FUR,
-    headgear: "wizard",
-    held: "staff_magic",
-    accentColor: "#7c5cd0",
-    weapon: { id: "rifle", name: "Magia", fireInterval: 0.42, damage: 3, pellets: 1, spread: 0, kind: "normal", bulletSpeed: 980, pierce: 2 },
-    lives: 3,
-    jumps: 1,
-    dodge: 0.2,
-    healEvery: 0,
+    healEvery: 16,
   },
 ];
 

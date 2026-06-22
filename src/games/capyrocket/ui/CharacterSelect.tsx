@@ -24,8 +24,11 @@ export default function CharacterSelect({ onSelect }: { onSelect: (id: string) =
             style={{ borderColor: c.accentColor }}
             onClick={() => onSelect(c.id)}
           >
-            <div className="capy-card__emoji" style={{ background: c.accentColor }}>
-              {c.emoji}
+            <div
+              className="capy-card__portrait"
+              style={{ background: `radial-gradient(ellipse at 50% 35%, ${c.accentColor}55 0%, transparent 70%)` }}
+            >
+              <img src={c.sprite} alt={c.name} draggable={false} />
             </div>
             <div className="capy-card__name">{c.name}</div>
             <div className="capy-card__role">{c.role}</div>
