@@ -3,6 +3,7 @@ import { capiSfx } from "../vendor/sfx";
 import { updateBoss } from "./boss";
 import { updateBullets } from "./bullets";
 import { aabbOverlap } from "./collision";
+import { playerHitbox, playerPickupBox } from "./geometry";
 import {
   BOSS_WAVE,
   CRATE_MIN_GAP,
@@ -321,16 +322,10 @@ export class Game {
 
   private handleCollisions(): void {
     const s = this.state;
-    // Hitbox com inset para perdoar acertos "de raspão" no avanço contínuo
-    // (e respeitar a forma redonda do agachado, que é mais largo que alto).
-    const insetX = 6;
-    const insetY = 4;
-    const playerRect = {
-      x: s.player.x + insetX,
-      y: s.player.y + insetY,
-      w: s.player.w - insetX * 2,
-      h: s.player.h - insetY,
-    };
+    // Geometria canônica (geometry.ts): hurtBox = dano (inset, perdoa raspões);
+    // pickBox = coleta (corpo cheio, generoso).
+    const hurtBox = playerHitbox(s.player);
+    const pickBox = playerPickupBox(s.player);
 
     // Shake + VFX (poeira + anel neon ciano) de aterrissagem.
     if (s.player.landImpact > 0.35) {
@@ -382,7 +377,7 @@ export class Game {
     if (s.player.invuln <= 0) {
       for (const b of s.enemyBullets) {
         if (b.life <= 0) continue;
-        if (aabbOverlap(playerRect, b)) {
+        if (aabbOverlap(hurtBox, b)) {
           b.life = 0;
           this.damagePlayer();
           break;
@@ -394,21 +389,21 @@ export class Game {
     if (s.player.invuln <= 0) {
       let hit = false;
       for (const e of s.enemies) {
-        if (!e.dead && aabbOverlap(playerRect, e)) { hit = true; break; }
+        if (!e.dead && aabbOverlap(hurtBox, e)) { hit = true; break; }
       }
       if (!hit) {
         for (const h of s.hazards) {
-          if (aabbOverlap(playerRect, h)) { hit = true; break; }
+          if (aabbOverlap(hurtBox, h)) { hit = true; break; }
         }
       }
-      if (!hit && s.boss && aabbOverlap(playerRect, s.boss)) hit = true;
+      if (!hit && s.boss && aabbOverlap(hurtBox, s.boss)) hit = true;
       if (hit) this.damagePlayer();
     }
 
     // Jogador vs estrelas.
     for (const pk of s.pickups) {
       if (pk.taken) continue;
-      if (aabbOverlap(playerRect, pk)) {
+      if (aabbOverlap(pickBox, pk)) {
         pk.taken = true;
         registerPickup(s);
         spawnSparkle(s, pk.x + pk.w / 2, pk.y + pk.h / 2);
@@ -419,7 +414,7 @@ export class Game {
     // Jogador vs caixas de arma (coletadas correndo).
     for (const c of s.crates) {
       if (c.taken) continue;
-      if (aabbOverlap(playerRect, c)) {
+      if (aabbOverlap(pickBox, c)) {
         c.taken = true;
         s.special = { id: c.weapon, ammo: c.ammo };
         s.fireCooldown = 0; // dispara já com a arma nova
@@ -431,7 +426,7 @@ export class Game {
     // Jogador vs reféns (resgate: bônus + arma especial, estilo Metal Slug).
     for (const pr of s.prisoners) {
       if (pr.freed) continue;
-      if (aabbOverlap(playerRect, pr)) {
+      if (aabbOverlap(pickBox, pr)) {
         pr.freed = true;
         s.rescued += 1;
         s.score += PRISONER_BONUS;

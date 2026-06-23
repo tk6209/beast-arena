@@ -1,4 +1,5 @@
-import { MUZZLE_TIME, PLAYER_H, PLAYER_W, VIRT_W } from "./constants";
+import { MUZZLE_TIME, VIRT_W } from "./constants";
+import { muzzlePoint, facingDir } from "./geometry";
 import { makeBullet } from "./entities";
 import { activeWeapon } from "./weapons";
 import { capiSfx } from "../vendor/sfx";
@@ -21,11 +22,11 @@ export function updateBullets(state: GameState, dt: number, input?: InputState):
     // atira sempre pra FRENTE do personagem. Como `facingX` só vira pra -1
     // enquanto o jogador segura ←, o tiro sai pra trás somente quando o herói
     // realmente está olhando pra trás.
-    const ndx: 1 | -1 = p.facingX === -1 ? -1 : 1;
-    const ndy = 0;
-    // Muzzle sempre na ponta frontal do sprite (lado para onde olha).
-    const muzzleX = p.x + PLAYER_W / 2 + ndx * (PLAYER_W / 2 + 8);
-    const muzzleY = p.y + PLAYER_H * 0.5;
+    const ndx: 1 | -1 = facingDir(p);
+    // Origem do tiro = ponta do cano do sprite (fonte única: geometry.ts).
+    const m = muzzlePoint(p);
+    const muzzleX = m.x;
+    const muzzleY = m.y;
     const n = w.pellets;
     for (let i = 0; i < n; i++) {
       const vy = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;

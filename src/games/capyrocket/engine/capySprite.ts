@@ -1,5 +1,6 @@
 import type { CharacterConfig, Headgear, HeldWeapon } from "./characters";
 import { COLORS, PLAYER_H } from "./constants";
+import { MUZZLE_FORWARD, SPRITE_SCALE, muzzlePoint } from "./geometry";
 import { getHeroImage } from "./heroSprites";
 import { capsule, drawBurst, rrPath } from "./primitives";
 import type { Player } from "./types";
@@ -58,21 +59,23 @@ export function drawCapy(
   // Usa a imagem do herói; cai no desenho procedural só enquanto carrega.
   const heroImg = getHeroImage(rec.sprite);
   if (heroImg) {
-    const targetH = PLAYER_H * 1.18;
+    const targetH = PLAYER_H * SPRITE_SCALE;
     const sc = targetH / heroImg.naturalHeight;
     const w = heroImg.naturalWidth * sc;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(heroImg, -w / 2, -targetH, w, targetH);
-    // Flash do disparo na frente (lado para onde olha — local +x).
+    // Flash do disparo na PONTA DO CANO (mesma origem das balas — geometry.ts).
     if (p.muzzle > 0) {
+      const mfx = MUZZLE_FORWARD;
+      const mfy = muzzlePoint(p).y - (p.y + p.h);
       ctx.save();
       ctx.globalAlpha = 0.9;
       ctx.fillStyle = heldFlash(rec.held, special);
-      drawBurst(ctx, w / 2 - 2, -targetH * 0.46, 10);
+      drawBurst(ctx, mfx, mfy, 10);
       ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.arc(w / 2 - 2, -targetH * 0.46, 3.5, 0, Math.PI * 2);
+      ctx.arc(mfx, mfy, 3.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
