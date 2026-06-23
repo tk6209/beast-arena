@@ -22,7 +22,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawPrisoners(ctx, state, camX);
   drawEnemies(ctx, state, camX);
   if (state.boss) drawBoss(ctx, state.boss, camX);
-  drawCapy(ctx, state.player, getCharacter(state.charId), state.special ? state.special.id : null);
+  drawCapy(ctx, state.player, getCharacter(state.charId), state.special ? state.special.id : null, camX);
   drawBullets(ctx, state, camX);
   drawEnemyBullets(ctx, state, camX);
   drawParticles(ctx, state, camX);

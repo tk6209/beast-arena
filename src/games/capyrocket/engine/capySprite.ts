@@ -1,5 +1,5 @@
 import type { CharacterConfig, Headgear, HeldWeapon } from "./characters";
-import { COLORS, PLAYER_H, PLAYER_SCREEN_X } from "./constants";
+import { COLORS, PLAYER_H } from "./constants";
 import { getHeroImage } from "./heroSprites";
 import { capsule, drawBurst, rrPath } from "./primitives";
 import type { Player } from "./types";
@@ -17,10 +17,13 @@ export function drawCapy(
   p: Player,
   rec: CharacterConfig,
   special: "shotgun" | "bazooka" | null,
+  camX: number,
 ): void {
   if (p.invuln > 0 && Math.floor(p.invuln * 14) % 2 === 0) return;
 
-  const cx = PLAYER_SCREEN_X + p.w / 2;
+  // Posição REAL do jogador na tela (mundo → tela). Mantém o sprite alinhado
+  // com a hitbox, as balas e as colisões (que usam coordenadas de mundo).
+  const cx = p.x - camX + p.w / 2;
   const feetY = p.y + p.h;
   const t = p.animPhase;
   const fur = rec.palette;
