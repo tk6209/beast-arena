@@ -1,5 +1,5 @@
 import type { HudSnapshot } from "../engine/types";
-import { MAX_LIVES } from "../engine/constants";
+import { LIFE_MAX } from "../engine/constants";
 
 export default function Hud({ snap }: { snap: HudSnapshot }) {
   return (
@@ -17,10 +17,7 @@ export default function Hud({ snap }: { snap: HudSnapshot }) {
       <div className="capy-hud__box" style={{ textAlign: "right" }}>
         <div className="capy-hud__label">Vidas</div>
         <div className="capy-hud__lives">
-          {"❤".repeat(Math.max(0, snap.lives))}
-          <span style={{ opacity: 0.25 }}>
-            {"❤".repeat(Math.max(0, MAX_LIVES - snap.lives))}
-          </span>
+          {"❤".repeat(Math.max(0, Math.min(LIFE_MAX, snap.lives)))}
         </div>
       </div>
 

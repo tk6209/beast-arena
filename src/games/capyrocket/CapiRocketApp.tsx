@@ -6,6 +6,7 @@ import Hud from "./ui/Hud";
 import TapLayer from "./ui/TapLayer";
 import GameOverOverlay from "./ui/GameOverOverlay";
 import CharacterSelect from "./ui/CharacterSelect";
+import StoryIntro from "./ui/StoryIntro";
 
 const INITIAL_SNAP: HudSnapshot = {
   score: 0,
@@ -27,14 +28,17 @@ export default function CapiRocketApp() {
   const [snap, setSnap] = useState<HudSnapshot>(INITIAL_SNAP);
   const [charId, setCharId] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
+  const [briefed, setBriefed] = useState(false);
 
-  // O jogo só é criado depois que um herói é escolhido.
+  // O jogo só é criado depois que um herói é escolhido. Começa PAUSADO para o
+  // briefing de história; o botão "Avançar" despausa.
   useEffect(() => {
     if (!charId || !canvasRef.current) return;
     const game = new Game(charId);
     gameRef.current = game;
     const unsub = game.subscribe(setSnap);
     game.mount(canvasRef.current);
+    game.setPaused(true);
     return () => {
       unsub();
       game.destroy();
@@ -49,6 +53,7 @@ export default function CapiRocketApp() {
 
   const backToSelect = () => {
     setStarted(false);
+    setBriefed(false);
     setSnap(INITIAL_SNAP);
     setCharId(null);
   };
@@ -62,12 +67,23 @@ export default function CapiRocketApp() {
           <CharacterSelect
             onSelect={(id) => {
               setStarted(false);
+              setBriefed(false);
               setCharId(id);
             }}
           />
         )}
 
-        {charId && (
+        {charId && !briefed && (
+          <StoryIntro
+            heroName={snap.charName}
+            onStart={() => {
+              setBriefed(true);
+              gameRef.current?.setPaused(false);
+            }}
+          />
+        )}
+
+        {charId && briefed && (
           <>
             <Hud snap={snap} />
 

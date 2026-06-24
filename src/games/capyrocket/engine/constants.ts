@@ -14,7 +14,7 @@ export const PLAYER_H = 84;
 // Física (px / s).
 export const GRAVITY = 2600;
 export const JUMP_V = -940;
-export const RUN_SPEED = 320; // avanço do mundo
+export const RUN_SPEED = 210; // avanço do mundo (ritmo calmo, não corrido)
 export const FIXED_DT = 1 / 60;
 
 // Tiro automático do jogador (cadência base; cada arma sobrescreve).
@@ -80,6 +80,14 @@ export const PICKUP_W = 34;
 export const PICKUP_H = 34;
 export const PICKUP_MIN_GAP = 5;
 export const PICKUP_RND_GAP = 4;
+
+// Vida extra (1-UP) — coletável raro estilo Sonic/Mario/Metal Slug.
+export const LIFE_W = 34;
+export const LIFE_H = 34;
+export const LIFE_MIN_GAP = 22; // seg entre 1-UPs (raro)
+export const LIFE_RND_GAP = 16;
+export const LIFE_MAX = 6; // teto de vidas
+export const LIFE_BONUS = 250; // pontos ao pegar
 
 // Refém (Capi prisioneiro) — resgate clássico de Metal Slug: bônus + arma.
 export const PRISONER_W = 30;

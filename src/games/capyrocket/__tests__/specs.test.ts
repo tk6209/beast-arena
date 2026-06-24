@@ -12,7 +12,8 @@ import {
   playerPickupBox,
   spriteTopY,
 } from "../engine/geometry";
-import { makeHazard } from "../engine/entities";
+import { makeHazard, makeLifeUp } from "../engine/entities";
+import { LIFE_MAX } from "../engine/constants";
 import { updateBullets } from "../engine/bullets";
 import { createInitialState } from "../engine/state";
 
@@ -86,6 +87,36 @@ describe("COL — colisão", () => {
     const pb = playerPickupBox(p);
     expect(pb.w).toBeGreaterThan(hb.w);
     expect(pb.h).toBeGreaterThan(hb.h);
+  });
+});
+
+describe("LIFE — vida extra (1-UP)", () => {
+  it("LIFE-1: pegar 1-UP dá +1 vida", () => {
+    const game = new Game() as unknown as {
+      handleCollisions: () => void;
+      state: { lives: number; lifeups: unknown[]; player: { x: number; y: number; invuln: number }; enemies: unknown[]; enemyBullets: unknown[]; hazards: unknown[]; boss: unknown };
+    };
+    const s = game.state;
+    s.enemies = []; s.enemyBullets = []; s.hazards = []; s.boss = null;
+    s.lives = 2;
+    s.player.invuln = 0;
+    s.lifeups = [makeLifeUp(s.player.x, s.player.y)];
+    game.handleCollisions();
+    expect(s.lives).toBe(3);
+  });
+
+  it("LIFE-1b: a vida não passa do teto LIFE_MAX", () => {
+    const game = new Game() as unknown as {
+      handleCollisions: () => void;
+      state: { lives: number; lifeups: unknown[]; player: { x: number; y: number; invuln: number }; enemies: unknown[]; enemyBullets: unknown[]; hazards: unknown[]; boss: unknown };
+    };
+    const s = game.state;
+    s.enemies = []; s.enemyBullets = []; s.hazards = []; s.boss = null;
+    s.lives = LIFE_MAX;
+    s.player.invuln = 0;
+    s.lifeups = [makeLifeUp(s.player.x, s.player.y)];
+    game.handleCollisions();
+    expect(s.lives).toBe(LIFE_MAX);
   });
 });
 

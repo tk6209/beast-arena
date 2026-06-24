@@ -1,6 +1,7 @@
 import { cameraX } from "./camera";
 import { drawCapy } from "./capySprite";
 import { getCharacter } from "./characters";
+import { bossTagline } from "./story";
 import { COLORS, GROUND_Y, VIRT_H, VIRT_W } from "./constants";
 import { capsule, drawStarAt, rrPath } from "./primitives";
 import type { Boss, Enemy, GameState } from "./types";
@@ -19,6 +20,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawHazards(ctx, state, camX);
   drawPickups(ctx, state, camX);
   drawCrates(ctx, state, camX);
+  drawLifeUps(ctx, state, camX);
   drawPrisoners(ctx, state, camX);
   drawEnemies(ctx, state, camX);
   if (state.boss) drawBoss(ctx, state.boss, camX);
@@ -196,6 +198,42 @@ function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
   ctx.fillStyle = COLORS.gunDark;
   rrPath(ctx, x - 22, y + 10, 34, 8, 3);
   ctx.fill();
+}
+
+/* ── Vida extra (1-UP) ── */
+
+function drawLifeUps(ctx: CanvasRenderingContext2D, state: GameState, camX: number): void {
+  for (const lu of state.lifeups) {
+    if (lu.taken) continue;
+    const x = lu.x - camX + lu.w / 2;
+    if (x < -lu.w || x > VIRT_W + lu.w) continue;
+    const r = lu.w * 0.42;
+    const y = lu.y + lu.h / 2 + Math.sin(lu.bob * 4) * 4;
+    const pulse = 0.7 + Math.abs(Math.sin(lu.bob * 3)) * 0.3;
+
+    ctx.save();
+    ctx.shadowColor = "#ff5a7a";
+    ctx.shadowBlur = 16 * pulse;
+    ctx.fillStyle = "#ff4d6d";
+    ctx.beginPath();
+    ctx.moveTo(x, y + r * 0.85);
+    ctx.bezierCurveTo(x - r * 1.3, y - r * 0.4, x - r * 0.5, y - r * 1.1, x, y - r * 0.3);
+    ctx.bezierCurveTo(x + r * 0.5, y - r * 1.1, x + r * 1.3, y - r * 0.4, x, y + r * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.beginPath();
+    ctx.arc(x - r * 0.35, y - r * 0.32, r * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 9px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("1UP", x, y + r * 1.9);
+    ctx.textAlign = "left";
+  }
 }
 
 /* ── Reféns (Capi prisioneiro) ── */
@@ -384,11 +422,14 @@ function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, camX: number): void
 
   ctx.restore();
 
-  // ── Nome + barra de vida (sem bob) ──
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold 13px system-ui, sans-serif";
+  // ── Legenda de história + nome + barra de vida (sem bob) ──
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = boss.accent;
+  ctx.font = "600 11px system-ui, sans-serif";
+  ctx.fillText(bossTagline(boss.kind), cx, y - 38);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 13px system-ui, sans-serif";
   ctx.fillText(boss.name.toUpperCase(), cx, y - 22);
   ctx.textAlign = "left";
 

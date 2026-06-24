@@ -40,6 +40,11 @@ Geometria única: `engine/geometry.ts` é a **fonte de verdade** de hitbox,
   recuado nas laterais e só na parte de baixo. Um pulinho curto já limpa, e
   passar de lado não causa dano — só toca quem realmente está em cima dela.
 
+## Vida / Progressão (LIFE)
+
+- **LIFE-1 — 1-UP dá vida.** Pegar a vida extra (1-UP) soma +1 vida, com teto
+  em `LIFE_MAX`. Coletável raro, estilo Sonic/Mario/Metal Slug.
+
 ## Movimento (MOV)
 
 - **MOV-1 — Herói acompanha a câmera.** Sem input, a posição em TELA do herói

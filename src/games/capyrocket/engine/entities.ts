@@ -20,6 +20,8 @@ import {
   HAZARD_W,
   PICKUP_H,
   PICKUP_W,
+  LIFE_H,
+  LIFE_W,
   PRISONER_H,
   PRISONER_W,
   SHOOTER_FIRE_INTERVAL,
@@ -34,7 +36,7 @@ import {
   TANK_W,
 } from "./constants";
 import type { BossDef } from "./characters";
-import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, Particle, Pickup, Prisoner, WeaponCrate } from "./types";
+import type { Boss, Bullet, Enemy, EnemyBullet, Hazard, LifeUp, Particle, Pickup, Prisoner, WeaponCrate } from "./types";
 
 export function makeBullet(
   x: number,
@@ -147,6 +149,10 @@ export function makeStar(x: number, y: number): Pickup {
 
 export function makePrisoner(x: number): Prisoner {
   return { x, y: GROUND_Y - PRISONER_H, w: PRISONER_W, h: PRISONER_H, freed: false, bob: 0 };
+}
+
+export function makeLifeUp(x: number, y: number): LifeUp {
+  return { x, y, w: LIFE_W, h: LIFE_H, taken: false, bob: 0 };
 }
 
 export function makeParticle(

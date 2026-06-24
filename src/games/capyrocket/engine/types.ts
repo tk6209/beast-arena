@@ -92,6 +92,12 @@ export interface Prisoner extends Rect {
   bob: number; // acumulador de animação
 }
 
+// Vida extra (1-UP) — coletável raro que dá +1 vida.
+export interface LifeUp extends Rect {
+  taken: boolean;
+  bob: number;
+}
+
 export interface Particle {
   x: number;
   y: number;
@@ -126,6 +132,7 @@ export interface GameState {
   pickups: Pickup[];
   crates: WeaponCrate[];
   prisoners: Prisoner[];
+  lifeups: LifeUp[];
   particles: Particle[];
   boss: Boss | null;
   lastBossWave: number;
@@ -138,6 +145,7 @@ export interface GameState {
   hazardTimer: number;
   crateTimer: number;
   prisonerTimer: number;
+  lifeTimer: number;
   rescued: number;
   special: { id: "shotgun" | "bazooka"; ammo: number } | null;
   // Personagem selecionado.

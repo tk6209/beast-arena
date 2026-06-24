@@ -13,6 +13,11 @@ import {
   HAZARD_MIN_GAP,
   HAZARD_RND_GAP,
   INVULN_TIME,
+  LIFE_BONUS,
+  LIFE_H,
+  LIFE_MAX,
+  LIFE_MIN_GAP,
+  LIFE_RND_GAP,
   PICKUP_H,
   PICKUP_MIN_GAP,
   PICKUP_RND_GAP,
@@ -28,6 +33,7 @@ import { updateEnemies, updateEnemyBullets, updateHazards } from "./enemies";
 import {
   makeBoss,
   makeHazard,
+  makeLifeUp,
   makePrisoner,
   makeShooter,
   makeStar,
@@ -64,6 +70,7 @@ export class Game {
   private character: CharacterConfig;
   private state: GameState;
   private input = new InputManager();
+  private paused = false;
 
   constructor(characterId?: string) {
     this.character = getCharacter(characterId ?? "peao");
@@ -198,9 +205,14 @@ export class Game {
     this.animId = requestAnimationFrame(this.loop);
   };
 
+  /** Pausa a simulação (ex.: enquanto o briefing de história está na tela). */
+  setPaused(p: boolean): void {
+    this.paused = p;
+  }
+
   private update(dt: number): void {
     const s = this.state;
-    if (s.phase !== "playing") return;
+    if (this.paused || s.phase !== "playing") return;
 
     s.time += dt;
     updatePlayer(s, dt, this.input.state);
@@ -267,6 +279,14 @@ export class Game {
     }
     for (const pr of s.prisoners) pr.bob += dt;
 
+    // Vida extra (1-UP) num timer próprio — rara, fora do chefe.
+    s.lifeTimer -= dt;
+    if (s.lifeTimer <= 0) {
+      s.lifeTimer = LIFE_MIN_GAP + Math.random() * LIFE_RND_GAP;
+      if (!bossActive && s.lives < LIFE_MAX) this.spawnLifeUp();
+    }
+    for (const lu of s.lifeups) lu.bob += dt;
+
     updateBullets(s, dt, this.input.state);
     updateEnemies(s, dt);
     updateEnemyBullets(s, dt);
@@ -276,6 +296,7 @@ export class Game {
     s.pickups = s.pickups.filter((pk) => !pk.taken && pk.x > s.camX - 200);
     s.crates = s.crates.filter((c) => !c.taken && c.x > s.camX - 200);
     s.prisoners = s.prisoners.filter((pr) => !pr.freed && pr.x > s.camX - 200);
+    s.lifeups = s.lifeups.filter((lu) => !lu.taken && lu.x > s.camX - 200);
 
     this.handleCollisions();
 
@@ -318,6 +339,12 @@ export class Game {
   private spawnPrisoner(): void {
     const aheadX = this.state.camX + VIRT_W + 60;
     this.state.prisoners.push(makePrisoner(aheadX));
+  }
+
+  private spawnLifeUp(): void {
+    const aheadX = this.state.camX + VIRT_W + 55;
+    const y = GROUND_Y - LIFE_H - (60 + Math.random() * 120);
+    this.state.lifeups.push(makeLifeUp(aheadX, y));
   }
 
   private handleCollisions(): void {
@@ -408,6 +435,19 @@ export class Game {
         pk.taken = true;
         registerPickup(s);
         spawnSparkle(s, pk.x + pk.w / 2, pk.y + pk.h / 2);
+        capiSfx.pickup();
+      }
+    }
+
+    // Jogador vs vida extra (1-UP).
+    for (const lu of s.lifeups) {
+      if (lu.taken) continue;
+      if (aabbOverlap(pickBox, lu)) {
+        lu.taken = true;
+        s.lives = Math.min(LIFE_MAX, s.lives + 1);
+        s.score += LIFE_BONUS;
+        spawnSparkle(s, lu.x + lu.w / 2, lu.y + lu.h / 2);
+        spawnSparkle(s, lu.x + lu.w / 2, lu.y);
         capiSfx.pickup();
       }
     }
