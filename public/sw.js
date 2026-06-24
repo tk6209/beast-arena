@@ -9,7 +9,7 @@
      servimos algo desatualizado).
    Suba o VERSION para invalidar todos os caches antigos.
 ───────────────────────────────────────────────────────── */
-const VERSION = "beast-arena-v1";
+const VERSION = "beast-arena-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const ASSET_RE = /\.(?:js|css|png|jpe?g|svg|webp|gif|woff2?|ttf|otf|ico)$/i;

@@ -20,6 +20,11 @@ Geometria única: `engine/geometry.ts` é a **fonte de verdade** de hitbox,
   (`muzzle.x − camX`) fica à frente do centro desenhado por exatamente
   `MUZZLE_FORWARD`. (Sem isto, o tiro "sai do canto da tela".)
 
+- **RENDER-1 — Bala colada ao herói.** No frame renderizado, a bala aparece à
+  FRENTE do herói e na altura do tronco (acima dos pés), nunca no fundo/canto
+  da tela. Verificado com um contexto-2D gravador que rastreia a transformação
+  do canvas e compara a posição de tela da bala com a do herói.
+
 ## Colisão (COL)
 
 - **COL-1 — Hitbox de dano é menor que o corpo visível.** `playerHitbox` é um
