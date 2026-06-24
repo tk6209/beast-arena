@@ -28,6 +28,12 @@ export const HIT_INSET_TOP = 14; // recuo no topo (cabeça/orelhas não contam)
 export const MUZZLE_FORWARD = PLAYER_W / 2 + 6;
 export const MUZZLE_HEIGHT_FRAC = 0.42; // fração da ALTURA do sprite, a partir do topo
 
+// Mina: o NÚCLEO que machuca é menor que o desenho — recuo lateral + só a parte
+// de baixo conta, para que um pulinho já limpe e raspar de lado não doa.
+// [SPEC: COL-5]
+export const HAZARD_INSET_X = 8;
+export const HAZARD_CORE_TOP_FRAC = 0.45;
+
 /** Direção horizontal para a qual o herói aponta (1 = direita, -1 = esquerda). */
 export function facingDir(p: Player): 1 | -1 {
   return p.facingX === -1 ? -1 : 1;
@@ -52,6 +58,12 @@ export function playerPickupBox(p: Player): Box {
 export function spriteTopY(p: Player): number {
   const feetY = p.y + p.h;
   return feetY - PLAYER_H * SPRITE_SCALE;
+}
+
+/** Núcleo de DANO de uma mina (inset do desenho; só a parte de baixo machuca). */
+export function hazardHitbox(h: Box): Box {
+  const cut = h.h * HAZARD_CORE_TOP_FRAC;
+  return { x: h.x + HAZARD_INSET_X, y: h.y + cut, w: h.w - HAZARD_INSET_X * 2, h: h.h - cut };
 }
 
 /** Ponta do cano (origem das balas e do flash) em coordenadas de MUNDO. */

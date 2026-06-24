@@ -31,6 +31,9 @@ Geometria única: `engine/geometry.ts` é a **fonte de verdade** de hitbox,
   dano não sobrepõe a mina mesmo com sobreposição horizontal.
 - **COL-4 — Coleta é generosa.** Estrelas/caixas/reféns usam `playerPickupBox`
   (corpo cheio), maior que a hitbox de dano.
+- **COL-5 — Mina perdoadora.** A mina só machuca pelo NÚCLEO (`hazardHitbox`):
+  recuado nas laterais e só na parte de baixo. Um pulinho curto já limpa, e
+  passar de lado não causa dano — só toca quem realmente está em cima dela.
 
 ## Movimento (MOV)
 

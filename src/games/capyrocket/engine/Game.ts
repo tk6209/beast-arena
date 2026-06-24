@@ -3,7 +3,7 @@ import { capiSfx } from "../vendor/sfx";
 import { updateBoss } from "./boss";
 import { updateBullets } from "./bullets";
 import { aabbOverlap } from "./collision";
-import { playerHitbox, playerPickupBox } from "./geometry";
+import { hazardHitbox, playerHitbox, playerPickupBox } from "./geometry";
 import {
   BOSS_WAVE,
   CRATE_MIN_GAP,
@@ -393,7 +393,8 @@ export class Game {
       }
       if (!hit) {
         for (const h of s.hazards) {
-          if (aabbOverlap(hurtBox, h)) { hit = true; break; }
+          // Núcleo da mina (menor que o desenho) → pulinho já limpa, raspão não doa.
+          if (aabbOverlap(hurtBox, hazardHitbox(h))) { hit = true; break; }
         }
       }
       if (!hit && s.boss && aabbOverlap(hurtBox, s.boss)) hit = true;

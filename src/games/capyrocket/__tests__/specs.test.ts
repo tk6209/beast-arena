@@ -6,6 +6,7 @@ import {
   HIT_INSET_TOP,
   HIT_INSET_X,
   MUZZLE_FORWARD,
+  hazardHitbox,
   muzzlePoint,
   playerHitbox,
   playerPickupBox,
@@ -63,6 +64,20 @@ describe("COL — colisão", () => {
     const hb = playerHitbox(p);
     expect(hb.y + hb.h).toBeLessThan(mine.y); // base do herói acima da mina
     expect(aabbOverlap(hb, mine)).toBe(false);
+  });
+
+  it("COL-5: um pulinho curto já limpa a mina (núcleo perdoador)", () => {
+    const p = createInitialState().player;
+    const mine = makeHazard(p.x); // mesmo x
+    // No chão, em cima da mina → toca o núcleo (dano).
+    expect(aabbOverlap(playerHitbox(p), hazardHitbox(mine))).toBe(true);
+    // Pulinho curto de 22px → já limpa o núcleo (sem dano).
+    p.y -= 22;
+    expect(aabbOverlap(playerHitbox(p), hazardHitbox(mine))).toBe(false);
+    // E o núcleo é menor que o desenho da mina.
+    const core = hazardHitbox(mine);
+    expect(core.w).toBeLessThan(mine.w);
+    expect(core.y).toBeGreaterThan(mine.y);
   });
 
   it("COL-4: caixa de coleta é maior que a hitbox de dano", () => {
