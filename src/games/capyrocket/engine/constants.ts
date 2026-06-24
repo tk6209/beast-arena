@@ -68,6 +68,7 @@ export const HAZARD_RND_GAP = 2.6;
 
 // Chefe — a cada BOSS_WAVE ondas.
 export const BOSS_WAVE = 5;
+export const BOSS_INTRO_TIME = 1.7; // mini-cutscene: porta blindada → câmara
 export const BOSS_W = 196;
 export const BOSS_H = 150;
 export const BOSS_HP = 46;

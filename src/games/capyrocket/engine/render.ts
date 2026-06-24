@@ -2,7 +2,7 @@ import { cameraX } from "./camera";
 import { drawCapy } from "./capySprite";
 import { getCharacter } from "./characters";
 import { bossTagline } from "./story";
-import { COLORS, GROUND_Y, VIRT_H, VIRT_W } from "./constants";
+import { BOSS_INTRO_TIME, COLORS, GROUND_Y, VIRT_H, VIRT_W } from "./constants";
 import { capsule, drawStarAt, rrPath } from "./primitives";
 import type { Boss, Enemy, GameState } from "./types";
 
@@ -27,6 +27,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawBullets(ctx, state, camX);
   drawEnemyBullets(ctx, state, camX);
   drawParticles(ctx, state, camX);
+  if (state.bossIntro > 0) drawBlastDoor(ctx, 1 - state.bossIntro / BOSS_INTRO_TIME);
 }
 
 /* ── Cenário CapyWars ── */
@@ -254,6 +255,90 @@ function drawGround(ctx: CanvasRenderingContext2D, camX: number, boss: boolean):
     ctx.arc(x, GROUND_Y + 8, 2.4, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/* ── Cutscene: porta blindada → câmara ── */
+
+function drawBlastDoor(ctx: CanvasRenderingContext2D, t: number): void {
+  const open = Math.max(0, Math.min(1, (t - 0.45) / 0.55)); // fechada até 45%, depois abre
+  const cover = (VIRT_W / 2) * (1 - open);
+  if (cover < 1) return;
+
+  drawDoorHalf(ctx, 0, cover, cover, 1);
+  drawDoorHalf(ctx, VIRT_W - cover, cover, VIRT_W - cover, -1);
+
+  if (open < 0.05) {
+    // costura central luminosa
+    const seamX = VIRT_W / 2;
+    const sg = ctx.createLinearGradient(seamX - 22, 0, seamX + 22, 0);
+    sg.addColorStop(0, "rgba(255,178,74,0)");
+    sg.addColorStop(0.5, "rgba(255,214,130,0.55)");
+    sg.addColorStop(1, "rgba(255,178,74,0)");
+    ctx.fillStyle = sg;
+    ctx.fillRect(seamX - 22, 0, 44, VIRT_H);
+    // aviso
+    ctx.save();
+    ctx.fillStyle = "#ffcf4a";
+    ctx.font = "bold 30px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 6;
+    ctx.fillText("⚠ PORTA BLINDADA", VIRT_W / 2, VIRT_H * 0.4);
+    ctx.restore();
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+  }
+}
+
+function drawDoorHalf(ctx: CanvasRenderingContext2D, x: number, w: number, innerX: number, dir: number): void {
+  const g = ctx.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0, dir > 0 ? COLORS.wallPlateDark : COLORS.wallPlate);
+  g.addColorStop(1, dir > 0 ? COLORS.wallPlate : COLORS.wallPlateDark);
+  ctx.fillStyle = g;
+  ctx.fillRect(x, 0, w, VIRT_H);
+
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  for (let ry = 80; ry < VIRT_H; ry += 150) ctx.fillRect(x, ry, w, 8);
+
+  ctx.fillStyle = COLORS.rivet;
+  for (let rx = x + 18; rx < x + w - 6; rx += 46) {
+    for (let ry = 30; ry < VIRT_H; ry += 60) {
+      ctx.beginPath();
+      ctx.arc(rx, ry, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // faixa de perigo (listras) na borda interna
+  const bw = 26;
+  drawHazardStripes(ctx, dir > 0 ? innerX - bw : innerX, bw);
+
+  // borda interna iluminada
+  ctx.fillStyle = COLORS.lampGlow;
+  ctx.fillRect(dir > 0 ? innerX - 3 : innerX, 0, 3, VIRT_H);
+}
+
+function drawHazardStripes(ctx: CanvasRenderingContext2D, x: number, w: number): void {
+  if (w <= 0) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, 0, w, VIRT_H);
+  ctx.clip();
+  ctx.fillStyle = "#1a130c";
+  ctx.fillRect(x, 0, w, VIRT_H);
+  ctx.fillStyle = "#e8b23a";
+  const step = 36;
+  for (let yy = -w; yy < VIRT_H + w; yy += step) {
+    ctx.beginPath();
+    ctx.moveTo(x, yy);
+    ctx.lineTo(x + w, yy - w);
+    ctx.lineTo(x + w, yy - w + step * 0.5);
+    ctx.lineTo(x, yy + step * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 /* ── Inimigos ── */

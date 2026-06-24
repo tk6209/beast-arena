@@ -55,6 +55,7 @@ export function createInitialState(character: CharacterConfig = CHARACTERS[0]): 
     lifeups: [],
     particles: [],
     boss: null,
+    bossIntro: 0,
     lastBossWave: 0,
     score: 0,
     combo: 0,

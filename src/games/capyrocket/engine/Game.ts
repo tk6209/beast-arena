@@ -5,6 +5,7 @@ import { updateBullets } from "./bullets";
 import { aabbOverlap } from "./collision";
 import { hazardHitbox, playerHitbox, playerPickupBox } from "./geometry";
 import {
+  BOSS_INTRO_TIME,
   BOSS_WAVE,
   CRATE_MIN_GAP,
   CRATE_RND_GAP,
@@ -221,6 +222,7 @@ export class Game {
     s.time += dt;
     updatePlayer(s, dt, this.input.state);
     addDistance(s, dt);
+    if (s.bossIntro > 0) s.bossIntro = Math.max(0, s.bossIntro - dt);
 
     // Câmera runner: avança sozinha a ritmo constante.
     s.camX += RUN_SPEED * dt;
@@ -231,6 +233,7 @@ export class Game {
     if (!bossActive && s.spawner.wave % BOSS_WAVE === 0 && s.spawner.wave !== s.lastBossWave) {
       s.lastBossWave = s.spawner.wave;
       s.boss = makeBoss(s.camX + VIRT_W + 80, bossForWave(s.spawner.wave));
+      s.bossIntro = BOSS_INTRO_TIME; // dispara a cutscene da porta blindada
       s.enemies = [];
       s.hazards = [];
     }

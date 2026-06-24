@@ -135,6 +135,7 @@ export interface GameState {
   lifeups: LifeUp[];
   particles: Particle[];
   boss: Boss | null;
+  bossIntro: number; // seg restantes da cutscene de entrada do chefe
   lastBossWave: number;
   score: number;
   combo: number;
