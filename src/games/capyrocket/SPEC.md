@@ -40,6 +40,15 @@ Geometria única: `engine/geometry.ts` é a **fonte de verdade** de hitbox,
   recuado nas laterais e só na parte de baixo. Um pulinho curto já limpa, e
   passar de lado não causa dano — só toca quem realmente está em cima dela.
 
+## Fases / Campanha (STAGE)
+
+- **STAGE-1 — 5 fases distintas.** A campanha tem 5 fases, cada uma com bioma
+  próprio (corredor, câmara, docas, lava, palácio) e chefe próprio.
+- **STAGE-2 — Progressão.** A fase atual avança a cada chefe derrotado
+  (`currentStage(bossesDefeated)`), com clamp na última.
+- **VICT-1 — Vitória.** Derrotar o chefe da 5ª fase encerra a campanha
+  (fase `victory`).
+
 ## Vida / Progressão (LIFE)
 
 - **LIFE-1 — 1-UP dá vida.** Pegar a vida extra (1-UP) soma +1 vida, com teto

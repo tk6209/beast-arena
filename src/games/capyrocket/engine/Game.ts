@@ -43,8 +43,8 @@ import {
   makeWeaponCrate,
 } from "./entities";
 import { CRATE_WEAPONS, activeWeapon } from "./weapons";
-import { BOSSES, bossForWave, getCharacter, type CharacterConfig } from "./characters";
-import { chapterForWave } from "./story";
+import { getCharacter, type CharacterConfig } from "./characters";
+import { STAGES, bossForStage, currentStage } from "./stages";
 import { InputManager } from "./input";
 import { spawnLandingBurst, spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
@@ -165,8 +165,8 @@ export class Game {
       ammo: s.special ? s.special.ammo : 0,
       charName: s.charName,
       rescued: s.rescued,
-      chapter: chapterForWave(s.spawner.wave).title,
-      chapterN: chapterForWave(s.spawner.wave).n,
+      chapter: currentStage(s.bossesDefeated).name,
+      chapterN: currentStage(s.bossesDefeated).n,
     };
   }
 
@@ -232,7 +232,7 @@ export class Game {
     // Chefe a cada BOSS_WAVE ondas (uma vez por marco). Pausa spawns normais.
     if (!bossActive && s.spawner.wave % BOSS_WAVE === 0 && s.spawner.wave !== s.lastBossWave) {
       s.lastBossWave = s.spawner.wave;
-      s.boss = makeBoss(s.camX + VIRT_W + 80, bossForWave(s.spawner.wave));
+      s.boss = makeBoss(s.camX + VIRT_W + 80, bossForStage(s.bossesDefeated));
       s.bossIntro = BOSS_INTRO_TIME; // dispara a cutscene da porta blindada
       s.enemies = [];
       s.hazards = [];
@@ -545,8 +545,8 @@ export class Game {
     s.enemyBullets = [];
     s.boss = null;
     s.bossesDefeated += 1;
-    // Derrotou todos os chefes → vitória da campanha.
-    if (s.bossesDefeated >= BOSSES.length) {
+    // Derrotou o chefe da última fase → vitória da campanha.
+    if (s.bossesDefeated >= STAGES.length) {
       s.phase = "victory";
       s.highscore = bestScore(s.highscore, Math.floor(s.score));
       saveHighscore(s.highscore);

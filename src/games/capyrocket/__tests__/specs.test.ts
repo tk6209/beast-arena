@@ -13,8 +13,8 @@ import {
   spriteTopY,
 } from "../engine/geometry";
 import { makeBoss, makeHazard, makeLifeUp } from "../engine/entities";
-import { BOSSES, bossForWave } from "../engine/characters";
 import { LIFE_MAX } from "../engine/constants";
+import { STAGES, bossForStage, currentStage, stageIndex } from "../engine/stages";
 import { updateBullets } from "../engine/bullets";
 import { createInitialState } from "../engine/state";
 
@@ -121,17 +121,32 @@ describe("LIFE — vida extra (1-UP)", () => {
   });
 });
 
-describe("VICT — vitória da campanha", () => {
-  it("VICT-1: derrotar todos os 7 chefes leva à vitória", () => {
+describe("STAGE — campanha de 5 fases", () => {
+  it("STAGE-1: há 5 fases com biomas distintos e chefe próprio", () => {
+    expect(STAGES.length).toBe(5);
+    const biomes = new Set(STAGES.map((s) => s.biome));
+    expect(biomes.size).toBe(5); // todos diferentes
+    const kinds = new Set(STAGES.map((s) => s.bossKind));
+    expect(kinds.size).toBe(5);
+  });
+
+  it("STAGE-2: a fase atual avança com os chefes derrotados (com clamp)", () => {
+    expect(currentStage(0).n).toBe(1);
+    expect(currentStage(2).biome).toBe("docks");
+    expect(stageIndex(99)).toBe(STAGES.length - 1); // clamp na última
+    expect(bossForStage(3).kind).toBe("dragon");
+  });
+
+  it("VICT-1: derrotar o chefe da última fase leva à vitória", () => {
     const game = new Game() as unknown as {
       killBoss: () => void;
       state: { bossesDefeated: number; phase: string; boss: unknown; player: { x: number } };
     };
     const s = game.state;
-    s.bossesDefeated = BOSSES.length - 1;
-    s.boss = makeBoss(s.player.x + 500, bossForWave(35));
+    s.bossesDefeated = STAGES.length - 1;
+    s.boss = makeBoss(s.player.x + 500, bossForStage(STAGES.length - 1));
     game.killBoss();
-    expect(s.bossesDefeated).toBe(BOSSES.length);
+    expect(s.bossesDefeated).toBe(STAGES.length);
     expect(s.phase).toBe("victory");
   });
 });

@@ -2,6 +2,7 @@ import { cameraX } from "./camera";
 import { drawCapy } from "./capySprite";
 import { getCharacter } from "./characters";
 import { bossTagline } from "./story";
+import { currentStage, type Biome } from "./stages";
 import { BOSS_INTRO_TIME, COLORS, GROUND_Y, VIRT_H, VIRT_W } from "./constants";
 import { capsule, drawStarAt, rrPath } from "./primitives";
 import type { Boss, Enemy, GameState } from "./types";
@@ -13,9 +14,9 @@ import type { Boss, Enemy, GameState } from "./types";
 export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   const camX = cameraX(state);
 
-  const inBoss = !!state.boss;
-  drawBackdrop(ctx, camX, state.time, inBoss);
-  drawGround(ctx, camX, inBoss);
+  const biome = currentStage(state.bossesDefeated).biome;
+  drawBackdrop(ctx, camX, state.time, biome);
+  drawGround(ctx, camX, biome);
   drawHazards(ctx, state, camX);
   drawPickups(ctx, state, camX);
   drawCrates(ctx, state, camX);
@@ -32,9 +33,14 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
 
 /* ── Cenário CapyWars ── */
 
-function drawBackdrop(ctx: CanvasRenderingContext2D, camX: number, time: number, boss: boolean): void {
-  if (boss) drawChamber(ctx, camX, time);
-  else drawCorridor(ctx, camX, time);
+function drawBackdrop(ctx: CanvasRenderingContext2D, camX: number, time: number, biome: Biome): void {
+  switch (biome) {
+    case "chamber": drawChamber(ctx, camX, time); break;
+    case "docks": drawDocks(ctx, camX, time); break;
+    case "lava": drawLava(ctx, camX, time); break;
+    case "palace": drawPalace(ctx, camX, time); break;
+    default: drawCorridor(ctx, camX, time);
+  }
 }
 
 // Corredor subterrâneo enferrujado (fases normais).
@@ -204,23 +210,222 @@ function drawChamber(ctx: CanvasRenderingContext2D, camX: number, time: number):
   }
 }
 
-function drawGround(ctx: CanvasRenderingContext2D, camX: number, boss: boolean): void {
+// Rios de CapyCity — docas à noite.
+function drawDocks(ctx: CanvasRenderingContext2D, camX: number, time: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  g.addColorStop(0, "#0a1530");
+  g.addColorStop(0.6, "#16294e");
+  g.addColorStop(1, "#233a63");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Lua + brilho.
+  const mx = VIRT_W * 0.74;
+  const my = 104;
+  const rg = ctx.createRadialGradient(mx, my, 8, mx, my, 120);
+  rg.addColorStop(0, "rgba(200,220,255,0.4)");
+  rg.addColorStop(1, "rgba(200,220,255,0)");
+  ctx.fillStyle = rg;
+  ctx.beginPath();
+  ctx.arc(mx, my, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e8f0ff";
+  ctx.beginPath();
+  ctx.arc(mx, my, 42, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Silhueta da cidade ao fundo (parallax lento).
+  ctx.fillStyle = "#0c1426";
+  const span = 360;
+  const off = -((camX * 0.2) % span);
+  for (let i = -1; i < VIRT_W / span + 1; i++) {
+    const bx = off + i * span;
+    for (const [dx, w, h] of [[20, 60, 110], [110, 44, 80], [180, 70, 140], [280, 50, 95]] as const) {
+      ctx.fillRect(bx + dx, GROUND_Y - 90 - h, w, h);
+    }
+  }
+
+  // Água: faixa com cintilação + reflexo da lua.
+  ctx.fillStyle = "rgba(30,60,110,0.55)";
+  ctx.fillRect(0, GROUND_Y - 90, VIRT_W, 90);
+  ctx.strokeStyle = "rgba(150,190,255,0.18)";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 6; i++) {
+    const wy = GROUND_Y - 78 + i * 13;
+    const ph = Math.sin(time * 2 + i) * 6;
+    ctx.beginPath();
+    ctx.moveTo(0, wy);
+    for (let x = 0; x <= VIRT_W; x += 60) ctx.lineTo(x, wy + Math.sin((x + camX) * 0.02 + i) * 2 + ph * 0.1);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(200,220,255,0.20)";
+  ctx.fillRect(mx - 16, GROUND_Y - 90, 32, 90);
+
+  // Postes da doca (parallax rápido).
+  ctx.fillStyle = "#3a2a18";
+  const pgap = 240;
+  const poff = -((camX * 0.55) % pgap);
+  for (let i = -1; i < VIRT_W / pgap + 1; i++) {
+    const x = poff + i * pgap + 60;
+    ctx.fillRect(x, GROUND_Y - 70, 12, 70);
+    ctx.fillStyle = "#4a3522";
+    ctx.fillRect(x - 2, GROUND_Y - 72, 16, 6);
+    ctx.fillStyle = "#3a2a18";
+  }
+}
+
+// Cavernas de Lava.
+function drawLava(ctx: CanvasRenderingContext2D, camX: number, time: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  g.addColorStop(0, "#160a08");
+  g.addColorStop(0.55, "#3a140c");
+  g.addColorStop(1, "#7a2208");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Brilho da lava (de baixo).
+  const lg = ctx.createRadialGradient(VIRT_W * 0.5, GROUND_Y, 30, VIRT_W * 0.5, GROUND_Y, 420);
+  lg.addColorStop(0, "rgba(255,120,40,0.5)");
+  lg.addColorStop(1, "rgba(255,120,40,0)");
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Estalactites do teto (parallax lento).
+  ctx.fillStyle = "#1a0d0a";
+  const span = 150;
+  const off = -((camX * 0.22) % span);
+  for (let i = -1; i < VIRT_W / span + 1; i++) {
+    const x = off + i * span;
+    const h = 40 + ((i * 37) % 40);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 26, 0);
+    ctx.lineTo(x + 13, h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Colunas rochosas (parallax médio).
+  ctx.fillStyle = "#26120e";
+  const cgap = 320;
+  const coff = -((camX * 0.35) % cgap);
+  for (let i = -1; i < VIRT_W / cgap + 1; i++) {
+    const x = coff + i * cgap + 80;
+    ctx.fillRect(x, 120, 40, GROUND_Y - 120);
+    ctx.fillStyle = "rgba(255,120,40,0.18)";
+    ctx.fillRect(x, 120, 6, GROUND_Y - 120);
+    ctx.fillStyle = "#26120e";
+  }
+
+  // Brasas subindo.
+  ctx.fillStyle = "#ff9a3a";
+  for (let i = 0; i < 10; i++) {
+    const ex = ((i * 173 - camX * 0.5) % (VIRT_W + 80) + VIRT_W + 80) % (VIRT_W + 80) - 40;
+    const ey = GROUND_Y - ((time * 40 + i * 55) % GROUND_Y);
+    ctx.globalAlpha = 0.5 + 0.5 * Math.sin(time * 4 + i);
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Palácio Real.
+function drawPalace(ctx: CanvasRenderingContext2D, camX: number, time: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  g.addColorStop(0, "#170f2c");
+  g.addColorStop(1, "#2c1c4e");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Janelas em arco com luz quente (parallax lento).
+  const span = 300;
+  const off = -((camX * 0.2) % span);
+  for (let i = -1; i < VIRT_W / span + 1; i++) {
+    const x = off + i * span + 70;
+    const wg = ctx.createLinearGradient(0, 70, 0, GROUND_Y - 40);
+    wg.addColorStop(0, "rgba(255,210,120,0.35)");
+    wg.addColorStop(1, "rgba(255,170,90,0.05)");
+    ctx.fillStyle = wg;
+    ctx.beginPath();
+    ctx.moveTo(x, GROUND_Y - 40);
+    ctx.lineTo(x, 120);
+    ctx.quadraticCurveTo(x + 40, 70, x + 80, 120);
+    ctx.lineTo(x + 80, GROUND_Y - 40);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Colunas douradas (parallax médio).
+  const cgap = 300;
+  const coff = -((camX * 0.34) % cgap);
+  for (let i = -1; i < VIRT_W / cgap + 1; i++) {
+    const x = coff + i * cgap;
+    const cgrad = ctx.createLinearGradient(x, 0, x + 34, 0);
+    cgrad.addColorStop(0, "#6a5a2e");
+    cgrad.addColorStop(0.5, "#d9b24a");
+    cgrad.addColorStop(1, "#6a5a2e");
+    ctx.fillStyle = cgrad;
+    ctx.fillRect(x, 40, 34, GROUND_Y - 40);
+    ctx.fillStyle = "#e8c860";
+    ctx.fillRect(x - 5, 40, 44, 12); // capitel
+    ctx.fillRect(x - 5, GROUND_Y - 18, 44, 14); // base
+    // estandarte roxo entre colunas
+    ctx.fillStyle = "#7c3aed";
+    ctx.fillRect(x + 120, 50, 30, 150);
+    ctx.fillStyle = "#ffcf4a";
+    ctx.beginPath();
+    ctx.arc(x + 135, 95, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7c3aed";
+    ctx.beginPath();
+    ctx.moveTo(x + 120, 200);
+    ctx.lineTo(x + 135, 188);
+    ctx.lineTo(x + 150, 200);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Brilho de candelabros.
+  ctx.fillStyle = "rgba(255,210,120,0.5)";
+  const hgap = 300;
+  const hoff = -((camX * 0.34) % hgap);
+  for (let i = -1; i < VIRT_W / hgap + 1; i++) {
+    const x = hoff + i * hgap + 150;
+    const pulse = 0.6 + Math.abs(Math.sin(time * 3 + i)) * 0.4;
+    ctx.globalAlpha = pulse;
+    ctx.beginPath();
+    ctx.arc(x, 60, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+const GROUND_PALETTE: Record<Biome, { top: string; bot: string; edge: string }> = {
+  corridor: { top: COLORS.grateTop, bot: COLORS.grateBot, edge: COLORS.grateBar },
+  chamber: { top: "#10241a", bot: "#06120c", edge: COLORS.energyGlow },
+  docks: { top: "#5a4326", bot: "#33240f", edge: "#8a6a3a" },
+  lava: { top: "#2a1410", bot: "#140805", edge: "#ff6a2a" },
+  palace: { top: "#3a2a4a", bot: "#1d1228", edge: "#ffcf4a" },
+};
+
+function drawGround(ctx: CanvasRenderingContext2D, camX: number, biome: Biome): void {
+  const pal = GROUND_PALETTE[biome];
   const g = ctx.createLinearGradient(0, GROUND_Y, 0, VIRT_H);
-  g.addColorStop(0, boss ? "#10241a" : COLORS.grateTop);
-  g.addColorStop(1, boss ? "#06120c" : COLORS.grateBot);
+  g.addColorStop(0, pal.top);
+  g.addColorStop(1, pal.bot);
   ctx.fillStyle = g;
   ctx.fillRect(0, GROUND_Y, VIRT_W, VIRT_H - GROUND_Y);
 
   // Borda superior brilhante.
-  ctx.strokeStyle = boss ? COLORS.energyGlow : COLORS.grateBar;
+  ctx.strokeStyle = pal.edge;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, GROUND_Y);
   ctx.lineTo(VIRT_W, GROUND_Y);
   ctx.stroke();
 
-  if (boss) {
-    // Piso de placas com costuras verdes.
+  if (biome === "chamber") {
     ctx.strokeStyle = "rgba(57,255,136,0.25)";
     ctx.lineWidth = 2;
     const gap = 84;
@@ -234,7 +439,62 @@ function drawGround(ctx: CanvasRenderingContext2D, camX: number, boss: boolean):
     return;
   }
 
-  // Piso gradeado de metal: barras + rebites.
+  if (biome === "docks") {
+    // Tábuas de madeira com juntas escuras.
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    const gap = 64;
+    const off = -(camX % gap);
+    for (let x = off; x < VIRT_W; x += gap) {
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y + 2);
+      ctx.lineTo(x, VIRT_H);
+      ctx.stroke();
+      ctx.fillRect(x + 8, GROUND_Y + 10, 4, 4);
+    }
+    return;
+  }
+
+  if (biome === "lava") {
+    // Rocha com fendas de lava brilhante.
+    const gap = 110;
+    const off = -(camX % gap);
+    ctx.lineWidth = 3;
+    for (let x = off; x < VIRT_W; x += gap) {
+      const grad = ctx.createLinearGradient(0, GROUND_Y, 0, VIRT_H);
+      grad.addColorStop(0, "#ff8a2a");
+      grad.addColorStop(1, "#7a1e08");
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y + 6);
+      ctx.lineTo(x + 18, GROUND_Y + 34);
+      ctx.lineTo(x + 6, VIRT_H);
+      ctx.stroke();
+    }
+    return;
+  }
+
+  if (biome === "palace") {
+    // Mármore com tapete vermelho central e juntas douradas.
+    ctx.fillStyle = "#7a1f2a";
+    ctx.fillRect(VIRT_W * 0.5 - 150, GROUND_Y, 300, VIRT_H - GROUND_Y);
+    ctx.fillStyle = "#a8323e";
+    ctx.fillRect(VIRT_W * 0.5 - 150, GROUND_Y, 300, 6);
+    ctx.strokeStyle = "rgba(255,207,74,0.25)";
+    ctx.lineWidth = 2;
+    const gap = 96;
+    const off = -(camX % gap);
+    for (let x = off; x < VIRT_W; x += gap) {
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y + 4);
+      ctx.lineTo(x, VIRT_H);
+      ctx.stroke();
+    }
+    return;
+  }
+
+  // Corredor: piso gradeado de metal.
   const gap = 26;
   const off = -(camX % gap);
   ctx.strokeStyle = "rgba(0,0,0,0.4)";

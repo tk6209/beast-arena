@@ -53,7 +53,7 @@ export default function CapiRocketApp() {
   const [chapterBanner, setChapterBanner] = useState<string | null>(null);
   useEffect(() => {
     if (!briefed || snap.phase !== "playing") return;
-    setChapterBanner(`Capítulo ${snap.chapterN}: ${snap.chapter}`);
+    setChapterBanner(`FASE ${snap.chapterN} — ${snap.chapter}`);
     const t = setTimeout(() => setChapterBanner(null), 3200);
     return () => clearTimeout(t);
   }, [snap.chapterN, briefed, snap.chapter, snap.phase]);
