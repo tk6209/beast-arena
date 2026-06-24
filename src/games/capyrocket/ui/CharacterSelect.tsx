@@ -32,6 +32,7 @@ export default function CharacterSelect({ onSelect }: { onSelect: (id: string) =
             </div>
             <div className="capy-card__name">{c.name}</div>
             <div className="capy-card__role">{c.role}</div>
+            <div className="capy-card__bio">{c.bio}</div>
             <div className="capy-card__ability">{c.ability}</div>
           </button>
         ))}

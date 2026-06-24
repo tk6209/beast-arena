@@ -22,6 +22,7 @@ export interface CharacterConfig {
   name: string;
   role: string; // descrição curta (papel)
   ability: string; // texto da habilidade para a tela de seleção
+  bio: string; // mini-biografia (cânone CapyWars)
   emoji: string;
   sprite: string; // arte real (PNG) — usada em jogo e na seleção
   // Visual de fallback (base canônica procedural).
@@ -52,6 +53,7 @@ export const CHARACTERS: CharacterConfig[] = [
     name: "Capivini",
     role: "Líder Estratégico",
     ability: "Líder durão: +1 vida e tiros perfurantes.",
+    bio: "Comandante carismático de CapyCity. Equilibra tática e coragem, armado com sua poção de energia azul.",
     emoji: "🛡️",
     sprite: capiviniSprite,
     palette: FUR,
@@ -69,6 +71,7 @@ export const CHARACTERS: CharacterConfig[] = [
     name: "Capininja",
     role: "Guerreiro Silencioso",
     ability: "Ágil: cadência altíssima, pulo duplo e esquiva.",
+    bio: "Assassino ágil e silencioso. Disciplinado e misterioso, ataca das sombras com katanas gêmeas.",
     emoji: "🥷",
     sprite: capininjaSprite,
     palette: FUR,
@@ -86,6 +89,7 @@ export const CHARACTERS: CharacterConfig[] = [
     name: "Capirocket",
     role: "Especialista em Explosivos",
     ability: "Explosivos: cada tiro detona em área.",
+    bio: "Demolidor destemido. A força bruta do esquadrão, sempre com o lança-foguetes no ombro e um sorriso.",
     emoji: "🚀",
     sprite: capirocketSprite,
     palette: FUR,
@@ -103,6 +107,7 @@ export const CHARACTERS: CharacterConfig[] = [
     name: "Capizozo",
     role: "Alívio Cômico",
     ability: "Caótico: dispara um leque de projéteis e regenera devagar.",
+    bio: "Aventureiro otimista e desastrado. Leal até o fim, traz alegria (e confusão) ao time.",
     emoji: "😜",
     sprite: capizozoSprite,
     palette: FUR,

@@ -4,13 +4,14 @@ import type { BossKind } from "./characters";
 
 export const INTRO_STORY = {
   title: "CAPI WARS",
-  subtitle: "A Defesa de Capynite",
+  subtitle: "A Batalha por CapyCity",
   lines: [
-    "Capynite vivia em paz às margens dos grandes rios —",
-    "até a Horda dos Chefes invadir o reino capivara.",
-    "Você é o último herói de pé do esquadrão.",
-    "Avance pela cidade, liberte os reféns (🆘) e ache vidas extras (1UP).",
-    "Derrube os 7 Chefes e devolva a paz a Capynite!",
+    "CapyCity vivia em paz às margens dos grandes rios —",
+    "até a Horda dos Chefes invadir as profundezas do reino.",
+    "O Esquadrão Capivara entra em ação: comando, furtividade,",
+    "explosivos e muita coragem (e uma boa dose de confusão).",
+    "Liberte os reféns (🆘), ache vidas extras (1UP) e avance pela cidade.",
+    "Derrube os 7 Chefes e devolva a paz a CapyCity!",
   ],
   cta: "Avançar ▸",
 };
