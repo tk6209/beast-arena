@@ -13,7 +13,7 @@ interface TapLayerProps {
  *  - Arrastar para baixo (mantido) = agachar (solta ao tirar o dedo).
  *  - Arrastar para a esquerda / direita = recuar / acelerar (enquanto mantido).
  */
-const SWIPE_THRESHOLD = 28;
+const SWIPE_THRESHOLD = 46;
 
 export default function TapLayer({ onTap, onMove, onCrouch }: TapLayerProps) {
   const start = useRef<{ x: number; y: number; t: number } | null>(null);
