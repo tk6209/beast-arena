@@ -29,3 +29,27 @@ const BOSS_TAGLINES: Record<BossKind, string> = {
 export function bossTagline(kind: BossKind): string {
   return BOSS_TAGLINES[kind];
 }
+
+// Capítulos da fase — um a cada 5 ondas (alinhado aos chefes).
+const CHAPTER_TITLES = [
+  "O Corredor",
+  "A Porta Blindada",
+  "As Profundezas",
+  "O Covil Inimigo",
+  "A Câmara Verde",
+  "O Núcleo Alienígena",
+  "O Confronto Final",
+];
+
+export function chapterForWave(wave: number): { n: number; title: string } {
+  const idx = Math.max(0, Math.min(CHAPTER_TITLES.length - 1, Math.floor((wave - 1) / 5)));
+  return { n: idx + 1, title: CHAPTER_TITLES[idx] };
+}
+
+export const VICTORY_STORY = {
+  title: "VITÓRIA!",
+  lines: [
+    "Os 7 Chefes caíram. A Horda recuou para as sombras.",
+    "CapyCity está a salvo — e o Esquadrão Capivara vira lenda.",
+  ],
+};

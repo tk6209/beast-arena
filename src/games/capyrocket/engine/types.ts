@@ -117,7 +117,7 @@ export interface SpawnerState {
   leftInWave: number;
 }
 
-export type Phase = "playing" | "gameover";
+export type Phase = "playing" | "gameover" | "victory";
 
 export interface GameState {
   phase: Phase;
@@ -147,6 +147,7 @@ export interface GameState {
   prisonerTimer: number;
   lifeTimer: number;
   rescued: number;
+  bossesDefeated: number;
   special: { id: "shotgun" | "bazooka"; ammo: number } | null;
   // Personagem selecionado.
   charId: string;
@@ -184,6 +185,8 @@ export interface HudSnapshot {
   ammo: number; // munição da arma especial (0 = arma base)
   charName: string; // personagem em jogo
   rescued: number; // reféns resgatados
+  chapter: string; // título do capítulo atual
+  chapterN: number; // número do capítulo (dispara o banner ao mudar)
 }
 
 export type SpawnCommand = { type: "enemy" };

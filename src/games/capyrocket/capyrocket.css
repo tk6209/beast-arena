@@ -351,6 +351,39 @@ body {
   color: rgba(232, 238, 252, 0.6);
 }
 
+/* ── Banner de capítulo ── */
+.capy-chapter {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 18;
+  white-space: nowrap;
+  font-family: "Black Han Sans", "Bangers", sans-serif;
+  font-size: clamp(20px, 4.4vw, 34px);
+  letter-spacing: 1px;
+  color: #ffe08a;
+  text-shadow: 0 3px 0 #000, 0 0 22px rgba(255, 178, 74, 0.55);
+  background: rgba(12, 16, 26, 0.55);
+  border: 2px solid rgba(255, 207, 74, 0.35);
+  border-radius: 12px;
+  padding: 8px 22px;
+  pointer-events: none;
+  animation: capyChapter 3.2s ease forwards;
+}
+
+@keyframes capyChapter {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.96); }
+  12% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  82% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -8px) scale(1.02); }
+}
+
+.capy-overlay__title--win {
+  color: #ffcf4a;
+  text-shadow: 0 4px 0 #000, 0 0 28px rgba(255, 207, 74, 0.6);
+}
+
 /* ── Briefing de história ── */
 .capy-story {
   position: absolute;

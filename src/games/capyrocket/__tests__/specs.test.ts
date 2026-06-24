@@ -12,7 +12,8 @@ import {
   playerPickupBox,
   spriteTopY,
 } from "../engine/geometry";
-import { makeHazard, makeLifeUp } from "../engine/entities";
+import { makeBoss, makeHazard, makeLifeUp } from "../engine/entities";
+import { BOSSES, bossForWave } from "../engine/characters";
 import { LIFE_MAX } from "../engine/constants";
 import { updateBullets } from "../engine/bullets";
 import { createInitialState } from "../engine/state";
@@ -117,6 +118,21 @@ describe("LIFE — vida extra (1-UP)", () => {
     s.lifeups = [makeLifeUp(s.player.x, s.player.y)];
     game.handleCollisions();
     expect(s.lives).toBe(LIFE_MAX);
+  });
+});
+
+describe("VICT — vitória da campanha", () => {
+  it("VICT-1: derrotar todos os 7 chefes leva à vitória", () => {
+    const game = new Game() as unknown as {
+      killBoss: () => void;
+      state: { bossesDefeated: number; phase: string; boss: unknown; player: { x: number } };
+    };
+    const s = game.state;
+    s.bossesDefeated = BOSSES.length - 1;
+    s.boss = makeBoss(s.player.x + 500, bossForWave(35));
+    game.killBoss();
+    expect(s.bossesDefeated).toBe(BOSSES.length);
+    expect(s.phase).toBe("victory");
   });
 });
 

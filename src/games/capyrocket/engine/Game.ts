@@ -42,7 +42,8 @@ import {
   makeWeaponCrate,
 } from "./entities";
 import { CRATE_WEAPONS, activeWeapon } from "./weapons";
-import { bossForWave, getCharacter, type CharacterConfig } from "./characters";
+import { BOSSES, bossForWave, getCharacter, type CharacterConfig } from "./characters";
+import { chapterForWave } from "./story";
 import { InputManager } from "./input";
 import { spawnLandingBurst, spawnPoof, spawnSparkle, updateParticles } from "./particles";
 import { updatePlayer } from "./player";
@@ -163,6 +164,8 @@ export class Game {
       ammo: s.special ? s.special.ammo : 0,
       charName: s.charName,
       rescued: s.rescued,
+      chapter: chapterForWave(s.spawner.wave).title,
+      chapterN: chapterForWave(s.spawner.wave).n,
     };
   }
 
@@ -182,6 +185,7 @@ export class Game {
       prev.bossName !== snap.bossName ||
       prev.charName !== snap.charName ||
       prev.rescued !== snap.rescued ||
+      prev.chapterN !== snap.chapterN ||
       Math.abs(prev.bossHp - snap.bossHp) > 0.01;
     if (changed) {
       this.lastSnap = snap;
@@ -537,6 +541,13 @@ export class Game {
     s.shake = Math.max(s.shake, 20);
     s.enemyBullets = [];
     s.boss = null;
+    s.bossesDefeated += 1;
+    // Derrotou todos os chefes → vitória da campanha.
+    if (s.bossesDefeated >= BOSSES.length) {
+      s.phase = "victory";
+      s.highscore = bestScore(s.highscore, Math.floor(s.score));
+      saveHighscore(s.highscore);
+    }
   }
 
   private damagePlayer(): void {

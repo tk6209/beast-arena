@@ -67,6 +67,7 @@ export function createInitialState(character: CharacterConfig = CHARACTERS[0]): 
     prisonerTimer: PRISONER_MIN_GAP + Math.random() * PRISONER_RND_GAP,
     lifeTimer: LIFE_MIN_GAP + Math.random() * LIFE_RND_GAP,
     rescued: 0,
+    bossesDefeated: 0,
     special: null,
     charId: character.id,
     charName: character.name,

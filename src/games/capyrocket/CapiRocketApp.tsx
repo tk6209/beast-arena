@@ -5,6 +5,7 @@ import OrientationGate from "./ui/OrientationGate";
 import Hud from "./ui/Hud";
 import TapLayer from "./ui/TapLayer";
 import GameOverOverlay from "./ui/GameOverOverlay";
+import VictoryOverlay from "./ui/VictoryOverlay";
 import CharacterSelect from "./ui/CharacterSelect";
 import StoryIntro from "./ui/StoryIntro";
 
@@ -20,6 +21,8 @@ const INITIAL_SNAP: HudSnapshot = {
   ammo: 0,
   charName: "",
   rescued: 0,
+  chapter: "O Corredor",
+  chapterN: 1,
 };
 
 export default function CapiRocketApp() {
@@ -45,6 +48,15 @@ export default function CapiRocketApp() {
       gameRef.current = null;
     };
   }, [charId]);
+
+  // Banner de capítulo: aparece por ~3s quando o capítulo muda (e ao começar).
+  const [chapterBanner, setChapterBanner] = useState<string | null>(null);
+  useEffect(() => {
+    if (!briefed || snap.phase !== "playing") return;
+    setChapterBanner(`Capítulo ${snap.chapterN}: ${snap.chapter}`);
+    const t = setTimeout(() => setChapterBanner(null), 3200);
+    return () => clearTimeout(t);
+  }, [snap.chapterN, briefed, snap.chapter, snap.phase]);
 
   const handleTap = () => {
     if (!started) setStarted(true);
@@ -97,6 +109,23 @@ export default function CapiRocketApp() {
 
             {snap.phase === "playing" && !started && (
               <div className="capy-start-hint">Toque para PULAR</div>
+            )}
+
+            {snap.phase === "playing" && chapterBanner && (
+              <div className="capy-chapter" key={snap.chapterN}>
+                {chapterBanner}
+              </div>
+            )}
+
+            {snap.phase === "victory" && (
+              <VictoryOverlay
+                snap={snap}
+                onRestart={() => {
+                  setStarted(true);
+                  gameRef.current?.restart();
+                }}
+                onChangeHero={backToSelect}
+              />
             )}
 
             {snap.phase === "gameover" && (
