@@ -13,10 +13,9 @@ import type { Boss, Enemy, GameState } from "./types";
 export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   const camX = cameraX(state);
 
-  drawSky(ctx);
-  drawHills(ctx, camX);
-  drawSkyline(ctx, camX);
-  drawGround(ctx, camX);
+  const inBoss = !!state.boss;
+  drawBackdrop(ctx, camX, state.time, inBoss);
+  drawGround(ctx, camX, inBoss);
   drawHazards(ctx, state, camX);
   drawPickups(ctx, state, camX);
   drawCrates(ctx, state, camX);
@@ -30,93 +29,230 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState): void {
   drawParticles(ctx, state, camX);
 }
 
-/* ── Fundo ── */
+/* ── Cenário CapyWars ── */
 
-function drawSky(ctx: CanvasRenderingContext2D): void {
-  const g = ctx.createLinearGradient(0, 0, 0, VIRT_H);
-  g.addColorStop(0, COLORS.skyTop);
-  g.addColorStop(0.55, COLORS.skyMid);
-  g.addColorStop(1, COLORS.skyBot);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, VIRT_W, VIRT_H);
-
-  ctx.fillStyle = "rgba(255, 224, 170, 0.55)";
-  ctx.beginPath();
-  ctx.arc(VIRT_W * 0.72, GROUND_Y - 120, 70, 0, Math.PI * 2);
-  ctx.fill();
+function drawBackdrop(ctx: CanvasRenderingContext2D, camX: number, time: number, boss: boolean): void {
+  if (boss) drawChamber(ctx, camX, time);
+  else drawCorridor(ctx, camX, time);
 }
 
-function drawHills(ctx: CanvasRenderingContext2D, camX: number): void {
-  const factor = 0.25;
-  const off = -(camX * factor) % VIRT_W;
-  ctx.fillStyle = COLORS.hillFar;
-  for (let base = off - VIRT_W; base < VIRT_W + 100; base += VIRT_W) {
+// Corredor subterrâneo enferrujado (fases normais).
+function drawCorridor(ctx: CanvasRenderingContext2D, camX: number, time: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  g.addColorStop(0, COLORS.tunnelTop);
+  g.addColorStop(0.55, COLORS.tunnelMid);
+  g.addColorStop(1, COLORS.tunnelTop);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Brilho quente no "ponto de fuga".
+  const rg = ctx.createRadialGradient(VIRT_W * 0.5, GROUND_Y - 150, 20, VIRT_W * 0.5, GROUND_Y - 150, 340);
+  rg.addColorStop(0, "rgba(180,100,45,0.45)");
+  rg.addColorStop(1, "rgba(180,100,45,0)");
+  ctx.fillStyle = rg;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Painéis rebitados da parede do fundo (parallax lento).
+  const segW = 156;
+  const offA = -((camX * 0.18) % segW);
+  for (let i = -1; i < VIRT_W / segW + 1; i++) {
+    const x = offA + i * segW;
+    ctx.fillStyle = i % 2 === 0 ? COLORS.wallPlate : COLORS.wallPlateDark;
+    ctx.fillRect(x, 64, segW, GROUND_Y - 64);
+    ctx.strokeStyle = COLORS.rivet;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(base, GROUND_Y);
-    for (let x = 0; x <= VIRT_W; x += 40) {
-      const y = GROUND_Y - 70 - Math.sin((x / VIRT_W) * Math.PI * 2) * 40 - 30;
-      ctx.lineTo(base + x, y);
+    ctx.moveTo(x, 64);
+    ctx.lineTo(x, GROUND_Y);
+    ctx.stroke();
+    ctx.fillStyle = COLORS.rivet;
+    for (let ry = 92; ry < GROUND_Y - 10; ry += 56) {
+      ctx.beginPath();
+      ctx.arc(x + 4, ry, 2.2, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.lineTo(base + VIRT_W, GROUND_Y);
-    ctx.closePath();
+  }
+  // Faixa horizontal escura (meio da parede).
+  ctx.fillStyle = "rgba(0,0,0,0.30)";
+  ctx.fillRect(0, GROUND_Y - 120, VIRT_W, 14);
+
+  // Teto curvo (arco do túnel).
+  ctx.fillStyle = COLORS.wallPlateDark;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(VIRT_W, 0);
+  ctx.lineTo(VIRT_W, 58);
+  ctx.quadraticCurveTo(VIRT_W / 2, 122, 0, 58);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tubo alto (parallax médio).
+  drawPipe(ctx, -((camX * 0.3) % 2000), 80, VIRT_W + 200, 14);
+
+  // Lâmpadas âmbar engaioladas (parallax médio).
+  const lampGap = 280;
+  const offL = -((camX * 0.35) % lampGap);
+  const flick = 0.85 + Math.sin(time * 7) * 0.15;
+  for (let i = -1; i < VIRT_W / lampGap + 1; i++) {
+    drawCageLamp(ctx, offL + i * lampGap + 120, 150, flick);
+  }
+
+  // Tubo grosso em primeiro plano (parallax rápido).
+  drawPipe(ctx, -((camX * 0.62) % 2400), GROUND_Y - 40, VIRT_W + 260, 22);
+
+  // Vapor subindo de junções (animado).
+  ctx.fillStyle = COLORS.steam;
+  for (let i = 0; i < 4; i++) {
+    const sx = ((i * 311 - camX * 0.4) % (VIRT_W + 200) + VIRT_W + 200) % (VIRT_W + 200) - 100;
+    const sy = GROUND_Y - 60 - ((time * 28 + i * 60) % 150);
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 22 - (i % 2) * 6, 14, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
-function drawSkyline(ctx: CanvasRenderingContext2D, camX: number): void {
-  const factor = 0.5;
-  const span = 1100;
-  const off = -(camX * factor) % span;
-  for (let base = off - span; base < VIRT_W + 100; base += span) {
-    drawBuildingCluster(ctx, base);
+function drawPipe(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  ctx.fillStyle = COLORS.pipeDark;
+  rrPath(ctx, x, y, w, h, h / 2);
+  ctx.fill();
+  ctx.fillStyle = COLORS.pipeBody;
+  rrPath(ctx, x, y, w, h * 0.55, h / 3);
+  ctx.fill();
+  // flanges
+  ctx.fillStyle = COLORS.pipeDark;
+  for (let fx = x; fx < x + w; fx += 220) {
+    ctx.fillRect(fx, y - 3, 10, h + 6);
   }
 }
 
-function drawBuildingCluster(ctx: CanvasRenderingContext2D, baseX: number): void {
-  const defs = [
-    [40, 120, 150],
-    [180, 80, 90],
-    [300, 160, 200],
-    [500, 100, 120],
-    [650, 140, 170],
-    [840, 90, 110],
-    [960, 130, 160],
-  ];
-  for (const [dx, w, h] of defs) {
-    const x = baseX + dx;
-    const y = GROUND_Y - h;
-    ctx.fillStyle = COLORS.building;
-    ctx.fillRect(x, y, w, h);
-    ctx.fillStyle = COLORS.buildingLit;
-    ctx.fillRect(x, y, w, 8);
-    ctx.fillStyle = "rgba(255, 220, 150, 0.35)";
-    for (let wy = y + 18; wy < GROUND_Y - 14; wy += 26) {
-      for (let wx = x + 12; wx < x + w - 12; wx += 24) {
-        ctx.fillRect(wx, wy, 9, 12);
-      }
-    }
+function drawCageLamp(ctx: CanvasRenderingContext2D, cx: number, cy: number, flick: number): void {
+  const rg = ctx.createRadialGradient(cx, cy, 2, cx, cy, 70);
+  rg.addColorStop(0, `rgba(255,178,74,${0.55 * flick})`);
+  rg.addColorStop(1, "rgba(255,178,74,0)");
+  ctx.fillStyle = rg;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 70, 0, Math.PI * 2);
+  ctx.fill();
+  // suporte
+  ctx.fillStyle = COLORS.pipeDark;
+  ctx.fillRect(cx - 3, cy - 24, 6, 14);
+  // bulbo
+  ctx.fillStyle = COLORS.lampGlow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = COLORS.lampCore;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  // gaiola
+  ctx.strokeStyle = COLORS.rivet;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+  ctx.moveTo(cx - 11, cy);
+  ctx.lineTo(cx + 11, cy);
+  ctx.moveTo(cx, cy - 11);
+  ctx.lineTo(cx, cy + 11);
+  ctx.stroke();
+}
+
+// Câmara alienígena (lutas de chefe) — energia verde.
+function drawChamber(ctx: CanvasRenderingContext2D, camX: number, time: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  g.addColorStop(0, COLORS.chamberTop);
+  g.addColorStop(1, COLORS.chamberBot);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIRT_W, GROUND_Y);
+
+  // Painéis escuros de tech.
+  ctx.fillStyle = COLORS.chamberWall;
+  ctx.fillRect(0, 50, VIRT_W, GROUND_Y - 50);
+
+  // Pilares de energia verde (parallax + flicker).
+  const gap = 230;
+  const off = -((camX * 0.3) % gap);
+  for (let i = -1; i < VIRT_W / gap + 1; i++) {
+    const x = off + i * gap + 90;
+    const flick = 0.7 + Math.sin(time * 5 + i) * 0.3;
+    const rg = ctx.createLinearGradient(x - 26, 0, x + 26, 0);
+    rg.addColorStop(0, "rgba(57,255,136,0)");
+    rg.addColorStop(0.5, `rgba(57,255,136,${0.4 * flick})`);
+    rg.addColorStop(1, "rgba(57,255,136,0)");
+    ctx.fillStyle = rg;
+    ctx.fillRect(x - 26, 60, 52, GROUND_Y - 90);
+    // núcleo brilhante
+    ctx.fillStyle = COLORS.energyCore;
+    ctx.fillRect(x - 4, 70, 8, GROUND_Y - 110);
+    ctx.fillStyle = COLORS.energyGlow;
+    ctx.fillRect(x - 7, 70, 3, GROUND_Y - 110);
+    ctx.fillRect(x + 4, 70, 3, GROUND_Y - 110);
+  }
+
+  // Costuras de circuito verdes na parede.
+  ctx.strokeStyle = COLORS.energyDim;
+  ctx.lineWidth = 2;
+  const sOff = -((camX * 0.3) % 320);
+  for (let i = -1; i < VIRT_W / 320 + 1; i++) {
+    const x = sOff + i * 320 + 40;
+    ctx.beginPath();
+    ctx.moveTo(x, 60);
+    ctx.lineTo(x, 130);
+    ctx.lineTo(x + 40, 130);
+    ctx.stroke();
   }
 }
 
-function drawGround(ctx: CanvasRenderingContext2D, camX: number): void {
+function drawGround(ctx: CanvasRenderingContext2D, camX: number, boss: boolean): void {
   const g = ctx.createLinearGradient(0, GROUND_Y, 0, VIRT_H);
-  g.addColorStop(0, COLORS.groundTop);
-  g.addColorStop(1, COLORS.groundBot);
+  g.addColorStop(0, boss ? "#10241a" : COLORS.grateTop);
+  g.addColorStop(1, boss ? "#06120c" : COLORS.grateBot);
   ctx.fillStyle = g;
   ctx.fillRect(0, GROUND_Y, VIRT_W, VIRT_H - GROUND_Y);
 
-  ctx.strokeStyle = COLORS.groundLine;
+  // Borda superior brilhante.
+  ctx.strokeStyle = boss ? COLORS.energyGlow : COLORS.grateBar;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, GROUND_Y);
   ctx.lineTo(VIRT_W, GROUND_Y);
   ctx.stroke();
 
-  const gap = 90;
+  if (boss) {
+    // Piso de placas com costuras verdes.
+    ctx.strokeStyle = "rgba(57,255,136,0.25)";
+    ctx.lineWidth = 2;
+    const gap = 84;
+    const off = -(camX % gap);
+    for (let x = off; x < VIRT_W; x += gap) {
+      ctx.beginPath();
+      ctx.moveTo(x, GROUND_Y);
+      ctx.lineTo(x - 14, VIRT_H);
+      ctx.stroke();
+    }
+    return;
+  }
+
+  // Piso gradeado de metal: barras + rebites.
+  const gap = 26;
   const off = -(camX % gap);
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.lineWidth = 2;
   for (let x = off; x < VIRT_W; x += gap) {
-    ctx.fillRect(x, GROUND_Y + 16, 46, 6);
+    ctx.beginPath();
+    ctx.moveTo(x, GROUND_Y + 4);
+    ctx.lineTo(x, VIRT_H);
+    ctx.stroke();
+  }
+  ctx.fillStyle = COLORS.grateBar;
+  ctx.fillRect(0, GROUND_Y + 14, VIRT_W, 3);
+  const rgap = 120;
+  const roff = -(camX % rgap);
+  ctx.fillStyle = COLORS.rivet;
+  for (let x = roff; x < VIRT_W; x += rgap) {
+    ctx.beginPath();
+    ctx.arc(x, GROUND_Y + 8, 2.4, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
