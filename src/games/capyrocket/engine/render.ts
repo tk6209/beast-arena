@@ -603,17 +603,29 @@ function drawHazardStripes(ctx: CanvasRenderingContext2D, x: number, w: number):
 
 /* ── Inimigos ── */
 
+interface EnemyPalette { body: string; dark: string; eye: string; tank: string; tankDark: string; }
+
+// Inimigos tematizados por fase — cada bioma tem sua "facção".
+const ENEMY_PALETTE: Record<Biome, EnemyPalette> = {
+  corridor: { body: "#7bdc8b", dark: "#4fae62", eye: "#13321a", tank: "#8a8f7a", tankDark: "#5e6350" },
+  chamber: { body: "#a06bff", dark: "#5e3aa6", eye: "#170a2e", tank: "#6a5e8a", tankDark: "#3e3460" },
+  docks: { body: "#3fb6c9", dark: "#236b7a", eye: "#06242a", tank: "#7a6a4a", tankDark: "#4a3f2a" },
+  lava: { body: "#ff9a3a", dark: "#b85018", eye: "#2a0d05", tank: "#6a3b2a", tankDark: "#3a1d12" },
+  palace: { body: "#caa24a", dark: "#7a5e22", eye: "#2a1f08", tank: "#8a6a3a", tankDark: "#4a3618" },
+};
+
 function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState, camX: number): void {
+  const pal = ENEMY_PALETTE[currentStage(state.bossesDefeated).biome];
   for (const e of state.enemies) {
     const x = e.x - camX;
     if (x < -e.w - 40 || x > VIRT_W + 40) continue;
-    if (e.kind === "tank") drawTank(ctx, e, x);
-    else drawFootSoldier(ctx, e, x);
+    if (e.kind === "tank") drawTank(ctx, e, x, pal);
+    else drawFootSoldier(ctx, e, x, pal);
     if (e.hp < e.maxHp) drawHpBar(ctx, x, e.y - 10, e.w, e.hp / e.maxHp);
   }
 }
 
-function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
+function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number, pal: EnemyPalette): void {
   const cx = x + e.w / 2;
   const feetY = e.y + e.h;
   const step = Math.sin(e.legPhase);
@@ -621,12 +633,12 @@ function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number): vo
   ctx.save();
   ctx.translate(cx, feetY);
 
-  capsule(ctx, 4, -26, 4 + step * 9, -2, 7, COLORS.enemyDark);
-  capsule(ctx, -4, -26, -4 - step * 9, -2, 7, COLORS.enemy);
+  capsule(ctx, 4, -26, 4 + step * 9, -2, 7, pal.dark);
+  capsule(ctx, -4, -26, -4 - step * 9, -2, 7, pal.body);
 
   const g = ctx.createLinearGradient(0, -56, 0, -26);
-  g.addColorStop(0, COLORS.enemy);
-  g.addColorStop(1, COLORS.enemyDark);
+  g.addColorStop(0, pal.body);
+  g.addColorStop(1, pal.dark);
   rrPath(ctx, -12, -56, 24, 32, 9);
   ctx.fillStyle = g;
   ctx.fill();
@@ -638,9 +650,9 @@ function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number): vo
   }
 
   rrPath(ctx, -11, -74, 22, 22, 9);
-  ctx.fillStyle = COLORS.enemy;
+  ctx.fillStyle = pal.body;
   ctx.fill();
-  ctx.fillStyle = COLORS.enemyDark;
+  ctx.fillStyle = pal.dark;
   ctx.beginPath();
   ctx.ellipse(0, -74, 14, 9, 0, Math.PI, 0);
   ctx.fill();
@@ -648,7 +660,7 @@ function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number): vo
   ctx.beginPath();
   ctx.arc(-4, -64, 4, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = COLORS.enemyEye;
+  ctx.fillStyle = pal.eye;
   ctx.beginPath();
   ctx.arc(-6, -64, 2.2, 0, Math.PI * 2);
   ctx.fill();
@@ -656,9 +668,9 @@ function drawFootSoldier(ctx: CanvasRenderingContext2D, e: Enemy, x: number): vo
   ctx.restore();
 }
 
-function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
+function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number, pal: EnemyPalette): void {
   const y = e.y;
-  ctx.fillStyle = COLORS.tankDark;
+  ctx.fillStyle = pal.tankDark;
   rrPath(ctx, x, y + e.h - 22, e.w, 22, 8);
   ctx.fill();
   ctx.fillStyle = "#2b2e26";
@@ -668,13 +680,13 @@ function drawTank(ctx: CanvasRenderingContext2D, e: Enemy, x: number): void {
     ctx.fill();
   }
   const g = ctx.createLinearGradient(0, y, 0, y + e.h);
-  g.addColorStop(0, COLORS.tank);
-  g.addColorStop(1, COLORS.tankDark);
+  g.addColorStop(0, pal.tank);
+  g.addColorStop(1, pal.tankDark);
   rrPath(ctx, x + 6, y + 18, e.w - 12, e.h - 36, 8);
   ctx.fillStyle = g;
   ctx.fill();
   rrPath(ctx, x + e.w * 0.32, y + 2, e.w * 0.4, 26, 8);
-  ctx.fillStyle = COLORS.tank;
+  ctx.fillStyle = pal.tank;
   ctx.fill();
   ctx.fillStyle = COLORS.gunDark;
   rrPath(ctx, x - 22, y + 10, 34, 8, 3);
