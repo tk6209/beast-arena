@@ -23,6 +23,8 @@ const INITIAL_SNAP: HudSnapshot = {
   rescued: 0,
   chapter: "O Corredor",
   chapterN: 1,
+  canContinue: false,
+  checkpointStage: 1,
 };
 
 export default function CapiRocketApp() {
@@ -134,6 +136,10 @@ export default function CapiRocketApp() {
                 onRestart={() => {
                   setStarted(true);
                   gameRef.current?.restart();
+                }}
+                onContinue={() => {
+                  setStarted(true);
+                  gameRef.current?.continueFromCheckpoint();
                 }}
                 onChangeHero={backToSelect}
               />

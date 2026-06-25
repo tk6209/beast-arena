@@ -188,6 +188,8 @@ export interface HudSnapshot {
   rescued: number; // reféns resgatados
   chapter: string; // título do capítulo atual
   chapterN: number; // número do capítulo (dispara o banner ao mudar)
+  canContinue: boolean; // há checkpoint para continuar?
+  checkpointStage: number; // fase em que o checkpoint retoma
 }
 
 export type SpawnCommand = { type: "enemy" };

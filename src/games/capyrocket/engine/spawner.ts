@@ -1,9 +1,10 @@
 import type { SpawnCommand, SpawnerState } from "./types";
 
-const FIRST_INTERVAL = 1.5;
+const FIRST_INTERVAL = 1.6;
 const FIRST_WAVE_SIZE = 4;
-const MIN_INTERVAL = 0.55;
-const INTERVAL_DECAY = 0.9;
+const MAX_WAVE_SIZE = 9; // teto de inimigos por onda (evita sufocar nas fases 2+)
+const MIN_INTERVAL = 0.8;
+const INTERVAL_DECAY = 0.95;
 
 export function createSpawner(): SpawnerState {
   return {
@@ -38,7 +39,7 @@ export function tickSpawner(s: SpawnerState, dt: number): SpawnCommand[] {
 
   if (s.leftInWave <= 0) {
     s.wave += 1;
-    s.enemiesPerWave += 1;
+    s.enemiesPerWave = Math.min(MAX_WAVE_SIZE, s.enemiesPerWave + 1);
     s.leftInWave = s.enemiesPerWave;
     s.interval = Math.max(MIN_INTERVAL, s.interval * INTERVAL_DECAY);
     s.timer = 0;

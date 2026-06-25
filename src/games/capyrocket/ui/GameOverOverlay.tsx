@@ -3,10 +3,12 @@ import type { HudSnapshot } from "../engine/types";
 export default function GameOverOverlay({
   snap,
   onRestart,
+  onContinue,
   onChangeHero,
 }: {
   snap: HudSnapshot;
   onRestart: () => void;
+  onContinue?: () => void;
   onChangeHero?: () => void;
 }) {
   const isRecord = snap.score >= snap.highscore && snap.score > 0;
@@ -20,13 +22,23 @@ export default function GameOverOverlay({
       <div className="capy-overlay__record">
         {isRecord ? "🏆 Novo recorde!" : `Recorde: ${snap.highscore.toLocaleString("pt-BR")}`}
       </div>
+      {snap.canContinue && onContinue && (
+        <button
+          type="button"
+          className="capy-overlay__btn"
+          onClick={onContinue}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          Continuar — Fase {snap.checkpointStage}
+        </button>
+      )}
       <button
         type="button"
-        className="capy-overlay__btn"
+        className={snap.canContinue ? "capy-overlay__btn capy-overlay__btn--ghost" : "capy-overlay__btn"}
         onClick={onRestart}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        Jogar de novo
+        {snap.canContinue ? "Recomeçar do início" : "Jogar de novo"}
       </button>
       {onChangeHero && (
         <button

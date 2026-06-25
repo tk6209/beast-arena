@@ -73,6 +73,8 @@ export class Game {
   private state: GameState;
   private input = new InputManager();
   private paused = false;
+  private checkpoint = 0; // fases concluídas (= bossesDefeated) no último checkpoint
+  private checkpointScore = 0;
 
   constructor(characterId?: string) {
     this.character = getCharacter(characterId ?? "peao");
@@ -133,7 +135,24 @@ export class Game {
   }
 
   restart(): void {
+    this.checkpoint = 0;
+    this.checkpointScore = 0;
     resetState(this.state, this.character);
+    this.notify(true);
+  }
+
+  /** Continua do início da fase do checkpoint (não recomeça do zero). */
+  continueFromCheckpoint(): void {
+    if (this.checkpoint <= 0) {
+      this.restart();
+      return;
+    }
+    resetState(this.state, this.character);
+    const s = this.state;
+    s.bossesDefeated = this.checkpoint;
+    s.score = this.checkpointScore;
+    s.spawner.wave = this.checkpoint * 5;
+    s.lastBossWave = this.checkpoint * 5;
     this.notify(true);
   }
 
@@ -167,6 +186,8 @@ export class Game {
       rescued: s.rescued,
       chapter: currentStage(s.bossesDefeated).name,
       chapterN: currentStage(s.bossesDefeated).n,
+      canContinue: this.checkpoint > 0,
+      checkpointStage: Math.min(STAGES.length, this.checkpoint + 1),
     };
   }
 
@@ -187,6 +208,7 @@ export class Game {
       prev.charName !== snap.charName ||
       prev.rescued !== snap.rescued ||
       prev.chapterN !== snap.chapterN ||
+      prev.canContinue !== snap.canContinue ||
       Math.abs(prev.bossHp - snap.bossHp) > 0.01;
     if (changed) {
       this.lastSnap = snap;
@@ -550,6 +572,10 @@ export class Game {
       s.phase = "victory";
       s.highscore = bestScore(s.highscore, Math.floor(s.score));
       saveHighscore(s.highscore);
+    } else {
+      // Concluiu a fase → grava checkpoint (retoma daqui ao continuar).
+      this.checkpoint = s.bossesDefeated;
+      this.checkpointScore = Math.floor(s.score);
     }
   }
 

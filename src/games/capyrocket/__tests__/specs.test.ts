@@ -137,6 +137,23 @@ describe("STAGE — campanha de 5 fases", () => {
     expect(bossForStage(3).kind).toBe("dragon");
   });
 
+  it("CHKP-1: concluir uma fase grava checkpoint e 'continuar' retoma dela", () => {
+    const game = new Game() as unknown as {
+      killBoss: () => void;
+      continueFromCheckpoint: () => void;
+      state: { bossesDefeated: number; phase: string; boss: unknown; score: number; player: { x: number } };
+    };
+    const s = game.state;
+    s.bossesDefeated = 0;
+    s.score = 1234;
+    s.boss = makeBoss(s.player.x + 500, bossForStage(0));
+    game.killBoss(); // conclui a Fase 1 → checkpoint na Fase 2
+    expect(s.bossesDefeated).toBe(1);
+    game.continueFromCheckpoint();
+    expect(s.bossesDefeated).toBe(1); // retomou na fase do checkpoint
+    expect(s.phase).toBe("playing");
+  });
+
   it("VICT-1: derrotar o chefe da última fase leva à vitória", () => {
     const game = new Game() as unknown as {
       killBoss: () => void;
