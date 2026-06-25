@@ -192,4 +192,19 @@ describe("WPN — armas", () => {
     expect(b.y).toBeCloseTo(m.y, 5); // origem vertical = cano (pellet único, vy=0)
     expect(Math.abs(b.x - m.x)).toBeLessThan(30); // origem horizontal ≈ cano (+ avanço de 1 frame)
   });
+
+  it("WPN-2: a mira (joystick direito) direciona o tiro", () => {
+    // Sem mira → tiro para a direita (vx > 0, vy ~ 0).
+    const s1 = createInitialState();
+    s1.fireCooldown = 0;
+    updateBullets(s1, 1 / 60, { jumpQueued: false, moveX: 0, crouch: false, aimX: 0, aimY: 0 });
+    expect(s1.bullets[0].vx).toBeGreaterThan(0);
+    expect(Math.abs(s1.bullets[0].vy)).toBeLessThan(1);
+
+    // Mira para cima → tiro sobe (vy < 0).
+    const s2 = createInitialState();
+    s2.fireCooldown = 0;
+    updateBullets(s2, 1 / 60, { jumpQueued: false, moveX: 0, crouch: false, aimX: 0, aimY: -1 });
+    expect(s2.bullets[0].vy).toBeLessThan(0);
+  });
 });

@@ -47,6 +47,60 @@ body {
   touch-action: none;
 }
 
+/* ── Controles duplos (joysticks COD Mobile) ── */
+.capy-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.capy-stick {
+  position: absolute;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  background: rgba(10, 14, 24, 0.32);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.capy-stick--left {
+  left: max(20px, env(safe-area-inset-left));
+}
+
+.capy-stick--right {
+  right: max(20px, env(safe-area-inset-right));
+}
+
+.capy-stick__label {
+  position: absolute;
+  top: 8px;
+  font-family: "Oswald", sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.capy-stick__knob {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  will-change: transform;
+}
+
 /* ── HUD ── */
 .capy-hud {
   position: absolute;

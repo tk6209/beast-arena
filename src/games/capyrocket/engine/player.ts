@@ -55,10 +55,9 @@ export function updatePlayer(state: GameState, dt: number, input: InputState): v
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
   if (p.muzzle > 0) p.muzzle = Math.max(0, p.muzzle - dt);
 
-  // Padrão: encara os inimigos (à direita). Vira para a ESQUERDA apenas
-  // enquanto o jogador está ativamente recuando/mirando à esquerda.
-  if (input.moveX === -1 || input.aimX === -1) p.facingX = -1;
-  else p.facingX = 1;
+  // Direção do herói = MIRA (joystick direito). Sem mira, encara à direita
+  // (frente). O movimento NÃO inverte o tiro — só a mira vira o herói.
+  p.facingX = input.aimX === -1 ? -1 : 1;
 
   // Cadência da corrida acompanha a velocidade real (parece mais natural).
   p.animPhase += dt * (1 + 0.4 * (input.moveX === 1 ? 1 : 0) - 0.4 * p.crouchT);

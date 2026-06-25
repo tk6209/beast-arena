@@ -134,6 +134,12 @@ export class Game {
     this.input.state.crouch = on;
   }
 
+  /** Mira do tiro (joystick direito): direção em -1..1; 0,0 = padrão (frente). */
+  setAim(ax: -1 | 0 | 1, ay: -1 | 0 | 1): void {
+    this.input.state.aimX = ax;
+    this.input.state.aimY = ay;
+  }
+
   restart(): void {
     this.checkpoint = 0;
     this.checkpointScore = 0;

@@ -3,7 +3,7 @@ import { Game } from "./engine/Game";
 import type { HudSnapshot } from "./engine/types";
 import OrientationGate from "./ui/OrientationGate";
 import Hud from "./ui/Hud";
-import TapLayer from "./ui/TapLayer";
+import DualControls from "./ui/DualControls";
 import GameOverOverlay from "./ui/GameOverOverlay";
 import VictoryOverlay from "./ui/VictoryOverlay";
 import CharacterSelect from "./ui/CharacterSelect";
@@ -60,11 +60,6 @@ export default function CapiRocketApp() {
     return () => clearTimeout(t);
   }, [snap.chapterN, briefed, snap.chapter, snap.phase]);
 
-  const handleTap = () => {
-    if (!started) setStarted(true);
-    gameRef.current?.queueJump();
-  };
-
   const backToSelect = () => {
     setStarted(false);
     setBriefed(false);
@@ -102,15 +97,22 @@ export default function CapiRocketApp() {
             <Hud snap={snap} />
 
             {snap.phase === "playing" && (
-              <TapLayer
-                onTap={handleTap}
-                onMove={(d) => gameRef.current?.setMoveX(d)}
+              <DualControls
+                onMove={(d) => {
+                  if (!started) setStarted(true);
+                  gameRef.current?.setMoveX(d);
+                }}
                 onCrouch={(c) => gameRef.current?.setCrouch(c)}
+                onAim={(x, y) => gameRef.current?.setAim(x, y)}
+                onJump={() => {
+                  if (!started) setStarted(true);
+                  gameRef.current?.queueJump();
+                }}
               />
             )}
 
             {snap.phase === "playing" && !started && (
-              <div className="capy-start-hint">Toque para PULAR</div>
+              <div className="capy-start-hint">◄ MOVER &nbsp;·&nbsp; MIRA ►</div>
             )}
 
             {snap.phase === "playing" && chapterBanner && (

@@ -22,15 +22,31 @@ export function updateBullets(state: GameState, dt: number, input?: InputState):
     // atira sempre pra FRENTE do personagem. Como `facingX` só vira pra -1
     // enquanto o jogador segura ←, o tiro sai pra trás somente quando o herói
     // realmente está olhando pra trás.
-    const ndx: 1 | -1 = facingDir(p);
+    // Direção do tiro: joystick de mira (aimX/aimY). Sem mira → para a FRENTE.
+    const ax = input?.aimX ?? 0;
+    const ay = input?.aimY ?? 0;
+    let dx: number;
+    let dy: number;
+    if (ax !== 0 || ay !== 0) {
+      const len = Math.hypot(ax, ay) || 1;
+      dx = ax / len;
+      dy = ay / len;
+    } else {
+      dx = facingDir(p);
+      dy = 0;
+    }
     // Origem do tiro = ponta do cano do sprite (fonte única: geometry.ts).
     const m = muzzlePoint(p);
     const muzzleX = m.x;
     const muzzleY = m.y;
     const n = w.pellets;
+    // Vetor perpendicular para distribuir o espalhamento da escopeta.
+    const perpX = -dy;
+    const perpY = dx;
     for (let i = 0; i < n; i++) {
-      const vy = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;
-      const vx = ndx * w.bulletSpeed;
+      const spread = n > 1 ? (i / (n - 1) - 0.5) * 2 * w.spread : 0;
+      const vx = dx * w.bulletSpeed + perpX * spread;
+      const vy = dy * w.bulletSpeed + perpY * spread;
       state.bullets.push(
         makeBullet(muzzleX, muzzleY, {
           vx,
