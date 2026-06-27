@@ -11,7 +11,7 @@ export const INTRO_STORY = {
     "O Esquadrão Capivara entra em ação: comando, furtividade,",
     "explosivos e muita coragem (e uma boa dose de confusão).",
     "Liberte os reféns (🆘), ache vidas extras (1UP) e avance pela cidade.",
-    "Derrube os 7 Chefes e devolva a paz a CapyCity!",
+    "Derrube os 5 Chefes e devolva a paz a CapyCity!",
   ],
   cta: "Avançar ▸",
 };
@@ -49,7 +49,7 @@ export function chapterForWave(wave: number): { n: number; title: string } {
 export const VICTORY_STORY = {
   title: "VITÓRIA!",
   lines: [
-    "Os 7 Chefes caíram. A Horda recuou para as sombras.",
+    "Os 5 Chefes caíram. A Horda recuou para as sombras.",
     "CapyCity está a salvo — e o Esquadrão Capivara vira lenda.",
   ],
 };
