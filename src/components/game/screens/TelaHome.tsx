@@ -7,6 +7,7 @@ import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Dificuldade } from "@/pages/Index";
 import WaveBanner from "@/components/game/WaveBanner";
+import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
@@ -66,6 +67,8 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
       <style>{CSS}</style>
 
       <h1 className="sr-only">Beast Arena — Monster Card Battle</h1>
+
+      <UniverseBackLink className="absolute left-3 top-3 z-30 origin-top-left scale-[0.78] opacity-70 hover:opacity-100 sm:scale-90" />
 
       {/* Noise */}
       <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
