@@ -30,6 +30,7 @@ jobs:
           npx eslint
           src/App.tsx
           src/pages/GameSelect.tsx
+          src/pages/GameSelect.test.tsx
           src/brand/capynite.ts
           src/brand/capynite.test.ts
           src/components/capynite/UniverseMark.tsx
