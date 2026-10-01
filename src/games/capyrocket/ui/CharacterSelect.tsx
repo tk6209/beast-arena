@@ -8,11 +8,13 @@ export default function CharacterSelect({ onSelect }: { onSelect: (id: string) =
   return (
     <div className="capy-select">
       <a className="capy-select__back" href="/">
-        ← Jogos
+        ← Capiverso
       </a>
       <div className="capy-select__head">
+        <div className="capy-select__edition">CAPYNITE · JOSHUA EDITION</div>
         <div className="capy-select__title">CAPI WARS</div>
         <div className="capy-select__sub">Escolha seu herói capivara</div>
+        <div className="capy-select__world">WORLD 02 · CAPYCITY</div>
       </div>
 
       <div className="capy-select__grid">
