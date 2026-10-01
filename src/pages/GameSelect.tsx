@@ -66,11 +66,11 @@ export default function GameSelect() {
       <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[1480px] flex-col px-4 pb-8 pt-5 sm:px-7 lg:px-10">
         <header className="flex items-center justify-between gap-4">
           <UniverseMark />
-          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white/55 backdrop-blur md:flex">
+          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white/[0.55] backdrop-blur md:flex">
             <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,.8)]" />
             CapyCity Online
           </div>
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/35 px-3 py-2 backdrop-blur-xl">
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/[0.35] px-3 py-2 backdrop-blur-xl">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 to-cyan-300 font-['Bebas_Neue'] text-xl text-[#07061a] shadow-[0_0_22px_rgba(56,225,255,.28)]">J</div>
             <div className="hidden sm:block">
               <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Creator signal</div>
@@ -90,7 +90,7 @@ export default function GameSelect() {
               CAPY
               <span className="block bg-gradient-to-r from-violet-300 via-white to-cyan-300 bg-clip-text text-transparent">VERSE</span>
             </h1>
-            <p className="mt-6 max-w-xl text-base font-semibold leading-relaxed text-white/62 sm:text-lg">
+            <p className="mt-6 max-w-xl text-base font-semibold leading-relaxed text-white/[0.62] sm:text-lg">
               {CAPYNITE_BRAND.tagline} Entre em cada mundo, descubra novos personagens e construa a sua história dentro do universo do Joshua.
             </p>
 
@@ -103,11 +103,11 @@ export default function GameSelect() {
             <div className="mt-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 backdrop-blur-lg sm:max-w-xl">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10 font-['Bebas_Neue'] text-xl text-cyan-100">01</div>
               <div className="min-w-0 flex-1">
-                <div className="text-[9px] font-black uppercase tracking-[0.24em] text-white/35">Capynite Passport</div>
+                <div className="text-[9px] font-black uppercase tracking-[0.24em] text-white/[0.35]">Capynite Passport</div>
                 <div className="truncate font-['Bebas_Neue'] text-2xl tracking-wide text-white">{playerName}</div>
               </div>
               <div className="hidden text-right sm:block">
-                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/35">Status</div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/[0.35]">Status</div>
                 <div className="text-xs font-black uppercase tracking-widest text-emerald-300">Explorador</div>
               </div>
             </div>
@@ -117,12 +117,12 @@ export default function GameSelect() {
             <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent" />
             <div className="mb-3 flex items-center justify-between px-1 py-2">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.25em] text-white/35">Mapa do universo</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.25em] text-white/[0.35]">Mapa do universo</div>
                 <div className="mt-1 flex items-center gap-2 font-['Bebas_Neue'] text-2xl tracking-wider text-white">
                   <Map className="h-5 w-5 text-cyan-300" /> ESCOLHA UM MUNDO
                 </div>
               </div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/45">{CAPYNITE_BRAND.city}</div>
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/[0.45]">{CAPYNITE_BRAND.city}</div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -135,7 +135,7 @@ export default function GameSelect() {
                     type="button"
                     onClick={() => locked ? setActiveId(world.id) : launch(world)}
                     onMouseEnter={() => setActiveId(world.id)}
-                    className={`group relative min-h-[250px] overflow-hidden rounded-[26px] border text-left transition duration-300 ${active ? "-translate-y-1 border-white/35 bg-white/[0.09] shadow-[0_22px_48px_rgba(0,0,0,.38)]" : "border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]"}`}
+                    className={`group relative min-h-[250px] overflow-hidden rounded-[26px] border text-left transition duration-300 ${active ? "-translate-y-1 border-white/[0.35] bg-white/[0.09] shadow-[0_22px_48px_rgba(0,0,0,.38)]" : "border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]"}`}
                     aria-pressed={active}
                   >
                     <div className="absolute inset-0 opacity-70" style={{ background: `radial-gradient(circle at 50% 35%, ${world.accent}35, transparent 48%), linear-gradient(180deg, transparent, #050611 86%)` }} />
@@ -143,9 +143,9 @@ export default function GameSelect() {
                       src={WORLD_ART[world.id]}
                       alt=""
                       draggable={false}
-                      className={`absolute left-1/2 top-2 h-[68%] w-auto max-w-[90%] -translate-x-1/2 object-contain drop-shadow-[0_15px_28px_rgba(0,0,0,.55)] transition duration-500 group-hover:scale-105 ${locked ? "grayscale opacity-45" : ""}`}
+                      className={`absolute left-1/2 top-2 h-[68%] w-auto max-w-[90%] -translate-x-1/2 object-contain drop-shadow-[0_15px_28px_rgba(0,0,0,.55)] transition duration-500 group-hover:scale-105 ${locked ? "grayscale opacity-[0.45]" : ""}`}
                     />
-                    <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-white/65 backdrop-blur">
+                    <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-white/[0.65] backdrop-blur">
                       {locked && <LockKeyhole className="h-3 w-3" />}{world.badge}
                     </div>
                     <div className="absolute inset-x-0 bottom-0 p-4">
@@ -166,7 +166,7 @@ export default function GameSelect() {
                     {worldStatus(activeWorld)}
                   </div>
                   <h2 className="mt-2 font-['Bebas_Neue'] text-4xl leading-none tracking-wide text-white sm:text-5xl">{activeWorld.name}</h2>
-                  <p className="mt-2 max-w-xl text-sm font-semibold leading-relaxed text-white/55">{activeWorld.description}</p>
+                  <p className="mt-2 max-w-xl text-sm font-semibold leading-relaxed text-white/[0.55]">{activeWorld.description}</p>
                 </div>
                 <button
                   type="button"
@@ -197,7 +197,7 @@ function Metric({ icon, value, label }: { icon: ReactNode; value: string; label:
     <div className="rounded-2xl border border-white/10 bg-black/25 p-3 backdrop-blur-md">
       <div className="mb-2 text-cyan-300">{icon}</div>
       <div className="font-['Bebas_Neue'] text-2xl tracking-wide text-white sm:text-3xl">{value}</div>
-      <div className="mt-0.5 text-[8px] font-black uppercase leading-tight tracking-[0.14em] text-white/35">{label}</div>
+      <div className="mt-0.5 text-[8px] font-black uppercase leading-tight tracking-[0.14em] text-white/[0.35]">{label}</div>
     </div>
   );
 }
