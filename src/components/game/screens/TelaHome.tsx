@@ -8,11 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Dificuldade } from "@/pages/Index";
 import WaveBanner from "@/components/game/WaveBanner";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
+import type { User } from "@supabase/supabase-js";
 
 interface TelaHomeProps {
   onIniciar: (modo: string, diff?: Dificuldade) => void;
-  user?: any; onLogin?: () => void; onPerfil?: () => void; onLoja?: () => void; onLobby?: () => void;
+  user?: User | null; onLogin?: () => void; onPerfil?: () => void; onLoja?: () => void; onLobby?: () => void;
 }
+
+type RankingRow = { player_name: string; wins: number };
 
 const monsterKeys = Object.keys(MONSTROS);
 
@@ -35,7 +38,7 @@ const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeProps) {
   const [show, setShow]         = useState(false);
   const [bgIdx, setBgIdx]       = useState(0);
-  const [rankings, setRankings] = useState<any[]>([]);
+  const [rankings, setRankings] = useState<RankingRow[]>([]);
 
   useEffect(() => {
     supabase.from("rankings").select("player_name,wins")
@@ -73,7 +76,7 @@ export default function TelaHome({ user, onLogin, onPerfil, onLobby }: TelaHomeP
       {/* Noise */}
       <div style={{ position:"absolute",inset:0,pointerEvents:"none",zIndex:0,
         backgroundImage:NOISE_BG,backgroundSize:"200px 200px",
-        opacity:.04,mixBlendMode:"overlay" as any }} />
+        opacity:.04,mixBlendMode:"overlay" }} />
 
       {/* Neon ambient glows */}
       <div style={{ position:"absolute",top:"6%",left:"-18%",width:340,height:340,
