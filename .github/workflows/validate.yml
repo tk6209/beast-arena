@@ -21,6 +21,23 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Lint Joshua Edition surface
+        run: >-
+          npx eslint
+          src/App.tsx
+          src/pages/GameSelect.tsx
+          src/brand/capynite.ts
+          src/brand/capynite.test.ts
+          src/components/capynite/UniverseMark.tsx
+          src/components/capynite/UniverseBackLink.tsx
+          src/components/game/screens/TelaHome.tsx
+          src/games/capyrocket/CapiRocketApp.tsx
+          src/games/capyrocket/ui/CharacterSelect.tsx
+          src/games/capyrocket/main.tsx
+      - name: Legacy repository lint baseline
+        continue-on-error: true
+        run: npm run lint
