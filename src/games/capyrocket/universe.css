@@ -7,7 +7,7 @@
 
 .capy-universe-mark {
   position: absolute;
-  z-index: 26;
+  z-index: 46;
   top: max(10px, env(safe-area-inset-top));
   left: max(12px, env(safe-area-inset-left));
   display: inline-flex;
