@@ -71,6 +71,7 @@ export default function CapiRocketApp() {
     <OrientationGate>
       <div className="capy-stage">
         <canvas ref={canvasRef} className="capy-canvas" />
+        {charId && <a className="capy-universe-mark" href="/">CAPYNITE · JOSHUA EDITION</a>}
 
         {!charId && (
           <CharacterSelect

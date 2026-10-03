@@ -1,13 +1,13 @@
 {
   "id": "/",
-  "name": "Beast Arena - Card Battle Game",
-  "short_name": "Beast Arena",
-  "description": "Jogo de cartas com monstros em tempo real",
+  "name": "Capynite — Joshua Edition",
+  "short_name": "Capynite",
+  "description": "O universo de jogos do Joshua: Beast Arena, Capi Wars e novas aventuras.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "landscape",
-  "theme_color": "#0d2137",
-  "background_color": "#0a0f1e",
+  "orientation": "any",
+  "theme_color": "#07061a",
+  "background_color": "#050611",
   "icons": [
     {
       "src": "/icon-192.png",

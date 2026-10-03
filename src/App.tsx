@@ -7,8 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import GameSelect from "./pages/GameSelect.tsx";
 import OrientationGate from "./components/game/OrientationGate";
 
-// Rotas pesadas carregadas sob demanda — o menu inicial (/) abre leve, sem
-// puxar o bundle do jogo de cartas até o jogador escolher Beast Arena.
 const Index = lazy(() => import("./pages/Index.tsx"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
@@ -20,20 +18,18 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <OrientationGate>
-        <BrowserRouter>
-          <Suspense fallback={null}>
-            <Routes>
-              {/* Menu inicial: escolha entre os jogos antes de começar. */}
-              <Route path="/" element={<GameSelect />} />
-              <Route path="/beast-arena" element={<Index />} />
-              <Route path="/admin" element={<AdminPanel />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </OrientationGate>
+      <BrowserRouter>
+        <Suspense fallback={null}>
+          <Routes>
+            {/* The Capynite Hub is intentionally orientation-agnostic. */}
+            <Route path="/" element={<GameSelect />} />
+            {/* Gameplay keeps the existing landscape contract. */}
+            <Route path="/beast-arena" element={<OrientationGate><Index /></OrientationGate>} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

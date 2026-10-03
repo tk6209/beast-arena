@@ -1,0 +1,31 @@
+.capynite-grid {
+  background-image:
+    linear-gradient(rgba(183, 148, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 225, 255, 0.035) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(circle at 50% 45%, black, transparent 86%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, black, transparent 86%);
+}
+
+.capynite-orb {
+  position: fixed;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.13;
+  pointer-events: none;
+  animation: capynite-drift 11s ease-in-out infinite alternate;
+}
+
+.capynite-orb-a { top: 12%; left: -10rem; background: #7c3aed; }
+.capynite-orb-b { right: -12rem; bottom: 2%; background: #38e1ff; animation-delay: -4s; }
+
+@keyframes capynite-drift {
+  from { transform: translate3d(0, 0, 0) scale(0.94); }
+  to { transform: translate3d(2.5rem, -1.5rem, 0) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capynite-orb { animation: none; }
+}

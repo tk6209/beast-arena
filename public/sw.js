@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────
-   BEAST ARENA — Service Worker
+   CAPYNITE — Service Worker
    Caching commercial-standard para carregamento instantâneo.
 
    Estratégia:
@@ -9,7 +9,7 @@
      servimos algo desatualizado).
    Suba o VERSION para invalidar todos os caches antigos.
 ───────────────────────────────────────────────────────── */
-const VERSION = "beast-arena-v2";
+const VERSION = "capynite-joshua-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const ASSET_RE = /\.(?:js|css|png|jpe?g|svg|webp|gif|woff2?|ttf|otf|ico)$/i;
