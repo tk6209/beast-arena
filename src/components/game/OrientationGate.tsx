@@ -1,63 +1,126 @@
 import React, { useEffect, useState } from "react";
 
+type OrientationState = {
+  blocked: boolean;
+  ready: boolean;
+};
+
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: string) => Promise<void> | void;
+};
+
 /**
  * OrientationGate — força landscape no padrão de jogos comerciais (Brawl Stars, Clash Royale).
  *
- * Estratégia em duas camadas:
- *   1. Tenta travar a orientação via Screen Orientation API (funciona em PWA/Android instalado).
- *   2. Fallback universal: quando o lock não é suportado (iOS Safari, navegador mobile comum),
- *      e o dispositivo está em retrato + é touch, exibe um overlay bloqueante pedindo
- *      para girar o aparelho. Sem rotação CSS (que quebrava as unidades vw/vh) — o jogo
- *      só renderiza de fato em landscape.
- *
- * Desktop nunca é bloqueado: janelas verticais são válidas e não há como "girar".
+ * Regras:
+ *   1. Em mobile/touch + portrait, mostra o overlay e NÃO monta o runtime do jogo.
+ *      Isso evita inicializar canvas/layout com dimensões de retrato no Android.
+ *   2. Assim que landscape é detectado, o runtime monta uma única vez.
+ *   3. Se o usuário voltar a portrait durante a partida, o overlay reaparece sem
+ *      desmontar o jogo, preservando a sessão.
+ *   4. Screen Orientation API é apenas melhoria progressiva; falhas de lock nunca
+ *      podem impedir o bootstrap.
  */
+function isLikelyMobileTouch(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+
+  const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+  const touchPoints = navigator.maxTouchPoints ?? 0;
+  const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  // pointer: coarse cobre Android/iOS modernos. O fallback de UA + touchPoints
+  // atende WebViews que reportam media queries de ponteiro de forma inconsistente.
+  return coarsePointer || (touchPoints > 0 && mobileUserAgent);
+}
+
+function isPortraitViewport(): boolean {
+  if (typeof window === "undefined") return false;
+
+  // No Android, matchMedia("(orientation)") pode ficar momentaneamente stale
+  // durante orientationchange. As dimensões reais do viewport são a fonte
+  // primária; o media query fica apenas como fallback para viewport quadrado/zero.
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  if (width > 0 && height > 0 && width !== height) {
+    return height > width;
+  }
+
+  return window.matchMedia?.("(orientation: portrait)").matches ?? false;
+}
+
 function getIsBlockingPortrait(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-  // pointer:coarse + (sem hover) ≈ dispositivo touch / mobile real.
-  const isTouch =
-    window.matchMedia("(pointer: coarse)").matches &&
-    window.matchMedia("(hover: none)").matches;
-  return isPortrait && isTouch;
+  return isLikelyMobileTouch() && isPortraitViewport();
 }
 
 export default function OrientationGate({ children }: { children: React.ReactNode }) {
-  const [blocked, setBlocked] = useState<boolean>(() => getIsBlockingPortrait());
+  const [orientationState, setOrientationState] = useState<OrientationState>(() => {
+    const blocked = getIsBlockingPortrait();
+    return { blocked, ready: !blocked };
+  });
 
   useEffect(() => {
-    // 1) Tenta o lock nativo (PWA/Android). `lock` é experimental e não consta
-    // no lib.dom padrão, por isso o cast estreito abaixo.
-    const so = screen.orientation as ScreenOrientation & {
-      lock?: (orientation: string) => Promise<void>;
-    };
-    so?.lock?.("landscape").catch(() => {
-      /* iOS Safari / desktop não suportam — fallback de overlay assume */
-    });
+    // Tenta o lock nativo quando disponível (principalmente PWA Android).
+    // Alguns WebViews antigos expõem lock() mas retornam void ou lançam
+    // sincronamente; ambos os casos são tratados sem quebrar o app.
+    const orientation = window.screen?.orientation as LockableScreenOrientation | undefined;
+    try {
+      const lockResult = orientation?.lock?.("landscape");
+      if (lockResult && typeof (lockResult as Promise<void>).catch === "function") {
+        (lockResult as Promise<void>).catch(() => {
+          /* lock não permitido/suportado — overlay + rotação manual assumem */
+        });
+      }
+    } catch {
+      /* implementação parcial da Screen Orientation API — fallback assume */
+    }
 
-    // 2) Observa mudanças de orientação para o fallback.
-    const update = () => setBlocked(getIsBlockingPortrait());
+    let settleTimer: number | undefined;
+
+    const refresh = () => {
+      const blocked = getIsBlockingPortrait();
+      setOrientationState((previous) => ({
+        blocked,
+        ready: previous.ready || !blocked,
+      }));
+    };
+
+    const update = () => {
+      // Atualização imediata para browsers que já atualizaram innerWidth/innerHeight.
+      refresh();
+
+      // orientationchange pode chegar antes do novo viewport no Android.
+      // Revalida após o settle sem depender de um segundo evento.
+      if (settleTimer !== undefined) window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(refresh, 250);
+    };
+
     update();
 
-    const mq = window.matchMedia("(orientation: portrait)");
-    // addEventListener moderno; addListener legado p/ Safari antigo.
-    if (mq.addEventListener) mq.addEventListener("change", update);
-    else mq.addListener(update);
+    const portraitQuery = window.matchMedia?.("(orientation: portrait)");
+    if (portraitQuery?.addEventListener) portraitQuery.addEventListener("change", update);
+    else portraitQuery?.addListener?.(update);
+
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
+    window.visualViewport?.addEventListener("resize", update);
+    orientation?.addEventListener?.("change", update);
 
     return () => {
-      if (mq.removeEventListener) mq.removeEventListener("change", update);
-      else mq.removeListener(update);
+      if (settleTimer !== undefined) window.clearTimeout(settleTimer);
+      if (portraitQuery?.removeEventListener) portraitQuery.removeEventListener("change", update);
+      else portraitQuery?.removeListener?.(update);
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      orientation?.removeEventListener?.("change", update);
     };
   }, []);
 
   return (
     <>
-      {children}
-      {blocked && <RotateOverlay />}
+      {orientationState.ready && children}
+      {orientationState.blocked && <RotateOverlay />}
     </>
   );
 }
@@ -105,7 +168,6 @@ function RotateOverlay() {
         }
       `}</style>
 
-      {/* Telefone que gira de retrato para paisagem em loop */}
       <div
         style={{
           animation: "rotGateGlow 2.4s ease-in-out infinite",
