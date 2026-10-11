@@ -8,6 +8,7 @@ import GameSelect from "./pages/GameSelect.tsx";
 import OrientationGate from "./components/game/OrientationGate";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
+const CapiRush = lazy(() => import("./pages/CapiRush.tsx"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
@@ -25,6 +26,8 @@ const App = () => (
             <Route path="/" element={<GameSelect />} />
             {/* Gameplay keeps the existing landscape contract. */}
             <Route path="/beast-arena" element={<OrientationGate><Index /></OrientationGate>} />
+            {/* Capi Rush adapts to portrait and landscape; no orientation gate. */}
+            <Route path="/capi-rush" element={<CapiRush />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

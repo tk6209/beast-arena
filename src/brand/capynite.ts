@@ -28,6 +28,7 @@ export const CAPYNITE_STORAGE = {
   beastGuestWins: "beast_guest_wins",
   beastPlayerName: "beast_arena_nome",
   capyHighscore: "capy_highscore",
+  rushHighscore: "capy_rush_highscore",
 } as const;
 
 export const CAPYNITE_WORLDS: readonly CapyniteWorld[] = [
@@ -58,9 +59,22 @@ export const CAPYNITE_WORLDS: readonly CapyniteWorld[] = [
     feature: "5 fases · 4 heróis · Boss fights",
   },
   {
+    id: "capi-rush",
+    name: "CAPI RUSH",
+    eyebrow: "WORLD 03 · ENDLESS RUN",
+    description: "Corra sem parar por CapyCity: troque de pista, pule barreiras, deslize sob as barras e desvie dos trens.",
+    href: "/capi-rush",
+    status: "live",
+    runtime: "spa",
+    accent: "#38e1ff",
+    secondary: "#b794ff",
+    badge: "NEW",
+    feature: "3 pistas · Moedas · Velocidade infinita",
+  },
+  {
     id: "unknown-zone",
     name: "PRÓXIMO MUNDO",
-    eyebrow: "WORLD 03 · EM DESCOBERTA",
+    eyebrow: "WORLD 04 · EM DESCOBERTA",
     description: "Uma nova região do Capiverso está sendo construída. Pistas vão surgir dentro dos jogos.",
     href: "#",
     status: "coming-soon",

@@ -9,6 +9,7 @@ function renderHub() {
       <Routes>
         <Route path="/" element={<GameSelect />} />
         <Route path="/beast-arena" element={<div>BEAST ROUTE OK</div>} />
+        <Route path="/capi-rush" element={<div>RUSH ROUTE OK</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -17,16 +18,17 @@ function renderHub() {
 describe("Capynite Hub", () => {
   beforeEach(() => window.localStorage.clear());
 
-  it("presents Joshua Edition and both playable worlds", () => {
+  it("presents Joshua Edition and the playable worlds", () => {
     renderHub();
     expect(screen.getAllByText("JOSHUA EDITION").length).toBeGreaterThan(0);
     expect(screen.getAllByText("BEAST ARENA").length).toBeGreaterThan(0);
     expect(screen.getAllByText("CAPI WARS").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("CAPI RUSH").length).toBeGreaterThan(0);
   });
 
   it("keeps future worlds locked", () => {
     renderHub();
-    fireEvent.click(screen.getByRole("button", { name: /WORLD 03.*PRÓXIMO MUNDO/i }));
+    fireEvent.click(screen.getByRole("button", { name: /WORLD 04.*PRÓXIMO MUNDO/i }));
     expect(screen.getByRole("button", { name: /EM BREVE/i })).toBeDisabled();
   });
 
@@ -34,5 +36,11 @@ describe("Capynite Hub", () => {
     renderHub();
     fireEvent.click(screen.getByRole("button", { name: /WORLD 01.*BEAST ARENA/i }));
     expect(screen.getByText("BEAST ROUTE OK")).toBeInTheDocument();
+  });
+
+  it("routes Capi Rush through the SPA without a reload", () => {
+    renderHub();
+    fireEvent.click(screen.getByRole("button", { name: /WORLD 03.*CAPI RUSH/i }));
+    expect(screen.getByText("RUSH ROUTE OK")).toBeInTheDocument();
   });
 });
