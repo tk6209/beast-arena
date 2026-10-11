@@ -76,38 +76,38 @@ export default function Index() {
   const [dailyChecked, setDailyChecked] = useState(false);
 
   // Auth listener
+  //
+  // IMPORTANTE: o callback de onAuthStateChange roda DENTRO do lock interno do
+  // supabase-js. Qualquer chamada ao supabase (signOut, from(...).select) com
+  // `await` aqui dentro espera o mesmo lock e trava o cliente inteiro: nenhuma
+  // requisição sai e a batalha fica eternamente em "CARREGANDO...". Por isso o
+  // callback só atualiza estado e adia o trabalho assíncrono para fora do lock.
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const u = session?.user ?? null;
+    const onSignedIn = async (u: User) => {
+      // Invalidate other sessions (prevent simultaneous logins)
+      try { await supabase.auth.signOut({ scope: 'others' }); } catch (e) { console.warn('[auth] signOut(others) falhou:', e); }
+      loadPrefsFromDB(u.id);
+      // Cache display name so we can skip TelaNome
+      const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", u.id).single();
+      if (profile?.display_name) {
+        setNomeJogador(profile.display_name);
+        localStorage.setItem("beast_arena_nome", profile.display_name);
+      }
+    };
+
+    let handledUserId: string | null = null;
+    const handleSession = (u: User | null) => {
       setUser(u);
       setAuthChecked(true);
-      if (u) {
-        // Invalidate other sessions (prevent simultaneous logins)
-        try { await supabase.auth.signOut({ scope: 'others' }); } catch (_) {}
-        setTela("lobby_principal");
-        loadPrefsFromDB(u.id);
-        // Cache display name so we can skip TelaNome
-        const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", u.id).single();
-        if (profile?.display_name) {
-          setNomeJogador(profile.display_name);
-          localStorage.setItem("beast_arena_nome", profile.display_name);
-        }
-      }
-    });
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      setAuthChecked(true);
-      if (u) {
-        try { await supabase.auth.signOut({ scope: 'others' }); } catch (_) {}
-        setTela("lobby_principal");
-        loadPrefsFromDB(u.id);
-        const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", u.id).single();
-        if (profile?.display_name) {
-          setNomeJogador(profile.display_name);
-          localStorage.setItem("beast_arena_nome", profile.display_name);
-        }
-      }
+      if (!u) { handledUserId = null; return; }
+      setTela("lobby_principal");
+      if (handledUserId === u.id) return; // INITIAL_SESSION + SIGNED_IN não repetem o trabalho
+      handledUserId = u.id;
+      setTimeout(() => { onSignedIn(u).catch(console.error); }, 0);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
