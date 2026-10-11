@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Coins, Heart, Pause, Play, Shield } from "lucide-react";
+import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, Rocket, Shield } from "lucide-react";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 import { CAPYNITE_STORAGE } from "@/brand/capynite";
-import { BASE_SPEED, MAX_SPEED, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
+import { BASE_SPEED, JET_TIME, MAGNET_TIME, MAX_SPEED, MULTI_TIME, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
 import { HEROES, getHero, preloadHeroes, type Hero } from "@/games/capirush/heroes";
 import { Fx, drawScene, makeView } from "@/games/capirush/render";
 
@@ -15,9 +15,30 @@ interface Hud {
   shield: boolean;
   meters: number;
   speed: number;
+  magnet: number;
+  jet: number;
+  multi: number;
+  airJump: boolean;
 }
 
-const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0 };
+const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0, magnet: 0, jet: 0, multi: 0, airJump: true };
+
+function hudOf(s: RushState): Hud {
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return {
+    score: s.score,
+    coins: s.coins,
+    lives: s.lives,
+    shield: s.shield,
+    meters: Math.floor(s.distance),
+    speed: Math.round(s.speed * 5) / 5,
+    magnet: r(s.magnet),
+    jet: r(s.jet),
+    multi: r(s.multi),
+    airJump: s.y <= 0 || s.jumpsLeft > 0,
+  };
+}
+const sameHud = (a: Hud, b: Hud) => (Object.keys(a) as (keyof Hud)[]).every((k) => a[k] === b[k]);
 const SWIPE_PX = 22;
 
 function readStore(key: string): string | null {
@@ -124,7 +145,8 @@ export default function CapiRush() {
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      const dt = Math.min((now - last) / 1000, 1 / 20);
+      // O timestamp do rAF pode ser anterior ao performance.now() inicial: nunca deixe dt negativo.
+      const dt = Math.max(0, Math.min((now - last) / 1000, 1 / 20));
       last = now;
       const s = stateRef.current;
       const fx = fxRef.current;
@@ -147,7 +169,7 @@ export default function CapiRush() {
         fx.update(dt, s, 0, true);
         if (events.includes("over")) {
           setPhase("over");
-          setHud({ score: s.score, coins: s.coins, lives: 0, shield: false, meters: Math.floor(s.distance), speed: s.speed });
+          setHud({ ...hudOf(s), lives: 0, shield: false, magnet: 0, jet: 0, multi: 0 });
           setBest((prev) => {
             if (s.score > prev) {
               writeStore(CAPYNITE_STORAGE.rushHighscore, String(s.score));
@@ -158,12 +180,8 @@ export default function CapiRush() {
           });
         } else if (now - hudAt > 90) {
           hudAt = now;
-          const meters = Math.floor(s.distance);
-          setHud((h) =>
-            h.score === s.score && h.coins === s.coins && h.lives === s.lives && h.shield === s.shield && h.meters === meters && Math.abs(h.speed - s.speed) < 0.2
-              ? h
-              : { score: s.score, coins: s.coins, lives: s.lives, shield: s.shield, meters, speed: s.speed },
-          );
+          const next = hudOf(s);
+          setHud((h) => (sameHud(h, next) ? h : next));
         }
       } else if (ph === "ready") {
         // Vitrine: a cidade passa devagar atrás do menu.
@@ -283,6 +301,7 @@ export default function CapiRush() {
           )}
         </div>
 
+        <div className="flex flex-col items-end gap-1.5">
         <div
           className="flex items-stretch gap-2 rounded-2xl border bg-black/50 p-2 pr-3 backdrop-blur-md"
           style={{ borderColor: `${hero.accent}55`, boxShadow: `0 0 28px ${hero.accent}22` }}
@@ -304,6 +323,22 @@ export default function CapiRush() {
               {hud.shield && <Shield className="h-3.5 w-3.5 text-cyan-300" aria-label="Escudo ativo" />}
             </div>
           </div>
+        </div>
+        {playing && (
+          <div className="flex flex-wrap justify-end gap-1.5" aria-live="polite">
+            {hud.jet > 0 && <PowerChip icon={<Rocket className="h-3.5 w-3.5" />} label="Foguete" left={hud.jet} total={JET_TIME} color="#ff7a45" />}
+            {hud.magnet > 0 && <PowerChip icon={<Magnet className="h-3.5 w-3.5" />} label="Ímã" left={hud.magnet} total={MAGNET_TIME} color="#ff4d6d" />}
+            {hud.multi > 0 && <PowerChip icon={<span className="font-['Bebas_Neue'] text-sm leading-none">x2</span>} label="Pontos x2" left={hud.multi} total={MULTI_TIME} color="#ffcf4a" />}
+            {hud.jet <= 0 && (
+              <span
+                className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold backdrop-blur ${hud.airJump ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-100" : "border-white/10 bg-black/40 text-white/35"}`}
+                aria-label={hud.airJump ? "Pulo duplo pronto" : "Pulo duplo usado"}
+              >
+                <ChevronsUp className="h-3.5 w-3.5" /> Pulo duplo
+              </span>
+            )}
+          </div>
+        )}
         </div>
       </div>
 
@@ -360,7 +395,7 @@ export default function CapiRush() {
           </div>
 
           <PlayButton onClick={start}>JOGAR</PlayButton>
-          <p className="mt-3 text-[11px] font-semibold leading-snug text-white/55">Deslize para os lados para trocar de pista, para cima para pular e para baixo para rolar. No teclado: setas ou WASD.</p>
+          <p className="mt-3 text-[11px] font-semibold leading-snug text-white/55">Deslize para os lados para trocar de pista, para cima para pular (de novo no ar = pulo duplo) e para baixo para rolar. Pegue ímã, foguete, x2, escudo e caixas-presente. No teclado: setas ou WASD.</p>
           {best > 0 && <div className="mt-2 text-xs font-bold text-amber-300">Recorde: {best.toLocaleString("pt-BR")}</div>}
         </Overlay>
       )}
@@ -392,6 +427,22 @@ export default function CapiRush() {
         </Overlay>
       )}
     </main>
+  );
+}
+
+function PowerChip({ icon, label, left, total, color }: { icon: React.ReactNode; label: string; left: number; total: number; color: string }) {
+  const pct = Math.max(0, Math.min(1, left / total));
+  const ending = left < 1.5;
+  return (
+    <span
+      className={`relative flex items-center gap-1 overflow-hidden rounded-full border bg-black/55 px-2 py-1 text-[11px] font-bold text-white backdrop-blur ${ending ? "animate-pulse" : ""}`}
+      style={{ borderColor: `${color}88`, boxShadow: `0 0 14px ${color}44` }}
+      aria-label={`${label}: ${Math.ceil(left)} segundos`}
+    >
+      <span aria-hidden className="absolute inset-y-0 left-0 opacity-30" style={{ width: `${pct * 100}%`, background: color }} />
+      <span className="relative flex items-center gap-1" style={{ color }}>{icon}</span>
+      <span className="relative tabular-nums">{Math.ceil(left)}s</span>
+    </span>
   );
 }
 

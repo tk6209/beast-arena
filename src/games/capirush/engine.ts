@@ -18,6 +18,7 @@ export const SPAWN_Z = 70;
 export const LANE_SWITCH_SPEED = 10; // pistas por segundo
 export const GRAVITY = 26;
 export const JUMP_V = 7.6;
+export const DOUBLE_JUMP_V = 7.0;
 export const FAST_FALL_V = 14;
 export const SLIDE_TIME = 0.7;
 
@@ -30,6 +31,18 @@ export const START_LIVES = 3;
 export const HIT_INVULN = 1.5;
 export const SHIELD_INVULN = 0.7;
 export const COIN_VALUE = 10;
+
+/* Poderes (segundos) */
+export const MAGNET_TIME = 9;
+export const JET_TIME = 5;
+export const MULTI_TIME = 12;
+/** Altura do voo do foguete (acima de trens de 2,5 m). */
+export const JET_ALT = 3.4;
+export const JET_SPEED_MULT = 1.4;
+export const JET_END_INVULN = 1.6;
+/** Alcance (em z) e força com que o ímã puxa as moedas. */
+export const MAGNET_RANGE = 18;
+export const MAGNET_PULL = 16;
 
 /** Faixa de profundidade (em z) ocupada pelo corpo do jogador. */
 export const PLAYER_Z0 = 0.15;
@@ -54,21 +67,35 @@ export interface Obstacle {
   len: number;
 }
 
+export type PickupKind = "coin" | "shield" | "magnet" | "jet" | "multi" | "gift";
+export type PowerKind = "shield" | "magnet" | "jet" | "multi";
+/** O que a caixa-presente pode conter. */
+export const GIFT_POOL: readonly PowerKind[] = ["shield", "magnet", "jet", "multi"];
+
 export interface Pickup {
   id: number;
-  kind: "coin" | "shield";
-  lane: Lane;
+  kind: PickupKind;
+  /** Pista; vira fracionária quando o ímã puxa a moeda. */
+  lane: number;
   z: number;
   /** 0 = no chão, 1 = no ar (acima das barreiras: exige pulo). */
   h: 0 | 1;
+  /** Puxada pelo ímã: ignora a altura. */
+  pulled?: boolean;
 }
 
 export type RushEvent =
   | "switch"
   | "jump"
+  | "double-jump"
   | "slide"
   | "coin"
   | "shield-pickup"
+  | "magnet-pickup"
+  | "jet-pickup"
+  | "jet-end"
+  | "multi-pickup"
+  | "gift"
   | "shield-break"
   | "hit"
   | "over";
@@ -95,6 +122,8 @@ export interface RushState {
   y: number;
   vy: number;
   slideTime: number;
+  /** Pulos extras disponíveis no ar (recarrega ao pousar). */
+  jumpsLeft: number;
 
   speed: number;
   distance: number;
@@ -103,6 +132,12 @@ export interface RushState {
   score: number;
   lives: number;
   shield: boolean;
+  /** Segundos restantes de cada poder (0 = inativo). */
+  magnet: number;
+  jet: number;
+  multi: number;
+  /** Pontos extras acumulados pelo multiplicador. */
+  bonus: number;
   invuln: number;
   over: boolean;
 
@@ -132,6 +167,7 @@ export function createState(seed = 1): RushState {
     y: 0,
     vy: 0,
     slideTime: 0,
+    jumpsLeft: 1,
     speed: BASE_SPEED,
     distance: 0,
     time: 0,
@@ -139,6 +175,10 @@ export function createState(seed = 1): RushState {
     score: 0,
     lives: START_LIVES,
     shield: false,
+    magnet: 0,
+    jet: 0,
+    multi: 0,
+    bonus: 0,
     invuln: 0,
     over: false,
     obstacles: [],
@@ -176,7 +216,32 @@ export function obstacleHits(s: RushState, o: Obstacle): boolean {
 function pickupReached(s: RushState, p: Pickup): boolean {
   if (p.z >= PLAYER_Z1 + 0.4 || p.z <= PLAYER_Z0 - 0.4) return false;
   if (Math.abs(s.laneX - p.lane) >= LANE_REACH + 0.1) return false;
+  // Voando ou puxada pelo ímã: a altura não importa.
+  if (s.jet > 0 || p.pulled) return true;
   return p.h === 1 ? s.y > COIN_AIR_MIN_Y : s.y < COIN_GROUND_MAX_Y;
+}
+
+function givePower(s: RushState, kind: PowerKind, events: RushEvent[]): void {
+  switch (kind) {
+    case "shield":
+      s.shield = true;
+      events.push("shield-pickup");
+      break;
+    case "magnet":
+      s.magnet = MAGNET_TIME;
+      events.push("magnet-pickup");
+      break;
+    case "jet":
+      s.jet = JET_TIME;
+      s.vy = 0;
+      s.slideTime = 0;
+      events.push("jet-pickup");
+      break;
+    case "multi":
+      s.multi = MULTI_TIME;
+      events.push("multi-pickup");
+      break;
+  }
 }
 
 /* ───────── Spawner ───────── */
@@ -247,8 +312,21 @@ export function spawnRow(s: RushState, z: number): Obstacle[] {
       }
     }
   }
-  if (freeLane !== undefined && rand(s) < 0.07) {
-    s.pickups.push({ id: s.nextId++, kind: "shield", lane: freeLane, z: z + span / 2, h: 0 });
+  if (freeLane !== undefined) {
+    // Poderes e presentes: raros, sempre na pista livre e logo depois da fileira.
+    const r = rand(s);
+    let kind: PickupKind | null = null;
+    if (r < 0.035) kind = "shield";
+    else if (r < 0.065) kind = "magnet";
+    else if (r < 0.085 && s.distance >= 150) kind = "jet";
+    else if (r < 0.115) kind = "multi";
+    else if (r < 0.15) kind = "gift";
+    if (kind) s.pickups.push({ id: s.nextId++, kind, lane: freeLane, z: z + span + 2, h: 0 });
+  }
+  // Voando de foguete: trilha de moedas no ar para recompensar o voo.
+  if (s.jet > 0) {
+    const lane = LANES[Math.floor(rand(s) * LANES.length)];
+    for (let i = 0; i < 6; i++) s.pickups.push({ id: s.nextId++, kind: "coin", lane, z: z + i * 2.2, h: 1 });
   }
 
   s.nextRowIn = span + rowGap(s.speed) + rand(s) * 8;
@@ -275,42 +353,78 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
   const maxMove = LANE_SWITCH_SPEED * dt;
   s.laneX = Math.abs(dx) <= maxMove ? s.lane : s.laneX + Math.sign(dx) * maxMove;
 
-  /* Pulo e deslize */
-  if (input.jump && isGrounded(s)) {
-    s.vy = JUMP_V;
-    s.y = 1e-6;
+  /* Foguete: voa em altitude fixa e ignora pulo/deslize */
+  const flying = s.jet > 0;
+  if (flying) {
+    s.jet = Math.max(0, s.jet - dt);
+    s.y += (JET_ALT - s.y) * Math.min(1, 6 * dt);
+    s.vy = 0;
     s.slideTime = 0;
-    events.push("jump");
-  }
-  if (input.slide) {
-    if (!isGrounded(s)) s.vy = -FAST_FALL_V; // desce rápido para deslizar logo
-    s.slideTime = SLIDE_TIME;
-    events.push("slide");
-  }
-  if (s.y > 0) {
-    s.vy -= GRAVITY * dt;
-    s.y += s.vy * dt;
-    if (s.y <= 0) {
-      s.y = 0;
-      s.vy = 0;
+    s.jumpsLeft = 1;
+    if (s.jet === 0) {
+      s.invuln = Math.max(s.invuln, JET_END_INVULN);
+      events.push("jet-end");
     }
+  } else {
+    /* Pulo (e pulo duplo no ar) e deslize */
+    if (input.jump) {
+      if (isGrounded(s)) {
+        s.vy = JUMP_V;
+        s.y = 1e-6;
+        s.slideTime = 0;
+        s.jumpsLeft = 1;
+        events.push("jump");
+      } else if (s.jumpsLeft > 0) {
+        s.jumpsLeft -= 1;
+        s.vy = DOUBLE_JUMP_V;
+        s.slideTime = 0;
+        events.push("double-jump");
+      }
+    }
+    if (input.slide) {
+      if (!isGrounded(s)) s.vy = -FAST_FALL_V; // desce rápido para deslizar logo
+      s.slideTime = SLIDE_TIME;
+      events.push("slide");
+    }
+    if (s.y > 0) {
+      s.vy -= GRAVITY * dt;
+      s.y += s.vy * dt;
+      if (s.y <= 0) {
+        s.y = 0;
+        s.vy = 0;
+        s.jumpsLeft = 1;
+      }
+    }
+    if (s.slideTime > 0 && s.y <= 0) s.slideTime = Math.max(0, s.slideTime - dt);
+    // Deslizar no ar não "guarda" o deslize: só começa a contar ao pousar.
   }
-  if (s.slideTime > 0 && s.y <= 0) s.slideTime = Math.max(0, s.slideTime - dt);
-  // Deslizar no ar não "guarda" o deslize: só começa a contar ao pousar.
+  s.magnet = Math.max(0, s.magnet - dt);
+  s.multi = Math.max(0, s.multi - dt);
 
   /* O mundo vem na direção do jogador */
-  const dz = s.speed * dt;
+  const dz = s.speed * dt * (s.jet > 0 ? JET_SPEED_MULT : 1);
   for (const o of s.obstacles) o.z -= dz;
   for (const p of s.pickups) p.z -= dz;
   s.obstacles = s.obstacles.filter((o) => o.z + o.len > -3);
   s.pickups = s.pickups.filter((p) => p.z > -3);
+
+  /* Ímã: moedas próximas voam até o jogador, em qualquer pista */
+  if (s.magnet > 0) {
+    for (const p of s.pickups) {
+      if (p.kind !== "coin" || p.z <= 0.2 || p.z > MAGNET_RANGE) continue;
+      p.pulled = true;
+      const d = s.laneX - p.lane;
+      p.lane += Math.sign(d) * Math.min(Math.abs(d), MAGNET_PULL * dt);
+      p.z -= 7 * dt;
+    }
+  }
 
   s.nextRowIn -= dz;
   if (s.nextRowIn <= 0) spawnRow(s, SPAWN_Z + s.nextRowIn);
 
   /* Colisão */
   if (s.invuln > 0) s.invuln = Math.max(0, s.invuln - dt);
-  if (s.invuln <= 0) {
+  if (s.invuln <= 0 && s.jet <= 0) {
     const hit = s.obstacles.find((o) => obstacleHits(s, o));
     if (hit) {
       s.obstacles = s.obstacles.filter((o) => o !== hit);
@@ -333,12 +447,18 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
   /* Coleta */
   s.pickups = s.pickups.filter((p) => {
     if (!pickupReached(s, p)) return true;
-    if (p.kind === "coin") {
-      s.coins += 1;
-      events.push("coin");
-    } else {
-      s.shield = true;
-      events.push("shield-pickup");
+    switch (p.kind) {
+      case "coin":
+        s.coins += 1;
+        if (s.multi > 0) s.bonus += COIN_VALUE;
+        events.push("coin");
+        break;
+      case "gift":
+        events.push("gift");
+        givePower(s, GIFT_POOL[Math.floor(rand(s) * GIFT_POOL.length)], events);
+        break;
+      default:
+        givePower(s, p.kind, events);
     }
     return false;
   });
@@ -346,7 +466,7 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
   /* Progressão */
   s.distance += dz;
   s.speed = Math.min(MAX_SPEED, BASE_SPEED + s.distance / SPEED_RAMP);
-  s.score = Math.floor(s.distance) + s.coins * COIN_VALUE;
+  s.score = Math.floor(s.distance) + s.coins * COIN_VALUE + s.bonus;
 
   return events;
 }

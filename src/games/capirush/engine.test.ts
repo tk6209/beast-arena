@@ -55,13 +55,41 @@ describe("Capi Rush — controles", () => {
     expect(s.laneX).toBe(1);
   });
 
-  it("pula só no chão (sem pulo duplo)", () => {
+  it("pula do chão e faz UM pulo duplo no ar", () => {
     const s = quiet();
     expect(run(s, DT, { jump: true })).toContain("jump");
     expect(s.y).toBeGreaterThan(0);
-    expect(run(s, DT, { jump: true })).not.toContain("jump");
-    run(s, 1);
+    run(s, 0.12);
+    expect(run(s, DT, { jump: true })).toContain("double-jump");
+    expect(run(s, DT, { jump: true })).not.toContain("double-jump");
+    run(s, 1.5);
     expect(s.y).toBe(0);
+  });
+
+  it("o pulo duplo sobe mais alto que o pulo simples", () => {
+    const apex = (double: boolean) => {
+      const s = quiet();
+      let top = 0;
+      run(s, DT, { jump: true });
+      for (let i = 0; i < 120; i++) {
+        step(s, DT, double && i === 8 ? input({ jump: true }) : NO_INPUT);
+        top = Math.max(top, s.y);
+      }
+      return top;
+    };
+    expect(apex(true)).toBeGreaterThan(apex(false) + 0.4);
+  });
+
+  it("recarrega o pulo duplo ao pousar", () => {
+    const s = quiet();
+    run(s, DT, { jump: true });
+    run(s, 0.1);
+    run(s, DT, { jump: true });
+    run(s, 1.5);
+    expect(s.y).toBe(0);
+    run(s, DT, { jump: true });
+    run(s, 0.1);
+    expect(run(s, DT, { jump: true })).toContain("double-jump");
   });
 
   it("deslizar no ar derruba a capivara e desliza ao pousar", () => {
@@ -189,6 +217,131 @@ describe("Capi Rush — moedas e pontuação", () => {
     s.pickups.push({ id: 1, kind: "shield", lane: 0, z: 3, h: 0 });
     expect(run(s, 0.6)).toContain("shield-pickup");
     expect(s.shield).toBe(true);
+  });
+});
+
+describe("Capi Rush — poderes", () => {
+  const pick = (s: RushState, kind: "magnet" | "jet" | "multi" | "gift" | "shield", z = 3) =>
+    s.pickups.push({ id: s.nextId++, kind, lane: 0, z, h: 0 });
+
+  it("ímã puxa moedas de outras pistas e de longe", () => {
+    const s = quiet();
+    pick(s, "magnet");
+    run(s, 0.4);
+    expect(s.magnet).toBeGreaterThan(0);
+    s.pickups.push({ id: 90, kind: "coin", lane: 1, z: 12, h: 0 });
+    s.pickups.push({ id: 91, kind: "coin", lane: -1, z: 10, h: 1 });
+    run(s, 1.2);
+    expect(s.coins).toBe(2);
+  });
+
+  it("sem ímã, moeda de outra pista passa batido", () => {
+    const s = quiet();
+    s.pickups.push({ id: 90, kind: "coin", lane: 1, z: 6, h: 0 });
+    run(s, 1.2);
+    expect(s.coins).toBe(0);
+  });
+
+  it("o ímã acaba depois do tempo", () => {
+    const s = quiet();
+    pick(s, "magnet");
+    run(s, 0.4);
+    run(s, 10);
+    expect(s.magnet).toBe(0);
+  });
+
+  it("foguete: voa alto, atravessa trem sem dano e recolhe moedas no ar", () => {
+    const s = quiet();
+    pick(s, "jet");
+    run(s, 0.4);
+    expect(s.jet).toBeGreaterThan(0);
+    run(s, 0.6);
+    expect(s.y).toBeGreaterThan(2.5);
+    put(s, "train", 0, 8, 10);
+    s.pickups.push({ id: 92, kind: "coin", lane: 0, z: 14, h: 1 });
+    const ev = run(s, 2);
+    expect(ev).not.toContain("hit");
+    expect(s.lives).toBe(START_LIVES);
+    expect(s.coins).toBeGreaterThanOrEqual(1);
+  });
+
+  it("foguete ignora pulo/deslize e, ao acabar, desce com invulnerabilidade", () => {
+    const s = quiet();
+    pick(s, "jet");
+    run(s, 0.4);
+    const y0 = s.y;
+    run(s, DT, { slide: true });
+    expect(s.y).toBeGreaterThanOrEqual(y0 - 0.2);
+    const ev = run(s, 6);
+    expect(ev).toContain("jet-end");
+    expect(s.y).toBe(0);
+    expect(s.jet).toBe(0);
+  });
+
+  it("depois do foguete dá tempo de pousar sem bater num trem embaixo", () => {
+    const s = quiet();
+    pick(s, "jet");
+    run(s, 0.4);
+    s.jet = 0.05;
+    put(s, "train", 0, 4, 12);
+    const ev = run(s, 2.2);
+    expect(ev).not.toContain("hit");
+  });
+
+  it("multiplicador x2 dobra os pontos das moedas", () => {
+    const base = quiet();
+    base.pickups.push({ id: 90, kind: "coin", lane: 0, z: 3, h: 0 });
+    run(base, 0.6);
+    const x2 = quiet();
+    pick(x2, "multi", 1.5);
+    run(x2, 0.3);
+    x2.pickups.push({ id: 90, kind: "coin", lane: 0, z: 3, h: 0 });
+    run(x2, 0.6);
+    expect(x2.multi).toBeGreaterThan(0);
+    expect(x2.bonus).toBe(COIN_VALUE);
+    expect(x2.score - Math.floor(x2.distance)).toBe(COIN_VALUE * 2);
+    expect(base.score - Math.floor(base.distance)).toBe(COIN_VALUE);
+  });
+
+  it("caixa-presente entrega um poder e avisa", () => {
+    const got = new Set<string>();
+    for (let seed = 1; seed <= 60; seed++) {
+      const s = quiet(seed);
+      pick(s, "gift");
+      const ev = run(s, 0.6);
+      expect(ev).toContain("gift");
+      const power = ev.find((e) => /-pickup$/.test(e));
+      expect(power).toBeTruthy();
+      got.add(power as string);
+    }
+    expect(got.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("poderes só nascem na pista livre e foguete não aparece no começo", () => {
+    let seen = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+      for (const distance of [0, 400]) {
+        const s = createState(seed);
+        s.distance = distance;
+        const row = spawnRow(s, 50);
+        const blocked = new Set(row.map((o) => o.lane));
+        for (const p of s.pickups) {
+          if (p.kind === "coin") continue;
+          seen++;
+          expect(blocked.has(p.lane as Lane)).toBe(false);
+          if (distance < 150) expect(p.kind).not.toBe("jet");
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(20);
+  });
+
+  it("voando, as fileiras novas vêm com trilha de moedas no ar", () => {
+    const s = createState(3);
+    s.distance = 300;
+    s.jet = 3;
+    spawnRow(s, 50);
+    expect(s.pickups.filter((p) => p.kind === "coin" && p.h === 1).length).toBeGreaterThanOrEqual(6);
   });
 });
 

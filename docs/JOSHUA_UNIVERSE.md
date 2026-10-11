@@ -43,7 +43,7 @@ CAPYNITE / JOSHUA EDITION
 ├── Capi Wars (/capyrocket.html)
 │   └── existing five-stage run-and-gun campaign
 └── Capi Rush (/capi-rush)
-    └── 3-lane endless runner (pure engine in src/games/capirush, layered canvas renderer with two biomes — CapyCity night and Ancestral Jungle — hero sprites cut from the 360° sheets in src/assets/capirush, swipe/keyboard)
+    └── 3-lane endless runner (pure engine in src/games/capirush, layered canvas renderer with two biomes — CapyCity night and Ancestral Jungle — hero sprites cut from the 360° sheets in src/assets/capirush, swipe/keyboard; double jump plus power-ups: shield, magnet, jetpack, x2 and mystery gift boxes)
 ```
 
 ## Shared visual language

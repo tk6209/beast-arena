@@ -16,101 +16,9 @@ import {
   type RushState,
 } from "./engine";
 
-const CAM = 8; // distância da câmera atrás da capivara
-
-/* ───────── Vista e projeção ───────── */
-export interface View {
-  W: number;
-  H: number;
-  horizon: number;
-  base: number;
-  laneW: number;
-  unit: number;
-  cx: number;
-  /** Posição lateral da câmera, em pistas (segue o jogador com atraso). */
-  cam: number;
-}
-
-export function makeView(W: number, H: number): View {
-  const laneW = Math.min(W * 0.3, H * 0.32);
-  return { W, H, horizon: H * 0.33, base: H * 0.86, laneW, unit: laneW * 0.55, cx: W / 2, cam: 0 };
-}
-
-/** Escala de perspectiva: 1 em z = 0, encolhe com a distância. */
-const sc = (z: number) => CAM / (Math.max(z, -CAM + 0.5) + CAM);
-const gy = (v: View, z: number) => v.horizon + (v.base - v.horizon) * sc(z);
-const gx = (v: View, laneX: number, z: number) => v.cx + (laneX - v.cam) * v.laneW * sc(z);
-
-function hash(n: number): number {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-/* ───────── Cor ───────── */
-type RGB = [number, number, number];
-const rgbCache = new Map<string, RGB>();
-function rgb(hex: string): RGB {
-  let c = rgbCache.get(hex);
-  if (!c) {
-    if (hex.startsWith("rgb")) {
-      const m = hex.match(/\d+/g) ?? ["0", "0", "0"];
-      c = [Number(m[0]), Number(m[1]), Number(m[2])];
-    } else {
-      const n = Number.parseInt(hex.slice(1), 16);
-      c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-    }
-    rgbCache.set(hex, c);
-  }
-  return c;
-}
-function mix(a: string, b: string, t: number, alpha = 1): string {
-  const A = rgb(a);
-  const B = rgb(b);
-  const r = Math.round(A[0] + (B[0] - A[0]) * t);
-  const g = Math.round(A[1] + (B[1] - A[1]) * t);
-  const bl = Math.round(A[2] + (B[2] - A[2]) * t);
-  return alpha >= 1 ? `rgb(${r},${g},${bl})` : `rgba(${r},${g},${bl},${alpha})`;
-}
-
-const PAL = {
-  cyan: "#38e1ff",
-  violet: "#b794ff",
-  gold: "#ffcf4a",
-  orange: "#ff7a45",
-  pink: "#ff3d8b",
-  mint: "#22e3a0",
-};
-
-/* ───────── Brilho aditivo (sprite radial em cache, bem mais barato que shadowBlur) ───────── */
-const glowCache = new Map<string, HTMLCanvasElement>();
-function glowSprite(color: string): HTMLCanvasElement {
-  let c = glowCache.get(color);
-  if (!c) {
-    c = document.createElement("canvas");
-    c.width = c.height = 64;
-    const g = c.getContext("2d");
-    if (g) {
-      const [r, gr, b] = rgb(color);
-      const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, `rgba(${r},${gr},${b},1)`);
-      grad.addColorStop(0.35, `rgba(${r},${gr},${b},.35)`);
-      grad.addColorStop(1, `rgba(${r},${gr},${b},0)`);
-      g.fillStyle = grad;
-      g.fillRect(0, 0, 64, 64);
-    }
-    glowCache.set(color, c);
-  }
-  return c;
-}
-function glow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, alpha = 1) {
-  if (r < 0.5 || alpha <= 0) return;
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  ctx.globalAlpha = Math.min(1, alpha);
-  ctx.drawImage(glowSprite(color), x - r, y - r, r * 2, r * 2);
-  ctx.restore();
-}
-
+import { CAM, PAL, glow, glowE, gx, gy, hash, mix, sc, type View } from "./gfx";
+import { drawBloom, drawClouds, drawForeground, drawLamps, drawLensFlare, drawMist, drawOverhead, drawSkyLife, drawWeather } from "./atmosphere";
+export { makeView, type View } from "./gfx";
 /* ───────── Partículas e efeitos de tela ───────── */
 interface Particle {
   lane: number;
@@ -168,8 +76,38 @@ export class Fx {
           this.burst("dust", lane, 0.05, 0.5, 8, "#e9d8ff", 2.2, 0.16, 0.5);
           this.parts.push({ lane, y: 0.05, z: 0.5, vl: 0, vy: 0, vz: 0, life: 0.35, max: 0.35, size: 1.2, color: hero.accent, kind: "ring" });
           break;
+        case "double-jump":
+          this.parts.push({ lane, y: s.y, z: 0.5, vl: 0, vy: 0, vz: 0, life: 0.45, max: 0.45, size: 1.8, color: PAL.cyan, kind: "ring" });
+          this.parts.push({ lane, y: s.y, z: 0.5, vl: 0, vy: 0, vz: 0, life: 0.3, max: 0.3, size: 1.1, color: "#ffffff", kind: "ring" });
+          this.burst("spark", lane, s.y + 0.2, 0.5, 14, hero.accent, 3.5, 0.1, 0.5);
+          break;
         case "slide":
           this.burst("spark", lane, 0.1, 0.4, 10, PAL.gold, 3, 0.1, 0.4);
+          break;
+        case "magnet-pickup":
+          this.burst("spark", lane, 1 + s.y, 0.6, 18, "#ff4d6d", 4.5, 0.12, 0.6);
+          this.burst("spark", lane, 1 + s.y, 0.6, 18, "#5aa8ff", 4.5, 0.12, 0.6);
+          this.flash = Math.max(this.flash, reduced ? 0 : 0.15);
+          this.flashColor = "#ff8aa0";
+          break;
+        case "jet-pickup":
+          this.burst("spark", lane, 0.6, 0.6, 30, PAL.orange, 6, 0.14, 0.7);
+          this.burst("dust", lane, 0.1, 0.5, 16, "#fff0c0", 3, 0.22, 0.8);
+          this.shake = reduced ? 0 : 8;
+          this.flash = Math.max(this.flash, reduced ? 0 : 0.22);
+          this.flashColor = "#ffb15a";
+          break;
+        case "jet-end":
+          this.burst("dust", lane, s.y, 0.5, 14, "#ffe2b0", 2.5, 0.2, 0.7);
+          break;
+        case "multi-pickup":
+          this.burst("spark", lane, 1 + s.y, 0.6, 26, PAL.gold, 5, 0.12, 0.7);
+          this.flash = Math.max(this.flash, reduced ? 0 : 0.18);
+          this.flashColor = PAL.gold;
+          break;
+        case "gift":
+          for (const c of [PAL.pink, PAL.cyan, PAL.gold, PAL.mint, PAL.violet]) this.burst("spark", lane, 1 + s.y, 0.6, 8, c, 5.5, 0.12, 0.8);
+          this.parts.push({ lane, y: 1 + s.y, z: 0.5, vl: 0, vy: 0, vz: 0, life: 0.55, max: 0.55, size: 2.6, color: PAL.pink, kind: "ring" });
           break;
         case "switch":
           this.burst("dust", lane, 0.05, 0.5, 4, "#cbb8ff", 1.4, 0.12, 0.35);
@@ -222,6 +160,19 @@ export class Fx {
         });
       }
     }
+    if (running && !s.over) {
+      // Rastro do foguete
+      if (s.jet > 0) {
+        for (let i = 0; i < 2; i++)
+          this.parts.push({ lane: s.laneX + (this.rnd() - 0.5) * 0.25, y: s.y - 0.1, z: 0.35, vl: (this.rnd() - 0.5) * 0.5, vy: -2.5 - this.rnd() * 2, vz: -4, life: 0.4, max: 0.4, size: 0.12, color: this.rnd() > 0.4 ? PAL.orange : "#fff0a0", kind: "spark" });
+      }
+      // Faíscas douradas do x2
+      if (s.multi > 0 && this.rnd() < dt * 14)
+        this.parts.push({ lane: s.laneX + (this.rnd() - 0.5) * 0.7, y: s.y + 0.3 + this.rnd() * 1.6, z: 0.5, vl: 0, vy: 0.6, vz: 0, life: 0.6, max: 0.6, size: 0.08, color: PAL.gold, kind: "ember" });
+      // Faíscas do ímã
+      if (s.magnet > 0 && this.rnd() < dt * 12)
+        this.parts.push({ lane: s.laneX + (this.rnd() - 0.5) * 1.2, y: s.y + 0.4 + this.rnd() * 1.2, z: 0.5, vl: 0, vy: 0.4, vz: 0, life: 0.45, max: 0.45, size: 0.07, color: this.rnd() > 0.5 ? "#ff4d6d" : "#5aa8ff", kind: "ember" });
+    }
     this.emberClock += dt;
     if (biome > 0.35 && this.rnd() < dt * 18 * biome) {
       this.parts.push({
@@ -238,7 +189,7 @@ export class Fx {
         kind: "ember",
       });
     }
-    const scroll = running ? s.speed : 6;
+    const scroll = running ? s.speed * (s.jet > 0 ? 1.4 : 1) : 6;
     for (const p of this.parts) {
       p.life -= dt;
       p.lane += p.vl * dt;
@@ -778,7 +729,7 @@ function drawObstacle(ctx: CanvasRenderingContext2D, v: View, o: Obstacle, time:
   void j;
 }
 
-function drawPickup(ctx: CanvasRenderingContext2D, v: View, p: Pickup, time: number) {
+function drawPickup(ctx: CanvasRenderingContext2D, v: View, p: Pickup, time: number, player: { x: number; y: number }) {
   const k = sc(p.z);
   const x = gx(v, p.lane, p.z);
   const lift = p.h === 1 ? 1.35 : 0.45;
@@ -786,6 +737,21 @@ function drawPickup(ctx: CanvasRenderingContext2D, v: View, p: Pickup, time: num
   const y = gy(v, p.z) - (lift + bob) * v.unit * k;
   if (p.kind === "coin") {
     const r = 0.25 * v.unit * k;
+    if (p.pulled) {
+      // rastro em direção ao jogador quando o ímã puxa
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createLinearGradient(x, y, player.x, player.y);
+      g.addColorStop(0, "rgba(255,207,74,.55)");
+      g.addColorStop(1, "rgba(255,207,74,0)");
+      ctx.strokeStyle = g;
+      ctx.lineWidth = Math.max(1, r * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (player.x - x) * 0.35, y + (player.y - y) * 0.35);
+      ctx.stroke();
+      ctx.restore();
+    }
     const squash = Math.abs(Math.cos(time * 5 + p.id));
     const rx = Math.max(0.6, r * (0.3 + 0.7 * squash));
     glow(ctx, x, y, r * 3, PAL.gold, 0.55);
@@ -804,34 +770,152 @@ function drawPickup(ctx: CanvasRenderingContext2D, v: View, p: Pickup, time: num
       ctx.fillStyle = "rgba(160,100,10,.55)";
       ctx.fillRect(x - rx * 0.12, y - r * 0.45, rx * 0.24, r * 0.9);
     }
-  } else {
-    const r = 0.4 * v.unit * k;
-    glow(ctx, x, y, r * 3.2, PAL.cyan, 0.7);
-    ctx.fillStyle = "rgba(56,225,255,.22)";
-    ctx.strokeStyle = "#8ff1ff";
-    ctx.lineWidth = Math.max(1.2, 2.5 * k);
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = Math.PI / 6 + (i * Math.PI) / 3 + time * 0.8;
-      const px = x + Math.cos(a) * r;
-      const py = y + Math.sin(a) * r;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#e8fdff";
-    ctx.beginPath();
-    ctx.moveTo(x, y - r * 0.5);
-    ctx.lineTo(x + r * 0.38, y - r * 0.25);
-    ctx.lineTo(x + r * 0.3, y + r * 0.25);
-    ctx.lineTo(x, y + r * 0.5);
-    ctx.lineTo(x - r * 0.3, y + r * 0.25);
-    ctx.lineTo(x - r * 0.38, y - r * 0.25);
-    ctx.closePath();
-    ctx.fill();
+    return;
   }
+
+  const r = 0.42 * v.unit * k;
+  const py = y - 0.25 * v.unit * k + Math.sin(time * 3 + p.id) * 0.1 * v.unit * k;
+  // pedestal de luz no chão: chama atenção de longe
+  glowE(ctx, x, gy(v, p.z), r * 2.2, r * 0.55, powerColor(p.kind, time), 0.5);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const beam = ctx.createLinearGradient(0, gy(v, p.z), 0, py - r * 3);
+  beam.addColorStop(0, hexA(powerColor(p.kind, time), 0.35));
+  beam.addColorStop(1, hexA(powerColor(p.kind, time), 0));
+  ctx.fillStyle = beam;
+  ctx.fillRect(x - r * 0.7, py - r * 3, r * 1.4, gy(v, p.z) - (py - r * 3));
+  ctx.restore();
+  glow(ctx, x, py, r * 3.4, powerColor(p.kind, time), 0.75);
+  drawPowerIcon(ctx, p.kind, x, py, r, time);
+}
+
+const POWER_COLOR: Record<string, string> = {
+  shield: "#38e1ff",
+  magnet: "#ff4d6d",
+  jet: "#ff7a45",
+  multi: "#ffcf4a",
+};
+function powerColor(kind: string, time: number): string {
+  if (kind === "gift") return ["#ff3d8b", "#38e1ff", "#ffcf4a", "#22e3a0", "#b794ff"][Math.floor(time * 3) % 5];
+  return POWER_COLOR[kind] ?? "#ffffff";
+}
+function hexA(hex: string, a: number): string {
+  return mix(hex, hex, 0, a);
+}
+
+/** Ícones dos poderes, desenhados em vetor (também usados no HUD via canvas? não: o HUD usa ícones do app). */
+function drawPowerIcon(ctx: CanvasRenderingContext2D, kind: string, x: number, y: number, r: number, time: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  // disco base
+  const disc = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
+  disc.addColorStop(0, "rgba(255,255,255,.35)");
+  disc.addColorStop(1, hexA(powerColor(kind, time), 0.25));
+  ctx.fillStyle = disc;
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = Math.max(1.2, r * 0.09);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.85;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  const s = r * 0.62;
+  switch (kind) {
+    case "shield": {
+      ctx.fillStyle = "#e8fdff";
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.8, -s * 0.55);
+      ctx.lineTo(s * 0.6, s * 0.45);
+      ctx.lineTo(0, s);
+      ctx.lineTo(-s * 0.6, s * 0.45);
+      ctx.lineTo(-s * 0.8, -s * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#38e1ff";
+      ctx.fillRect(-s * 0.12, -s * 0.55, s * 0.24, s * 1.1);
+      break;
+    }
+    case "magnet": {
+      ctx.lineCap = "butt";
+      ctx.lineWidth = s * 0.5;
+      ctx.strokeStyle = "#ff4d6d";
+      ctx.beginPath();
+      ctx.arc(0, -s * 0.05, s * 0.62, Math.PI, 0, false);
+      ctx.stroke();
+      ctx.fillStyle = "#ff4d6d";
+      ctx.fillRect(-s * 0.87, -s * 0.05, s * 0.5, s * 0.55);
+      ctx.fillRect(s * 0.37, -s * 0.05, s * 0.5, s * 0.55);
+      ctx.fillStyle = "#e9f2ff";
+      ctx.fillRect(-s * 0.87, s * 0.5, s * 0.5, s * 0.3);
+      ctx.fillRect(s * 0.37, s * 0.5, s * 0.5, s * 0.3);
+      break;
+    }
+    case "jet": {
+      ctx.rotate(-0.5);
+      ctx.fillStyle = "#f1f1f8";
+      ctx.beginPath();
+      ctx.moveTo(0, -s * 1.05);
+      ctx.quadraticCurveTo(s * 0.45, -s * 0.4, s * 0.32, s * 0.45);
+      ctx.lineTo(-s * 0.32, s * 0.45);
+      ctx.quadraticCurveTo(-s * 0.45, -s * 0.4, 0, -s * 1.05);
+      ctx.fill();
+      ctx.fillStyle = "#38e1ff";
+      ctx.beginPath();
+      ctx.arc(0, -s * 0.35, s * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff7a45";
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.32, s * 0.2);
+      ctx.lineTo(-s * 0.62, s * 0.6);
+      ctx.lineTo(-s * 0.3, s * 0.48);
+      ctx.moveTo(s * 0.32, s * 0.2);
+      ctx.lineTo(s * 0.62, s * 0.6);
+      ctx.lineTo(s * 0.3, s * 0.48);
+      ctx.fill();
+      const fl = 0.7 + 0.3 * Math.sin(time * 30);
+      ctx.fillStyle = "#ffd36a";
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.2, s * 0.48);
+      ctx.lineTo(0, s * (0.95 + 0.25 * fl));
+      ctx.lineTo(s * 0.2, s * 0.48);
+      ctx.fill();
+      break;
+    }
+    case "multi": {
+      ctx.fillStyle = "#fff6cf";
+      ctx.font = `900 ${Math.round(s * 1.25)}px "Bebas Neue", Impact, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("x2", 0, s * 0.06);
+      break;
+    }
+    case "gift": {
+      const wob = Math.sin(time * 6) * 0.08;
+      ctx.rotate(wob);
+      const g = ctx.createLinearGradient(0, -s, 0, s);
+      g.addColorStop(0, "#ff5fa8");
+      g.addColorStop(1, "#b0207a");
+      ctx.fillStyle = g;
+      ctx.fillRect(-s * 0.72, -s * 0.35, s * 1.44, s * 1.1);
+      ctx.fillStyle = "#ff86c1";
+      ctx.fillRect(-s * 0.82, -s * 0.62, s * 1.64, s * 0.32);
+      ctx.fillStyle = "#ffcf4a";
+      ctx.fillRect(-s * 0.13, -s * 0.62, s * 0.26, s * 1.37);
+      ctx.beginPath();
+      ctx.ellipse(-s * 0.3, -s * 0.78, s * 0.3, s * 0.17, -0.5, 0, Math.PI * 2);
+      ctx.ellipse(s * 0.3, -s * 0.78, s * 0.3, s * 0.17, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = `900 ${Math.round(s * 0.7)}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("?", s * 0.38, s * 0.2);
+      break;
+    }
+  }
+  ctx.restore();
 }
 
 /* ───────── Jogador (sprite do herói) ───────── */
@@ -871,6 +955,45 @@ function drawPlayer(ctx: CanvasRenderingContext2D, v: View, s: RushState, hero: 
     glow(ctx, 0, -targetH * 0.18, u * 1.1 * fl, PAL.orange, 0.9);
     glow(ctx, 0, -targetH * 0.12, u * 0.6 * fl, "#fff2a0", 0.95);
   }
+
+  // foguete (poder): mochila a jato com chamas fortes, para qualquer herói
+  if (s.jet > 0) {
+    const fl = 0.75 + 0.25 * Math.sin(s.time * 40);
+    for (const sx2 of [-0.22, 0.22]) {
+      glow(ctx, sx2 * targetH, -targetH * 0.2, u * 0.7 * fl, PAL.orange, 0.7);
+      glow(ctx, sx2 * targetH, -targetH * 0.17, u * 0.32 * fl, "#fff2a0", 0.85);
+      ctx.fillStyle = "rgba(255,190,90,.85)";
+      ctx.beginPath();
+      ctx.moveTo(sx2 * targetH - u * 0.12, -targetH * 0.28);
+      ctx.lineTo(sx2 * targetH, -targetH * 0.28 + u * (0.9 + 0.4 * fl));
+      ctx.lineTo(sx2 * targetH + u * 0.12, -targetH * 0.28);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#c9cbd8";
+    for (const sx2 of [-0.22, 0.22]) {
+      ctx.beginPath();
+      ctx.ellipse(sx2 * targetH, -targetH * 0.48, u * 0.16, u * 0.36, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // ímã: anéis vermelho/azul pulsando
+  if (s.magnet > 0) {
+    const t = (s.time * 1.6) % 1;
+    for (const [col, off] of [["#ff4d6d", 0], ["#5aa8ff", 0.5]] as const) {
+      const tt = (t + off) % 1;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = (1 - tt) * 0.8 * Math.min(1, s.magnet);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(0, -targetH * 0.5, targetH * (0.35 + tt * 0.6), targetH * (0.5 + tt * 0.5), 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+  // x2: auréola dourada
+  if (s.multi > 0) glow(ctx, 0, -targetH * 0.55, targetH * 0.95, PAL.gold, 0.3 + 0.1 * Math.sin(s.time * 6));
 
   // squash & stretch + balanço da corrida
   let sx = 1;
@@ -978,7 +1101,7 @@ function drawVignette(ctx: CanvasRenderingContext2D, v: View) {
 }
 
 function drawSpeedLines(ctx: CanvasRenderingContext2D, v: View, s: RushState, j: number) {
-  const f = Math.max(0, (s.speed - BASE_SPEED - 2) / (MAX_SPEED - BASE_SPEED));
+  const f = s.jet > 0 ? 1 : Math.max(0, (s.speed - BASE_SPEED - 2) / (MAX_SPEED - BASE_SPEED));
   if (f <= 0) return;
   const n = Math.round(6 + f * 16);
   const vx = v.cx - v.cam * v.laneW * 0.3;
@@ -1014,9 +1137,10 @@ export interface SceneOptions {
 export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, opts: SceneOptions = {}) {
   const hero = getHero(opts.heroId);
   const fx = opts.fx;
+  const reduced = !!opts.reduced;
   const j = biomeAt(s.distance);
 
-  // câmera acompanha a pista com suavidade
+  // câmera acompanha a pista com suavidade (e sobe um pouco quando o herói voa)
   v.cam += (s.laneX * 0.5 - v.cam) * 0.12;
 
   ctx.save();
@@ -1025,32 +1149,56 @@ export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, 
   ctx.clearRect(-30, -30, v.W + 60, v.H + 60);
 
   drawSky(ctx, v, s, j);
+  drawClouds(ctx, v, s.time, s.distance, j);
+  drawSkyLife(ctx, v, s.time, j);
   drawFarLayers(ctx, v, s, j);
   drawRoad(ctx, v, s, j);
   drawScenery(ctx, v, s, j);
+  drawMist(ctx, v, s.time, j);
+  drawLamps(ctx, v, s.distance, s.time, j);
 
   // Objetos do mais longe para o mais perto.
+  const pk = sc(0.5);
+  const player = { x: gx(v, s.laneX, 0.5), y: gy(v, 0.5) - (s.y + 1) * v.unit * pk };
   type Item = { z: number; draw: () => void };
   const items: Item[] = [];
   for (const o of s.obstacles) items.push({ z: o.z, draw: () => drawObstacle(ctx, v, o, s.time, j) });
-  for (const p of s.pickups) items.push({ z: p.z, draw: () => drawPickup(ctx, v, p, s.time) });
+  for (const p of s.pickups) items.push({ z: p.z, draw: () => drawPickup(ctx, v, p, s.time, player) });
   if (fx) for (const p of fx.parts) items.push({ z: p.z - 0.01, draw: () => drawParticle(ctx, v, p) });
   items.push({ z: 0.5, draw: () => drawPlayer(ctx, v, s, hero) });
+  // pórticos neon / arcos de pedra sobre a pista a cada 36 m
+  const ospace = 36;
+  const obase = Math.floor(s.distance / ospace);
+  const ophase = (s.distance % ospace) / ospace;
+  for (let i = 0; i <= Math.ceil(SPAWN_Z / ospace); i++) {
+    const z = (i - ophase) * ospace + 10;
+    if (z < -3.5 || z > SPAWN_Z) continue;
+    const id = obase + i;
+    items.push({ z, draw: () => drawOverhead(ctx, v, z, id, s.time, j) });
+  }
   items.sort((a, b) => b.z - a.z);
   for (const it of items) if (it.z < SPAWN_Z + 5) it.draw();
 
-  // Neblina do horizonte (esconde o spawn)
-  const fogH = (v.base - v.horizon) * 0.32;
+  // Neblina do horizonte (esconde o spawn e dá profundidade atmosférica)
+  const fogH = (v.base - v.horizon) * 0.42;
   const fog = ctx.createLinearGradient(0, v.horizon - 6, 0, v.horizon + fogH);
-  fog.addColorStop(0, mix("#5a2288", "#d9b45a", j, 0.9));
+  fog.addColorStop(0, mix("#5a2288", "#d9b45a", j, 0.92));
+  fog.addColorStop(0.45, mix("#5a2288", "#d9b45a", j, 0.35));
   fog.addColorStop(1, mix("#5a2288", "#d9b45a", j, 0));
   ctx.fillStyle = fog;
   ctx.fillRect(0, v.horizon - 6, v.W, fogH + 6);
+
+  drawWeather(ctx, v, s.time, j, reduced);
+  drawForeground(ctx, v, s.time, j);
   ctx.restore();
 
-  if (!opts.reduced) drawSpeedLines(ctx, v, s, j);
+  if (!reduced) drawSpeedLines(ctx, v, s, j);
 
-  // Gradação de cor por bioma (teal/magenta de noite, âmbar de tarde)
+  // Bloom: o que é claro "vaza" luz (neon, sol, faróis)
+  drawBloom(ctx, v, j > 0.5 ? 0.28 : 0.3);
+  drawLensFlare(ctx, v, j);
+
+  // Gradação de cor por bioma (violeta de noite, âmbar de tarde)
   ctx.save();
   ctx.globalCompositeOperation = "soft-light";
   ctx.globalAlpha = 0.28;
