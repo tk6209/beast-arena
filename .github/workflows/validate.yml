@@ -39,6 +39,8 @@ jobs:
           src/components/capynite/UniverseMark.tsx
           src/components/capynite/UniverseBackLink.tsx
           src/components/game/screens/TelaHome.tsx
+          src/components/game/screens/TelaAuth.tsx
+          src/components/game/screens/TelaAuth.test.tsx
           src/games/capyrocket/CapiRocketApp.tsx
           src/pages/CapiRush.tsx
           src/games/capirush/engine.ts
