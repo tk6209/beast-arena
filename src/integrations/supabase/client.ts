@@ -2,8 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Valores PÚBLICOS do projeto (URL + chave "anon"/publishable). Eles já vão dentro
+// de todo bundle do navegador; quem protege os dados são as políticas RLS. Servem de
+// fallback quando o build não recebe as variáveis VITE_* (ex.: preview do Lovable
+// depois que o .env deixou de ser versionado) — sem isso o createClient lança
+// "supabaseUrl is required" e o app fica em tela branca.
+// NUNCA coloque aqui a service_role key.
+export const SUPABASE_PUBLIC_URL = "https://ftlwkkjjpkocklaajavh.supabase.co";
+export const SUPABASE_PUBLIC_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0bHdra2pqcGtvY2tsYWFqYXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjgxMzUsImV4cCI6MjA5MTY0NDEzNX0.WFy-O-L3ZnISK23DBDkSsx5FDRtzFxX8EIxWKsRWixM";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || SUPABASE_PUBLIC_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLIC_ANON_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
