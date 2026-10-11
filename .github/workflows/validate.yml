@@ -29,6 +29,9 @@ jobs:
         run: >-
           npx eslint
           src/App.tsx
+          src/components/AppErrorBoundary.tsx
+          src/components/AppErrorBoundary.test.tsx
+          src/integrations/supabase/client.test.ts
           src/pages/GameSelect.tsx
           src/pages/GameSelect.test.tsx
           src/brand/capynite.ts

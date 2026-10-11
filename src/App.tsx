@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import GameSelect from "./pages/GameSelect.tsx";
 import OrientationGate from "./components/game/OrientationGate";
+import AppErrorBoundary from "./components/AppErrorBoundary";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const CapiRush = lazy(() => import("./pages/CapiRush.tsx"));
@@ -20,6 +21,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AppErrorBoundary>
         <Suspense fallback={null}>
           <Routes>
             {/* The Capynite Hub is intentionally orientation-agnostic. */}
@@ -32,6 +34,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </AppErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
