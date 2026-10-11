@@ -1,37 +1,42 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Coins, Heart, Shield } from "lucide-react";
+import { Coins, Heart, Pause, Play, Shield } from "lucide-react";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 import { CAPYNITE_STORAGE } from "@/brand/capynite";
-import { NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
-import { drawScene, makeView } from "@/games/capirush/render";
+import { BASE_SPEED, MAX_SPEED, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
+import { HEROES, getHero, preloadHeroes, type Hero } from "@/games/capirush/heroes";
+import { Fx, drawScene, makeView } from "@/games/capirush/render";
 
-type Phase = "ready" | "playing" | "over";
+type Phase = "ready" | "playing" | "paused" | "over";
 
 interface Hud {
   score: number;
   coins: number;
   lives: number;
   shield: boolean;
+  meters: number;
+  speed: number;
 }
 
-const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false };
+const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0 };
 const SWIPE_PX = 22;
 
-function readBest(): number {
+function readStore(key: string): string | null {
   try {
-    const n = Number.parseInt(window.localStorage.getItem(CAPYNITE_STORAGE.rushHighscore) || "0", 10);
-    return Number.isFinite(n) ? n : 0;
+    return window.localStorage.getItem(key);
   } catch {
-    return 0;
+    return null;
   }
 }
-
-function writeBest(n: number) {
+function writeStore(key: string, value: string) {
   try {
-    window.localStorage.setItem(CAPYNITE_STORAGE.rushHighscore, String(n));
+    window.localStorage.setItem(key, value);
   } catch {
-    /* armazenamento indisponível (modo privado): o recorde só vale nesta sessão */
+    /* armazenamento indisponível (modo privado): vale só nesta sessão */
   }
+}
+function readBest(): number {
+  const n = Number.parseInt(readStore(CAPYNITE_STORAGE.rushHighscore) || "0", 10);
+  return Number.isFinite(n) ? n : 0;
 }
 
 export default function CapiRush() {
@@ -40,24 +45,52 @@ export default function CapiRush() {
   const stateRef = useRef<RushState>(createState(1));
   const phaseRef = useRef<Phase>("ready");
   const pendingRef = useRef<RushInput>({ ...NO_INPUT });
-  const shakeRef = useRef(0);
+  const fxRef = useRef(new Fx());
+  const heroRef = useRef<Hero>(getHero(readStore(CAPYNITE_STORAGE.rushHero)));
 
-  const [phase, setPhase] = useState<Phase>("ready");
+  const [phase, setPhaseState] = useState<Phase>("ready");
+  const [hero, setHero] = useState<Hero>(heroRef.current);
   const [hud, setHud] = useState<Hud>(HUD0);
   const [best, setBest] = useState(readBest);
   const [newRecord, setNewRecord] = useState(false);
 
+  const setPhase = useCallback((p: Phase) => {
+    phaseRef.current = p;
+    setPhaseState(p);
+  }, []);
+
+  const pickHero = useCallback((h: Hero) => {
+    heroRef.current = h;
+    setHero(h);
+    writeStore(CAPYNITE_STORAGE.rushHero, h.id);
+  }, []);
+
+  // Pré-visualização do bioma na vitrine: /capi-rush?m=1000 (só muda o fundo do menu).
+  useEffect(() => {
+    const m = Number.parseInt(new URLSearchParams(window.location.search).get("m") || "", 10);
+    if (Number.isFinite(m) && m > 0) stateRef.current.distance = m;
+  }, []);
+
   const start = useCallback(() => {
     stateRef.current = createState((Date.now() & 0x7fffffff) || 1);
+    fxRef.current = new Fx();
     pendingRef.current = { ...NO_INPUT };
-    phaseRef.current = "playing";
-    setPhase("playing");
     setNewRecord(false);
     setHud(HUD0);
-  }, []);
+    setPhase("playing");
+  }, [setPhase]);
+
+  const togglePause = useCallback(() => {
+    if (phaseRef.current === "playing") setPhase("paused");
+    else if (phaseRef.current === "paused") setPhase("playing");
+  }, [setPhase]);
 
   const queue = useCallback((k: keyof RushInput) => {
     pendingRef.current[k] = true;
+  }, []);
+
+  useEffect(() => {
+    preloadHeroes();
   }, []);
 
   /* Loop principal */
@@ -76,7 +109,9 @@ export default function CapiRush() {
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const cam = view.cam;
       view = makeView(W, H);
+      view.cam = cam;
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -85,20 +120,22 @@ export default function CapiRush() {
     let raf = 0;
     let last = performance.now();
     let hudAt = 0;
-    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       const dt = Math.min((now - last) / 1000, 1 / 20);
       last = now;
       const s = stateRef.current;
+      const fx = fxRef.current;
+      const ph = phaseRef.current;
 
-      if (phaseRef.current === "playing") {
+      if (ph === "playing") {
         const input = pendingRef.current;
         pendingRef.current = { ...NO_INPUT };
         // Passos fixos de até 1/60 s para o movimento ficar estável em telas lentas.
         let left = dt;
-        let events: string[] = [];
+        let events: ReturnType<typeof step> = [];
         let first = true;
         while (left > 1e-6) {
           const h = Math.min(left, 1 / 60);
@@ -106,14 +143,14 @@ export default function CapiRush() {
           first = false;
           left -= h;
         }
-        if (events.includes("hit") || events.includes("shield-break")) shakeRef.current = reduceMotion ? 0 : 14;
+        fx.onEvents(events, s, heroRef.current, reduced);
+        fx.update(dt, s, 0, true);
         if (events.includes("over")) {
-          phaseRef.current = "over";
           setPhase("over");
-          setHud({ score: s.score, coins: s.coins, lives: 0, shield: false });
+          setHud({ score: s.score, coins: s.coins, lives: 0, shield: false, meters: Math.floor(s.distance), speed: s.speed });
           setBest((prev) => {
             if (s.score > prev) {
-              writeBest(s.score);
+              writeStore(CAPYNITE_STORAGE.rushHighscore, String(s.score));
               setNewRecord(true);
               return s.score;
             }
@@ -121,25 +158,29 @@ export default function CapiRush() {
           });
         } else if (now - hudAt > 90) {
           hudAt = now;
+          const meters = Math.floor(s.distance);
           setHud((h) =>
-            h.score === s.score && h.coins === s.coins && h.lives === s.lives && h.shield === s.shield
+            h.score === s.score && h.coins === s.coins && h.lives === s.lives && h.shield === s.shield && h.meters === meters && Math.abs(h.speed - s.speed) < 0.2
               ? h
-              : { score: s.score, coins: s.coins, lives: s.lives, shield: s.shield },
+              : { score: s.score, coins: s.coins, lives: s.lives, shield: s.shield, meters, speed: s.speed },
           );
         }
-      } else if (phaseRef.current === "ready") {
+      } else if (ph === "ready") {
         // Vitrine: a cidade passa devagar atrás do menu.
-        s.distance += dt * 6;
+        s.distance += dt * 9;
         s.time += dt;
+        fx.update(dt, s, 0, false);
+      } else {
+        fx.update(dt * (ph === "over" ? 1 : 0), s, 0, false);
       }
 
-      shakeRef.current = Math.max(0, shakeRef.current - dt * 60);
-      drawScene(ctx, view, s, shakeRef.current);
+      drawScene(ctx, view, s, { heroId: heroRef.current.id, fx, reduced });
     };
     raf = requestAnimationFrame(frame);
 
     const onVis = () => {
       last = performance.now();
+      if (document.hidden && phaseRef.current === "playing") setPhase("paused");
     };
     document.addEventListener("visibilitychange", onVis);
 
@@ -148,20 +189,29 @@ export default function CapiRush() {
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [setPhase]);
 
   /* Teclado */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (phaseRef.current !== "playing") {
+      const ph = phaseRef.current;
+      if (ph === "ready" || ph === "over") {
         if (k === "enter" || k === " ") {
           e.preventDefault();
           start();
+        } else if (ph === "ready" && (k === "arrowleft" || k === "arrowright")) {
+          const i = HEROES.findIndex((h) => h.id === heroRef.current.id);
+          pickHero(HEROES[(i + (k === "arrowright" ? 1 : HEROES.length - 1)) % HEROES.length]);
         }
         return;
       }
-      if (e.repeat) return;
+      if (k === "p" || k === "escape") {
+        e.preventDefault();
+        togglePause();
+        return;
+      }
+      if (ph !== "playing" || e.repeat) return;
       if (k === "arrowleft" || k === "a") queue("left");
       else if (k === "arrowright" || k === "d") queue("right");
       else if (k === "arrowup" || k === "w" || k === " ") queue("jump");
@@ -171,7 +221,7 @@ export default function CapiRush() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [queue, start]);
+  }, [queue, start, pickHero, togglePause]);
 
   /* Toque: deslizar o dedo = trocar de pista / pular / deslizar; toque curto = pular */
   const touch = useRef<{ x: number; y: number; id: number; used: boolean } | null>(null);
@@ -182,15 +232,14 @@ export default function CapiRush() {
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const t = touch.current;
-    if (!t || t.id !== e.pointerId || t.used) return;
+    if (!t || t.id !== e.pointerId) return;
     const dx = e.clientX - t.x;
     const dy = e.clientY - t.y;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_PX) return;
-    t.used = true;
     if (Math.abs(dx) > Math.abs(dy)) queue(dx < 0 ? "left" : "right");
     else queue(dy < 0 ? "jump" : "slide");
     // Permite encadear gestos sem tirar o dedo da tela.
-    touch.current = { x: e.clientX, y: e.clientY, id: e.pointerId, used: false };
+    touch.current = { x: e.clientX, y: e.clientY, id: e.pointerId, used: true };
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const t = touch.current;
@@ -199,6 +248,9 @@ export default function CapiRush() {
     const moved = Math.hypot(e.clientX - t.x, e.clientY - t.y);
     if (!t.used && moved < SWIPE_PX / 2) queue("jump");
   };
+
+  const speedPct = Math.round(Math.max(0, Math.min(1, (hud.speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED))) * 100);
+  const playing = phase === "playing" || phase === "paused";
 
   return (
     <main className="relative h-[100dvh] w-full select-none overflow-hidden bg-[#050611] text-white">
@@ -211,63 +263,130 @@ export default function CapiRush() {
         onPointerUp={onPointerUp}
         onPointerCancel={() => (touch.current = null)}
       >
-        <canvas ref={canvasRef} className="block h-full w-full" aria-label="Capi Rush: corrida de capivara em CapyCity" role="img" />
+        <canvas ref={canvasRef} className="block h-full w-full" aria-label="Capi Rush: corrida de capivara por CapyCity e pela selva" role="img" />
       </div>
 
       {/* HUD */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex flex-col items-start gap-2">
           <UniverseBackLink />
+          {playing && (
+            <button
+              type="button"
+              onClick={togglePause}
+              onPointerDown={(e) => e.stopPropagation()}
+              aria-label={phase === "paused" ? "Continuar" : "Pausar"}
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/45 backdrop-blur-md transition hover:border-cyan-300/50"
+            >
+              {phase === "paused" ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+            </button>
+          )}
         </div>
-        <div className="flex flex-col items-end gap-1 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur">
-          <div data-testid="rush-score" className="font-['Bebas_Neue'] text-3xl leading-none tracking-wide text-white">
-            {hud.score.toLocaleString("pt-BR")}
-          </div>
-          <div className="flex items-center gap-3 text-sm font-bold">
-            <span className="flex items-center gap-1 text-amber-300">
-              <Coins className="h-4 w-4" /> {hud.coins}
-            </span>
-            <span className="flex items-center gap-0.5" aria-label={`${hud.lives} vidas`}>
-              {Array.from({ length: START_LIVES }, (_, i) => (
-                <Heart key={i} className={`h-4 w-4 ${i < hud.lives ? "fill-rose-400 text-rose-400" : "text-white/25"}`} />
-              ))}
-            </span>
-            {hud.shield && <Shield className="h-4 w-4 text-cyan-300" aria-label="Escudo ativo" />}
+
+        <div
+          className="flex items-stretch gap-2 rounded-2xl border bg-black/50 p-2 pr-3 backdrop-blur-md"
+          style={{ borderColor: `${hero.accent}55`, boxShadow: `0 0 28px ${hero.accent}22` }}
+        >
+          <img src={hero.portrait} alt="" draggable={false} className="h-12 w-12 shrink-0 rounded-xl bg-white/5 object-contain object-bottom" style={{ boxShadow: `inset 0 0 0 1.5px ${hero.accent}88` }} />
+          <div className="flex min-w-[88px] flex-col items-end justify-between">
+            <div data-testid="rush-score" className="font-['Bebas_Neue'] text-3xl leading-none tracking-wide text-white">
+              {hud.score.toLocaleString("pt-BR")}
+            </div>
+            <div className="flex items-center gap-2.5 text-[13px] font-bold leading-none">
+              <span className="flex items-center gap-1 text-amber-300">
+                <Coins className="h-3.5 w-3.5" /> {hud.coins}
+              </span>
+              <span className="flex items-center gap-0.5" aria-label={`${hud.lives} vidas`}>
+                {Array.from({ length: START_LIVES }, (_, i) => (
+                  <Heart key={i} className={`h-3.5 w-3.5 ${i < hud.lives ? "fill-rose-400 text-rose-400" : "text-white/25"}`} />
+                ))}
+              </span>
+              {hud.shield && <Shield className="h-3.5 w-3.5 text-cyan-300" aria-label="Escudo ativo" />}
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Medidor de velocidade + distância */}
+      {playing && (
+        <div className="pointer-events-none absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 right-3 flex items-end justify-between gap-3">
+          <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur">
+            <span data-testid="rush-meters" className="font-['Bebas_Neue'] text-2xl tracking-wide">{hud.meters.toLocaleString("pt-BR")}</span>
+            <span className="ml-1 text-xs font-bold text-white/55">m</span>
+          </div>
+          <div className="w-32 sm:w-44">
+            <div className="mb-1 flex justify-between text-[10px] font-bold text-white/55">
+              <span>Velocidade</span>
+              <span>{speedPct}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full transition-[width] duration-150" style={{ width: `${Math.max(4, speedPct)}%`, background: `linear-gradient(90deg, ${hero.accent}, #ffcf4a, #ff7a45)` }} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {phase === "ready" && (
         <Overlay>
-          <div className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">WORLD 03 · ENDLESS RUN</div>
-          <h1 className="mt-1 font-['Bebas_Neue'] text-7xl leading-[0.85] tracking-wide text-white">CAPI RUSH</h1>
-          <p className="mx-auto mt-3 max-w-xs text-sm font-semibold text-white/65">
-            Corra por CapyCity, desvie dos trens, pule as barreiras e junte moedas. Quanto mais longe, mais rápido!
-          </p>
-          <ul className="mx-auto mt-4 grid max-w-xs grid-cols-2 gap-2 text-left text-xs font-bold text-white/70">
-            <li className="rounded-xl bg-white/5 p-2">👈👉 Deslize para os lados: troca de pista</li>
-            <li className="rounded-xl bg-white/5 p-2">👆 Deslize para cima ou toque: pula</li>
-            <li className="rounded-xl bg-white/5 p-2">👇 Deslize para baixo: rola sob as barras</li>
-            <li className="rounded-xl bg-white/5 p-2">⌨️ Setas/WASD e Espaço no teclado</li>
-          </ul>
+          <h1 className="font-['Bebas_Neue'] text-7xl leading-[0.82] tracking-wide text-white drop-shadow-[0_4px_24px_rgba(56,225,255,.45)]">CAPI RUSH</h1>
+          <p className="mx-auto mt-2 max-w-[17rem] text-sm font-semibold text-white/65">Atravesse CapyCity e a selva antiga. Quanto mais longe, mais rápido.</p>
+
+          <div className="relative mx-auto mt-3 flex h-36 items-end justify-center">
+            <div aria-hidden className="absolute bottom-0 left-1/2 h-28 w-28 -translate-x-1/2 rounded-full blur-2xl" style={{ background: hero.accent, opacity: 0.45 }} />
+            <img key={hero.id} src={hero.portrait} alt={hero.name} draggable={false} className="relative max-h-full w-auto max-w-[11rem] object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,.6)] animate-in fade-in zoom-in-95 duration-200" />
+          </div>
+          <div className="mt-1 font-['Bebas_Neue'] text-3xl leading-none tracking-wider" style={{ color: hero.accent }}>{hero.name}</div>
+          <div className="text-xs font-semibold text-white/55">{hero.tagline}</div>
+
+          <div role="radiogroup" aria-label="Escolha seu herói" className="mt-3 flex justify-center gap-1.5">
+            {HEROES.map((h) => {
+              const on = h.id === hero.id;
+              return (
+                <button
+                  key={h.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-label={h.name}
+                  onClick={() => pickHero(h)}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className={`h-14 w-14 shrink-0 overflow-hidden rounded-2xl border bg-white/5 p-1 transition ${on ? "scale-110 bg-white/15" : "opacity-60 hover:opacity-100"}`}
+                  style={{ borderColor: on ? h.accent : "rgba(255,255,255,.12)", boxShadow: on ? `0 0 18px ${h.accent}66` : undefined }}
+                >
+                  <img src={h.portrait} alt="" draggable={false} className="h-full w-full object-contain object-bottom" />
+                </button>
+              );
+            })}
+          </div>
+
           <PlayButton onClick={start}>JOGAR</PlayButton>
-          {best > 0 && <div className="mt-3 text-xs font-bold uppercase tracking-widest text-amber-300">Recorde: {best.toLocaleString("pt-BR")}</div>}
+          <p className="mt-3 text-[11px] font-semibold leading-snug text-white/55">Deslize para os lados para trocar de pista, para cima para pular e para baixo para rolar. No teclado: setas ou WASD.</p>
+          {best > 0 && <div className="mt-2 text-xs font-bold text-amber-300">Recorde: {best.toLocaleString("pt-BR")}</div>}
+        </Overlay>
+      )}
+
+      {phase === "paused" && (
+        <Overlay>
+          <div className="font-['Bebas_Neue'] text-6xl leading-none text-white">PAUSADO</div>
+          <PlayButton onClick={togglePause}>CONTINUAR</PlayButton>
         </Overlay>
       )}
 
       {phase === "over" && (
         <Overlay>
-          <div className="text-[10px] font-black uppercase tracking-[0.28em] text-rose-300">FIM DA CORRIDA</div>
-          <div data-testid="rush-final" className="mt-1 font-['Bebas_Neue'] text-7xl leading-[0.85] text-white">
+          <img src={hero.portrait} alt="" draggable={false} className="mx-auto h-24 w-auto object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,.6)]" />
+          <div className="mt-1 text-sm font-bold text-rose-300">Fim da corrida</div>
+          <div data-testid="rush-final" className="font-['Bebas_Neue'] text-7xl leading-[0.85] text-white">
             {hud.score.toLocaleString("pt-BR")}
           </div>
-          <div className="mt-2 flex items-center justify-center gap-1 text-lg font-bold text-amber-300">
-            <Coins className="h-5 w-5" /> {hud.coins} moedas
+          <div className="mt-2 flex items-center justify-center gap-4 text-base font-bold">
+            <span className="flex items-center gap-1 text-amber-300"><Coins className="h-4 w-4" /> {hud.coins}</span>
+            <span className="text-white/70">{hud.meters.toLocaleString("pt-BR")} m</span>
           </div>
           {newRecord ? (
-            <div className="mt-2 text-sm font-black uppercase tracking-widest text-emerald-300">🏆 Novo recorde!</div>
+            <div className="mt-2 text-sm font-black text-emerald-300">Novo recorde!</div>
           ) : (
-            <div className="mt-2 text-xs font-bold uppercase tracking-widest text-white/50">Recorde: {best.toLocaleString("pt-BR")}</div>
+            <div className="mt-2 text-xs font-bold text-white/55">Recorde: {best.toLocaleString("pt-BR")}</div>
           )}
           <PlayButton onClick={start}>JOGAR DE NOVO</PlayButton>
         </Overlay>
@@ -278,10 +397,8 @@ export default function CapiRush() {
 
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-[#050611]/65 p-4 backdrop-blur-[2px]">
-      <div className="w-full max-w-sm rounded-[28px] border border-white/15 bg-black/55 p-5 text-center shadow-[0_30px_90px_rgba(0,0,0,.55)] backdrop-blur-xl">
-        {children}
-      </div>
+    <div className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-[#050611]/60 p-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-sm rounded-[28px] border border-white/15 bg-black/55 p-5 text-center shadow-[0_30px_90px_rgba(0,0,0,.55)] backdrop-blur-xl">{children}</div>
     </div>
   );
 }
@@ -292,7 +409,7 @@ function PlayButton({ onClick, children }: { onClick: () => void; children: Reac
       type="button"
       onClick={onClick}
       onPointerDown={(e) => e.stopPropagation()}
-      className="mt-5 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffcf4a] to-[#ff7a45] px-6 font-['Bebas_Neue'] text-3xl tracking-wider text-[#07061a] shadow-[0_8px_30px_rgba(255,122,69,.35)] transition active:scale-[0.98]"
+      className="mt-4 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffcf4a] to-[#ff7a45] px-6 font-['Bebas_Neue'] text-3xl tracking-wider text-[#07061a] shadow-[0_8px_30px_rgba(255,122,69,.35)] transition active:scale-[0.98]"
     >
       {children}
     </button>

@@ -43,7 +43,7 @@ CAPYNITE / JOSHUA EDITION
 ├── Capi Wars (/capyrocket.html)
 │   └── existing five-stage run-and-gun campaign
 └── Capi Rush (/capi-rush)
-    └── 3-lane endless runner (pure engine in src/games/capirush, canvas renderer, swipe/keyboard)
+    └── 3-lane endless runner (pure engine in src/games/capirush, layered canvas renderer with two biomes — CapyCity night and Ancestral Jungle — hero sprites cut from the 360° sheets in src/assets/capirush, swipe/keyboard)
 ```
 
 ## Shared visual language
@@ -70,6 +70,7 @@ The first implementation is intentionally read-only and backward compatible:
 - player name: `beast_arena_nome`
 - Beast Arena local guest wins: `beast_guest_wins`
 - Capi Wars high score: `capy_highscore`
+- Capi Rush selected hero: `capy_rush_hero`
 - Capi Rush high score: `capy_rush_highscore`
 - last selected world: `capynite_last_world`
 
