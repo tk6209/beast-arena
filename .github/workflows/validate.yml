@@ -41,6 +41,9 @@ jobs:
           src/games/capirush/engine.ts
           src/games/capirush/engine.test.ts
           src/games/capirush/render.ts
+          src/games/capirush/heroes.ts
+          src/games/capirush/biome.ts
+          src/games/capirush/biome.test.ts
           src/games/capyrocket/ui/CharacterSelect.tsx
           src/games/capyrocket/main.tsx
       - name: Legacy repository lint baseline

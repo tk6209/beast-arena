@@ -4,10 +4,10 @@ import { ArrowRight, Gamepad2, LockKeyhole, Map, Sparkles, Trophy, Zap } from "l
 import { CAPYNITE_BRAND, CAPYNITE_STORAGE, CAPYNITE_WORLDS, getPlayableWorlds, type CapyniteWorld } from "@/brand/capynite";
 import UniverseMark from "@/components/capynite/UniverseMark";
 import "@/brand/capynite.css";
-import capiArt from "@/assets/monsters/capirocket.png";
+import capiArt from "@/assets/capirush/capirocket_portrait.webp";
 import drakoArt from "@/assets/monsters/drako.png";
-import capiviniArt from "@/assets/monsters/capivini.png";
-import capizozoArt from "@/assets/monsters/capizozo.png";
+import capiviniArt from "@/assets/capirush/voxchick_front.webp";
+import capizozoArt from "@/assets/capirush/capininja_portrait.webp";
 import herosBg from "@/assets/capy_herois_360.webp";
 
 const WORLD_ART: Record<string, string> = {

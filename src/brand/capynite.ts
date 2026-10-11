@@ -29,6 +29,7 @@ export const CAPYNITE_STORAGE = {
   beastPlayerName: "beast_arena_nome",
   capyHighscore: "capy_highscore",
   rushHighscore: "capy_rush_highscore",
+  rushHero: "capy_rush_hero",
 } as const;
 
 export const CAPYNITE_WORLDS: readonly CapyniteWorld[] = [
