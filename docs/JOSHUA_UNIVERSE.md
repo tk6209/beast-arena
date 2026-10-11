@@ -8,7 +8,7 @@
 
 ## North star
 
-Capynite is the universe. Beast Arena and Capi Wars are worlds inside it.
+Capynite is the universe. Beast Arena, Capi Wars and Capi Rush are worlds inside it.
 
 The product should feel like a child-owned game universe rather than a collection of unrelated prototypes. Every experience may keep its own gameplay art direction, but the player should always recognize the same universe, authorship and continuity.
 
@@ -36,11 +36,14 @@ CAPYNITE / JOSHUA EDITION
 │   ├── Passport snapshot
 │   ├── World 01 — Beast Arena
 │   ├── World 02 — Capi Wars
-│   └── World 03 — locked expansion slot
+│   ├── World 03 — Capi Rush
+│   └── World 04 — locked expansion slot
 ├── Beast Arena (/beast-arena)
 │   └── existing battle / collection / social / progression systems
-└── Capi Wars (/capyrocket.html)
-    └── existing five-stage run-and-gun campaign
+├── Capi Wars (/capyrocket.html)
+│   └── existing five-stage run-and-gun campaign
+└── Capi Rush (/capi-rush)
+    └── 3-lane endless runner (pure engine in src/games/capirush, canvas renderer, swipe/keyboard)
 ```
 
 ## Shared visual language
@@ -67,6 +70,7 @@ The first implementation is intentionally read-only and backward compatible:
 - player name: `beast_arena_nome`
 - Beast Arena local guest wins: `beast_guest_wins`
 - Capi Wars high score: `capy_highscore`
+- Capi Rush high score: `capy_rush_highscore`
 - last selected world: `capynite_last_world`
 
 No existing gameplay storage key is renamed in this release.

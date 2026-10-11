@@ -1,17 +1,19 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Gamepad2, LockKeyhole, Map, Sparkles, Trophy, Zap } from "lucide-react";
-import { CAPYNITE_BRAND, CAPYNITE_STORAGE, CAPYNITE_WORLDS, type CapyniteWorld } from "@/brand/capynite";
+import { CAPYNITE_BRAND, CAPYNITE_STORAGE, CAPYNITE_WORLDS, getPlayableWorlds, type CapyniteWorld } from "@/brand/capynite";
 import UniverseMark from "@/components/capynite/UniverseMark";
 import "@/brand/capynite.css";
 import capiArt from "@/assets/monsters/capirocket.png";
 import drakoArt from "@/assets/monsters/drako.png";
 import capiviniArt from "@/assets/monsters/capivini.png";
+import capizozoArt from "@/assets/monsters/capizozo.png";
 import herosBg from "@/assets/capy_herois_360.webp";
 
 const WORLD_ART: Record<string, string> = {
   "beast-arena": drakoArt,
   "capi-wars": capiArt,
+  "capi-rush": capizozoArt,
   "unknown-zone": capiviniArt,
 };
 
@@ -42,6 +44,7 @@ export default function GameSelect() {
     : window.localStorage.getItem(CAPYNITE_STORAGE.beastPlayerName) || "PLAYER 01";
   const beastWins = readNumber(CAPYNITE_STORAGE.beastGuestWins);
   const capyHighscore = readNumber(CAPYNITE_STORAGE.capyHighscore);
+  const rushHighscore = readNumber(CAPYNITE_STORAGE.rushHighscore);
 
   const launch = (world: CapyniteWorld) => {
     setActiveId(world.id);
@@ -95,9 +98,9 @@ export default function GameSelect() {
             </p>
 
             <div className="mt-7 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
-              <Metric icon={<Gamepad2 className="h-4 w-4" />} value="2" label="Mundos jogáveis" />
+              <Metric icon={<Gamepad2 className="h-4 w-4" />} value={String(getPlayableWorlds().length)} label="Mundos jogáveis" />
               <Metric icon={<Trophy className="h-4 w-4" />} value={String(beastWins)} label="Vitórias locais" />
-              <Metric icon={<Zap className="h-4 w-4" />} value={capyHighscore.toLocaleString("pt-BR")} label="Recorde Capi Wars" />
+              <Metric icon={<Zap className="h-4 w-4" />} value={Math.max(capyHighscore, rushHighscore).toLocaleString("pt-BR")} label="Melhor recorde" />
             </div>
 
             <div className="mt-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 backdrop-blur-lg sm:max-w-xl">
@@ -125,7 +128,7 @@ export default function GameSelect() {
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white/[0.45]">{CAPYNITE_BRAND.city}</div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {CAPYNITE_WORLDS.map((world) => {
                 const active = world.id === activeWorld.id;
                 const locked = world.status !== "live";

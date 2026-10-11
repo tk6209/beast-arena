@@ -37,6 +37,10 @@ jobs:
           src/components/capynite/UniverseBackLink.tsx
           src/components/game/screens/TelaHome.tsx
           src/games/capyrocket/CapiRocketApp.tsx
+          src/pages/CapiRush.tsx
+          src/games/capirush/engine.ts
+          src/games/capirush/engine.test.ts
+          src/games/capirush/render.ts
           src/games/capyrocket/ui/CharacterSelect.tsx
           src/games/capyrocket/main.tsx
       - name: Legacy repository lint baseline
