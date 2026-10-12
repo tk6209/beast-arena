@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import TelaHome from "@/components/game/screens/TelaHome";
 import TelaNome from "@/components/game/screens/TelaNome";
 import TelaMonstro from "@/components/game/screens/TelaMonstro";
@@ -36,6 +36,14 @@ type Tela = "home" | "auth" | "lobby_principal" | "perfil" | "loja" | "ranking" 
 export type Dificuldade = "facil" | "medio" | "avancado";
 
 const ALL_MONSTERS = Object.keys(MONSTROS);
+
+/** Telas que exigem conta. Sem sessão, o jogador volta para a landing (que tem o CTA de login). */
+export const PROTECTED: ReadonlySet<Tela> = new Set<Tela>([
+  "lobby_principal", "perfil", "loja", "season_pass", "missoes", "conquistas",
+  "amigos", "colecao", "deck_builder", "evolucao", "matchmaking",
+]);
+/** Telas de entrada: só delas um login/sessão restaurada leva ao lobby. */
+const ENTRY_SCREENS: ReadonlySet<Tela> = new Set<Tela>(["home", "auth"]);
 
 export default function Index() {
   // Link de sala pendente (?sala=) é lido já no estado inicial para sobreviver à resolução de sessão.
@@ -126,6 +134,11 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Guarda de rotas protegidas → landing (nunca TelaAuth inline, sem loop).
+  useEffect(() => {
+    if (authChecked && !user && PROTECTED.has(tela)) setTela("home");
+  }, [authChecked, user, tela]);
+
   // Daily reward check on login
   useEffect(() => {
     if (user && !dailyChecked) {
@@ -150,7 +163,6 @@ export default function Index() {
     if (sala) {
       setJoinCode(sala);
       setModo("multi");
-      setTela("nome");
     }
   }, []);
 
@@ -358,17 +370,17 @@ export default function Index() {
             onLogout={handleLogout}
           />
         </>
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "perfil":
       return user ? (
         <TelaPerfil user={user} onVoltar={() => setTela(user ? "lobby_principal" : "home")} onLogout={handleLogout} onReplayTutorial={handleReplayTutorial} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "loja":
       return user ? (
         <TelaLoja user={user} onVoltar={() => setTela("lobby_principal")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "ranking":
       return <TelaRanking userId={user?.id} onVoltar={() => setTela(user ? "lobby_principal" : "home")} />;
@@ -376,37 +388,37 @@ export default function Index() {
     case "season_pass":
       return user ? (
         <TelaSeasonPass user={user} onVoltar={() => setTela("lobby_principal")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "missoes":
       return user ? (
         <TelaMissoes user={user} onVoltar={() => setTela("lobby_principal")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "conquistas":
       return user ? (
         <TelaConquistas user={user} onVoltar={() => setTela("lobby_principal")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "amigos":
       return user ? (
         <TelaAmigos user={user} onVoltar={() => setTela("lobby_principal")} onConvidar={handleConvidarAmigo} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "colecao":
       return user ? (
         <TelaColecao user={user} onVoltar={() => setTela("lobby_principal")} onDeckBuilder={() => setTela("deck_builder")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "deck_builder":
       return user ? (
         <TelaDeckBuilder user={user} onVoltar={() => setTela("colecao")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "evolucao":
       return user ? (
         <TelaEvolucao user={user} monstroId={evolucaoMonstroId} onVoltar={() => setTela("lobby_principal")} />
-      ) : <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
+      ) : null;
 
     case "home":
       return (
