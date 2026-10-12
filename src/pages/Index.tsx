@@ -524,7 +524,7 @@ export default function Index() {
       {showAccountPrompt && (
         <AccountPrompt
           wins={parseInt(localStorage.getItem("beast_guest_wins") || "1")}
-          onCriarConta={() => { setShowAccountPrompt(false); setTela("auth"); }}
+          onCriarConta={() => { setShowAccountPrompt(false); resetAll(); setTela("home"); }}
           onAgora_Nao={() => { setShowAccountPrompt(false); }}
         />
       )}
