@@ -37,7 +37,7 @@ export default function TelaAuth({ onAuth, onSkip }: TelaAuthProps) {
         const { error: err } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: window.location.href.split("?")[0].split("#")[0] },
         });
         if (err) throw err;
         setSuccess("Verifique seu email para confirmar o cadastro!");
@@ -58,7 +58,7 @@ export default function TelaAuth({ onAuth, onSkip }: TelaAuthProps) {
     setError(null);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/beast-arena`,
+        redirect_uri: window.location.href.split("?")[0].split("#")[0],
       });
       if (result.error) {
         throw result.error;
