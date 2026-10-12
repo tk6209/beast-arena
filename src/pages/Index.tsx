@@ -38,7 +38,12 @@ export type Dificuldade = "facil" | "medio" | "avancado";
 const ALL_MONSTERS = Object.keys(MONSTROS);
 
 export default function Index() {
-  const [tela, setTela] = useState<Tela>("home");
+  // Link de sala pendente (?sala=) é lido já no estado inicial para sobreviver à resolução de sessão.
+  const [tela, setTela] = useState<Tela>(() =>
+    new URLSearchParams(window.location.search).get("sala") ? "nome" : "home"
+  );
+  const telaRef = useRef<Tela>(tela);
+  telaRef.current = tela;
   const [modo, setModo] = useState<string>("duel");
   const [nomeJogador, setNomeJogador] = useState<string>("Jogador");
   const [monstroP1, setMonstroP1] = useState<string>("");
@@ -96,18 +101,27 @@ export default function Index() {
     };
 
     let handledUserId: string | null = null;
-    const handleSession = (u: User | null) => {
+    let resolved = false;
+    const handleSession = (event: string, u: User | null) => {
       setUser(u);
+      const first = !resolved;
+      resolved = true;
       setAuthChecked(true);
       if (!u) { handledUserId = null; return; }
-      setTela("lobby_principal");
+      // Só leva ao lobby na resolução inicial (refresh/PWA) ou num login novo
+      // feito a partir da landing/login. TOKEN_REFRESHED, USER_UPDATED e
+      // SIGNED_IN repetidos (ex.: troca de aba) nunca tiram o jogador da batalha.
+      const isNewLogin = event === "SIGNED_IN" && handledUserId !== u.id;
+      if ((first || isNewLogin) && ENTRY_SCREENS.has(telaRef.current)) {
+        setTela("lobby_principal");
+      }
       if (handledUserId === u.id) return; // INITIAL_SESSION + SIGNED_IN não repetem o trabalho
       handledUserId = u.id;
       setTimeout(() => { onSignedIn(u).catch(console.error); }, 0);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSession(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      handleSession(event, session?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -150,10 +164,8 @@ export default function Index() {
   };
 
   const handleNomeConfirm = (nome: string) => {
-    setNomeJogador(nome);
-    if (user) {
-      supabase.from("profiles").update({ display_name: nome }).eq("user_id", user.id).then(() => {});
-    }
+    // Logado: o nome vem do perfil e só muda em TelaPerfil (validação + cooldown no servidor).
+    if (!user) setNomeJogador(nome);
     setTela("monstro");
   };
 
@@ -317,7 +329,10 @@ export default function Index() {
     return "slideUp";
   };
 
-  const renderScreen = () => { switch (tela) {
+  const renderScreen = () => {
+    // Telas protegidas sem sessão: o efeito acima redireciona para a landing.
+    if (!user && PROTECTED.has(tela)) return null;
+    switch (tela) {
     case "auth":
       return <TelaAuth onAuth={() => setTela("lobby_principal")} onSkip={() => setTela("home")} />;
 
@@ -484,6 +499,9 @@ export default function Index() {
         />
       );
   } }; // end renderScreen
+
+  // Evita o "flash" da landing antes de saber se há sessão salva.
+  if (!authChecked) return null;
 
   return (
     <>
