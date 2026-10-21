@@ -42,6 +42,14 @@ try {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: resolve(evidencePath, "webgl-1920x1080.png"), fullPage: true });
+  // Exercise the canvas with the demo's keyboard controls; this is an
+  // interaction smoke, NOT evidence of rule correctness or animation fidelity.
+  await page.locator("canvas").click({ position: { x: 40, y: 40 } });
+  await page.keyboard.press("Digit2");
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: resolve(evidencePath, "webgl-after-input.png"), fullPage: true });
   const canvasState = await page.evaluate(() => {
     const c = document.querySelector("canvas");
     if (!c) return null;
@@ -50,7 +58,7 @@ try {
   });
   if (!canvasState?.visible) errors.push("Canvas not visible");
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(JSON.stringify({ result: "BROWSER_SMOKE_PASS", url, canvasState, screenshots: 2 }, null, 2));
+  console.log(JSON.stringify({ result: "BROWSER_SMOKE_PASS", url, canvasState, screenshots: 3 }, null, 2));
 } catch (error) {
   failure = error;
   console.error("WebGL browser smoke FAILED:", error);
