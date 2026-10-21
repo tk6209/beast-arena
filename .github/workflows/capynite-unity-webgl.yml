@@ -1,0 +1,77 @@
+name: Capynite Unity 6 WebGL — gated build
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capynite-unity-webgl-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unity-webgl:
+    name: Unity EditMode tests + real WebGL binary
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Require editor-generated project settings and valid license configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s unity/Capynite/ProjectSettings/ProjectVersion.txt || {
+            echo "::error::Missing Unity Editor-generated ProjectVersion.txt"; exit 1;
+          }
+          test -s unity/Capynite/Packages/manifest.json
+          if [[ -z "${UNITY_EMAIL}" || -z "${UNITY_PASSWORD}" ]]; then
+            echo "::error::Unity credentials missing in repository secrets"; exit 1
+          fi
+          if [[ -z "${UNITY_LICENSE}" && -z "${UNITY_SERIAL}" ]]; then
+            echo "::error::Unity license activation not configured"; exit 1
+          fi
+
+      - name: Unity EditMode tests
+        id: unitytests
+        uses: game-ci/unity-test-runner@v4
+        with:
+          projectPath: unity/Capynite
+          testMode: EditMode
+          coverageEnabled: false
+
+      - name: Preserve Unity test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capynite-unity-editmode-evidence
+          path: ${{ steps.unitytests.outputs.artifactsPath }}
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Build Capynite card-battle WebGL
+        uses: game-ci/unity-builder@v4
+        with:
+          projectPath: unity/Capynite
+          targetPlatform: WebGL
+          buildMethod: CapyniteCardBattleBuild.Build
+
+      - name: Check real Unity binary structure
+        run: node scripts/verify-capynite-webgl.mjs unity/Capynite/Builds/CardBattleWebGL
+
+      - name: Upload non-production WebGL build
+        uses: actions/upload-artifact@v4
+        with:
+          name: capynite-card-battle-webgl-candidate
+          path: unity/Capynite/Builds/CardBattleWebGL/
+          if-no-files-found: error
+          retention-days: 14
+# No deployment action by design: browser smoke, security and art approval
+# remain separate protected prerequisites for production release.
