@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://capynite.example/schemas/game-envelope.v1.json",
+  "title": "Capynite Game Bridge Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "type",
+    "requestId",
+    "payload"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "capynite.game.ready",
+        "capynite.game.start",
+        "capynite.game.pause",
+        "capynite.game.resume",
+        "capynite.game.exit",
+        "capynite.game.error",
+        "capynite.game.finished"
+      ]
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "payload": {
+      "type": "object",
+      "maxProperties": 24
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "capynite.game.start"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "worldId",
+              "mode",
+              "deckId",
+              "characterId"
+            ],
+            "properties": {
+              "worldId": {
+                "const": "beast-arena"
+              },
+              "mode": {
+                "enum": [
+                  "campaign",
+                  "practice"
+                ]
+              },
+              "deckId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "characterId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "capynite.game.finished"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "gameSessionId",
+              "outcome"
+            ],
+            "properties": {
+              "gameSessionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "outcome": {
+                "enum": [
+                  "win",
+                  "loss",
+                  "abandoned"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}
