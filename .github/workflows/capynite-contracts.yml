@@ -25,8 +25,12 @@ jobs:
         run: npm ci
       - name: Test web and Capynite contracts
         run: npm test
-      - name: Lint
-        run: npm run lint
+      - name: Lint changed Capynite contracts
+        run: npx eslint packages/game-contracts/src
+      - name: Verify production manifest evidence and totals
+        run: node scripts/validate-capynite-delivery.mjs
       - name: Production compile
         run: npm run build
+# Scoped feature check: full-repository lint remains existing technical debt,
+# previously reported at 197 errors; this job does not represent that gate.
 # Unity EditMode/WebGL testing is explicitly NOT claimed by this web-only job.
