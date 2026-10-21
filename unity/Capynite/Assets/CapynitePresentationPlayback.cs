@@ -33,6 +33,8 @@ public sealed class CapynitePresentationPlayback : MonoBehaviour
     private string activeSession;
     private int lastSequence;
     private Coroutine runningAnimation;
+    private Transform movingActor;
+    private Vector3 originalLocalPosition;
 
     public void BindSession(string sessionId)
     {
@@ -56,6 +58,7 @@ public sealed class CapynitePresentationPlayback : MonoBehaviour
             !ValidId(cue.actorId) || (!string.IsNullOrEmpty(cue.targetId) && !ValidId(cue.targetId))) return;
         lastSequence = cue.sequence;
         if (runningAnimation != null) StopCoroutine(runningAnimation);
+        RestoreActor();
         runningAnimation = StartCoroutine(PlayVisualOnly(cue));
     }
 
@@ -89,7 +92,9 @@ public sealed class CapynitePresentationPlayback : MonoBehaviour
         if (cue.action == "defend" && defenseEffect != null) defenseEffect.Play();
 
         Vector3 origin = actor.localPosition;
-        if (reducedMotion) yield break;
+        movingActor = actor;
+        originalLocalPosition = origin;
+        if (reducedMotion) { RestoreActor(); runningAnimation = null; yield break; }
         float elapsed = 0f, duration = cue.action == "attack" ? .40f : .24f;
         while (elapsed < duration)
         {
@@ -98,14 +103,20 @@ public sealed class CapynitePresentationPlayback : MonoBehaviour
             actor.localPosition = origin + Vector3.up * (.20f * Mathf.Sin(phase * Mathf.PI));
             yield return null;
         }
-        actor.localPosition = origin;
+        RestoreActor();
         runningAnimation = null;
+    }
+
+    private void RestoreActor()
+    {
+        if (movingActor != null) movingActor.localPosition = originalLocalPosition;
+        movingActor = null;
     }
 
     private void OnDisable()
     {
         if (runningAnimation != null) StopCoroutine(runningAnimation);
+        RestoreActor();
         runningAnimation = null;
-        if (playerActor != null) playerActor.localPosition = Vector3.zero;
     }
 }
