@@ -35,7 +35,7 @@ public static class CapyniteImportAudit
 
             foreach (var clip in clips)
             {
-                if (clip == null || clip.length <= 0 || !float.IsFinite(clip.length))
+                if (clip == null || clip.length <= 0 || float.IsNaN(clip.length) || float.IsInfinity(clip.length))
                     throw new Exception(name + ": invalid animation clip duration");
             }
             Debug.Log("Capynite import structure OK: " + name +
