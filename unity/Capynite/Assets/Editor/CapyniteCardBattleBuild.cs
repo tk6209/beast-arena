@@ -16,6 +16,7 @@ public static class CapyniteCardBattleBuild
         var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
         new GameObject("Card Battle Target Prototype").AddComponent<CapyniteCardBattleTarget>();
         EditorSceneManager.SaveScene(scene,ScenePath);
+        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
         AssetDatabase.Refresh();
     }
     [MenuItem("Capynite/Build Card Battle WebGL")]
