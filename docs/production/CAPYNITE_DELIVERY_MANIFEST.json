@@ -1,0 +1,3772 @@
+{
+  "schema_version": "1.0",
+  "project": "Capynite Unity Premium",
+  "reference": "Drako vs Panther visual target approved 2026-10-21",
+  "last_verified": "2026-10-21",
+  "definition": {
+    "concepts": "independent original image with canonical reference, human art approval and license",
+    "rigged_characters": "mesh, UV, materials, skinned rig, animations importable in pinned Unity",
+    "arenas": "individually playable scene with lighting, collisions, camera and performance validation",
+    "abilities": "canonical card rule/event integration, art, sound, VFX, deterministic assertions",
+    "animation_clips": "12 per character with controller, timing, transitions and screenshot/video evidence",
+    "webgl_release": "compiled editor-produced artifact, browser e2e, telemetry and rollback evidence"
+  },
+  "items": [
+    {
+      "id": "CAP-0001",
+      "type": "concepts",
+      "slug": "concepts_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0002",
+      "type": "concepts",
+      "slug": "concepts_002",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0003",
+      "type": "concepts",
+      "slug": "concepts_003",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0004",
+      "type": "concepts",
+      "slug": "concepts_004",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0005",
+      "type": "concepts",
+      "slug": "concepts_005",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0006",
+      "type": "concepts",
+      "slug": "concepts_006",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0007",
+      "type": "concepts",
+      "slug": "concepts_007",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0008",
+      "type": "concepts",
+      "slug": "concepts_008",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0009",
+      "type": "concepts",
+      "slug": "concepts_009",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0010",
+      "type": "concepts",
+      "slug": "concepts_010",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0011",
+      "type": "concepts",
+      "slug": "concepts_011",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0012",
+      "type": "concepts",
+      "slug": "concepts_012",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0013",
+      "type": "concepts",
+      "slug": "concepts_013",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0014",
+      "type": "concepts",
+      "slug": "concepts_014",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0015",
+      "type": "concepts",
+      "slug": "concepts_015",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0016",
+      "type": "concepts",
+      "slug": "concepts_016",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0017",
+      "type": "concepts",
+      "slug": "concepts_017",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0018",
+      "type": "concepts",
+      "slug": "concepts_018",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0019",
+      "type": "concepts",
+      "slug": "concepts_019",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0020",
+      "type": "concepts",
+      "slug": "concepts_020",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0021",
+      "type": "concepts",
+      "slug": "concepts_021",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0022",
+      "type": "concepts",
+      "slug": "concepts_022",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0023",
+      "type": "concepts",
+      "slug": "concepts_023",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0024",
+      "type": "concepts",
+      "slug": "concepts_024",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0025",
+      "type": "concepts",
+      "slug": "concepts_025",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0026",
+      "type": "concepts",
+      "slug": "concepts_026",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0027",
+      "type": "concepts",
+      "slug": "concepts_027",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0028",
+      "type": "concepts",
+      "slug": "concepts_028",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0029",
+      "type": "concepts",
+      "slug": "concepts_029",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0030",
+      "type": "concepts",
+      "slug": "concepts_030",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0031",
+      "type": "concepts",
+      "slug": "concepts_031",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0032",
+      "type": "concepts",
+      "slug": "concepts_032",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0033",
+      "type": "concepts",
+      "slug": "concepts_033",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0034",
+      "type": "concepts",
+      "slug": "concepts_034",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0035",
+      "type": "concepts",
+      "slug": "concepts_035",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0036",
+      "type": "concepts",
+      "slug": "concepts_036",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0037",
+      "type": "concepts",
+      "slug": "concepts_037",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0038",
+      "type": "concepts",
+      "slug": "concepts_038",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0039",
+      "type": "concepts",
+      "slug": "concepts_039",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0040",
+      "type": "concepts",
+      "slug": "concepts_040",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0041",
+      "type": "concepts",
+      "slug": "concepts_041",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0042",
+      "type": "concepts",
+      "slug": "concepts_042",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0043",
+      "type": "concepts",
+      "slug": "concepts_043",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0044",
+      "type": "concepts",
+      "slug": "concepts_044",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0045",
+      "type": "concepts",
+      "slug": "concepts_045",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0046",
+      "type": "concepts",
+      "slug": "concepts_046",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0047",
+      "type": "concepts",
+      "slug": "concepts_047",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0048",
+      "type": "concepts",
+      "slug": "concepts_048",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0049",
+      "type": "concepts",
+      "slug": "concepts_049",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0050",
+      "type": "concepts",
+      "slug": "concepts_050",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0051",
+      "type": "concepts",
+      "slug": "concepts_051",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0052",
+      "type": "concepts",
+      "slug": "concepts_052",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0053",
+      "type": "concepts",
+      "slug": "concepts_053",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0054",
+      "type": "concepts",
+      "slug": "concepts_054",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0055",
+      "type": "concepts",
+      "slug": "concepts_055",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0056",
+      "type": "concepts",
+      "slug": "concepts_056",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0057",
+      "type": "concepts",
+      "slug": "concepts_057",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0058",
+      "type": "concepts",
+      "slug": "concepts_058",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0059",
+      "type": "concepts",
+      "slug": "concepts_059",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0060",
+      "type": "concepts",
+      "slug": "concepts_060",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0061",
+      "type": "concepts",
+      "slug": "concepts_061",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0062",
+      "type": "concepts",
+      "slug": "concepts_062",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0063",
+      "type": "concepts",
+      "slug": "concepts_063",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0064",
+      "type": "concepts",
+      "slug": "concepts_064",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0065",
+      "type": "concepts",
+      "slug": "concepts_065",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0066",
+      "type": "concepts",
+      "slug": "concepts_066",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0067",
+      "type": "concepts",
+      "slug": "concepts_067",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0068",
+      "type": "concepts",
+      "slug": "concepts_068",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0069",
+      "type": "concepts",
+      "slug": "concepts_069",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0070",
+      "type": "concepts",
+      "slug": "concepts_070",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0071",
+      "type": "concepts",
+      "slug": "concepts_071",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0072",
+      "type": "concepts",
+      "slug": "concepts_072",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0073",
+      "type": "concepts",
+      "slug": "concepts_073",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0074",
+      "type": "concepts",
+      "slug": "concepts_074",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0075",
+      "type": "concepts",
+      "slug": "concepts_075",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0076",
+      "type": "concepts",
+      "slug": "concepts_076",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0077",
+      "type": "concepts",
+      "slug": "concepts_077",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0078",
+      "type": "concepts",
+      "slug": "concepts_078",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0079",
+      "type": "concepts",
+      "slug": "concepts_079",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0080",
+      "type": "concepts",
+      "slug": "concepts_080",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0081",
+      "type": "concepts",
+      "slug": "concepts_081",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0082",
+      "type": "concepts",
+      "slug": "concepts_082",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0083",
+      "type": "concepts",
+      "slug": "concepts_083",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0084",
+      "type": "concepts",
+      "slug": "concepts_084",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0085",
+      "type": "concepts",
+      "slug": "concepts_085",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0086",
+      "type": "concepts",
+      "slug": "concepts_086",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0087",
+      "type": "concepts",
+      "slug": "concepts_087",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0088",
+      "type": "concepts",
+      "slug": "concepts_088",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0089",
+      "type": "concepts",
+      "slug": "concepts_089",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0090",
+      "type": "concepts",
+      "slug": "concepts_090",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0091",
+      "type": "concepts",
+      "slug": "concepts_091",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0092",
+      "type": "concepts",
+      "slug": "concepts_092",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0093",
+      "type": "concepts",
+      "slug": "concepts_093",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0094",
+      "type": "concepts",
+      "slug": "concepts_094",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0095",
+      "type": "concepts",
+      "slug": "concepts_095",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0096",
+      "type": "concepts",
+      "slug": "concepts_096",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": []
+    },
+    {
+      "id": "CAP-0097",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0098",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_002",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0099",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_003",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0100",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_004",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0101",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_005",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0102",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_006",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0103",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_007",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0104",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_008",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0105",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_009",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0106",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_010",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0107",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_011",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0108",
+      "type": "rigged_characters",
+      "slug": "rigged_characters_012",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0109",
+      "type": "arenas",
+      "slug": "arenas_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "environment_concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0110",
+      "type": "arenas",
+      "slug": "arenas_002",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "environment_concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0111",
+      "type": "arenas",
+      "slug": "arenas_003",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "environment_concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0112",
+      "type": "arenas",
+      "slug": "arenas_004",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "environment_concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0113",
+      "type": "arenas",
+      "slug": "arenas_005",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "environment_concept_approval"
+      ]
+    },
+    {
+      "id": "CAP-0114",
+      "type": "abilities",
+      "slug": "abilities_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0115",
+      "type": "abilities",
+      "slug": "abilities_002",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0116",
+      "type": "abilities",
+      "slug": "abilities_003",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0117",
+      "type": "abilities",
+      "slug": "abilities_004",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0118",
+      "type": "abilities",
+      "slug": "abilities_005",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0119",
+      "type": "abilities",
+      "slug": "abilities_006",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0120",
+      "type": "abilities",
+      "slug": "abilities_007",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0121",
+      "type": "abilities",
+      "slug": "abilities_008",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0122",
+      "type": "abilities",
+      "slug": "abilities_009",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0123",
+      "type": "abilities",
+      "slug": "abilities_010",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0124",
+      "type": "abilities",
+      "slug": "abilities_011",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0125",
+      "type": "abilities",
+      "slug": "abilities_012",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0126",
+      "type": "abilities",
+      "slug": "abilities_013",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0127",
+      "type": "abilities",
+      "slug": "abilities_014",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0128",
+      "type": "abilities",
+      "slug": "abilities_015",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0129",
+      "type": "abilities",
+      "slug": "abilities_016",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0130",
+      "type": "abilities",
+      "slug": "abilities_017",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0131",
+      "type": "abilities",
+      "slug": "abilities_018",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0132",
+      "type": "abilities",
+      "slug": "abilities_019",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0133",
+      "type": "abilities",
+      "slug": "abilities_020",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0134",
+      "type": "abilities",
+      "slug": "abilities_021",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0135",
+      "type": "abilities",
+      "slug": "abilities_022",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0136",
+      "type": "abilities",
+      "slug": "abilities_023",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0137",
+      "type": "abilities",
+      "slug": "abilities_024",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "battle_rules_verified"
+      ]
+    },
+    {
+      "id": "CAP-0138",
+      "type": "animation_clips",
+      "slug": "animation_clips_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0139",
+      "type": "animation_clips",
+      "slug": "animation_clips_002",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0140",
+      "type": "animation_clips",
+      "slug": "animation_clips_003",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0141",
+      "type": "animation_clips",
+      "slug": "animation_clips_004",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0142",
+      "type": "animation_clips",
+      "slug": "animation_clips_005",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0143",
+      "type": "animation_clips",
+      "slug": "animation_clips_006",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0144",
+      "type": "animation_clips",
+      "slug": "animation_clips_007",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0145",
+      "type": "animation_clips",
+      "slug": "animation_clips_008",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0146",
+      "type": "animation_clips",
+      "slug": "animation_clips_009",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0147",
+      "type": "animation_clips",
+      "slug": "animation_clips_010",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0148",
+      "type": "animation_clips",
+      "slug": "animation_clips_011",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0149",
+      "type": "animation_clips",
+      "slug": "animation_clips_012",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0150",
+      "type": "animation_clips",
+      "slug": "animation_clips_013",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0151",
+      "type": "animation_clips",
+      "slug": "animation_clips_014",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0152",
+      "type": "animation_clips",
+      "slug": "animation_clips_015",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0153",
+      "type": "animation_clips",
+      "slug": "animation_clips_016",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0154",
+      "type": "animation_clips",
+      "slug": "animation_clips_017",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0155",
+      "type": "animation_clips",
+      "slug": "animation_clips_018",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0156",
+      "type": "animation_clips",
+      "slug": "animation_clips_019",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0157",
+      "type": "animation_clips",
+      "slug": "animation_clips_020",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0158",
+      "type": "animation_clips",
+      "slug": "animation_clips_021",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0159",
+      "type": "animation_clips",
+      "slug": "animation_clips_022",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0160",
+      "type": "animation_clips",
+      "slug": "animation_clips_023",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0161",
+      "type": "animation_clips",
+      "slug": "animation_clips_024",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0162",
+      "type": "animation_clips",
+      "slug": "animation_clips_025",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0163",
+      "type": "animation_clips",
+      "slug": "animation_clips_026",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0164",
+      "type": "animation_clips",
+      "slug": "animation_clips_027",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0165",
+      "type": "animation_clips",
+      "slug": "animation_clips_028",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0166",
+      "type": "animation_clips",
+      "slug": "animation_clips_029",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0167",
+      "type": "animation_clips",
+      "slug": "animation_clips_030",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0168",
+      "type": "animation_clips",
+      "slug": "animation_clips_031",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0169",
+      "type": "animation_clips",
+      "slug": "animation_clips_032",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0170",
+      "type": "animation_clips",
+      "slug": "animation_clips_033",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0171",
+      "type": "animation_clips",
+      "slug": "animation_clips_034",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0172",
+      "type": "animation_clips",
+      "slug": "animation_clips_035",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0173",
+      "type": "animation_clips",
+      "slug": "animation_clips_036",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0174",
+      "type": "animation_clips",
+      "slug": "animation_clips_037",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0175",
+      "type": "animation_clips",
+      "slug": "animation_clips_038",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0176",
+      "type": "animation_clips",
+      "slug": "animation_clips_039",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0177",
+      "type": "animation_clips",
+      "slug": "animation_clips_040",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0178",
+      "type": "animation_clips",
+      "slug": "animation_clips_041",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0179",
+      "type": "animation_clips",
+      "slug": "animation_clips_042",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0180",
+      "type": "animation_clips",
+      "slug": "animation_clips_043",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0181",
+      "type": "animation_clips",
+      "slug": "animation_clips_044",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0182",
+      "type": "animation_clips",
+      "slug": "animation_clips_045",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0183",
+      "type": "animation_clips",
+      "slug": "animation_clips_046",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0184",
+      "type": "animation_clips",
+      "slug": "animation_clips_047",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0185",
+      "type": "animation_clips",
+      "slug": "animation_clips_048",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0186",
+      "type": "animation_clips",
+      "slug": "animation_clips_049",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0187",
+      "type": "animation_clips",
+      "slug": "animation_clips_050",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0188",
+      "type": "animation_clips",
+      "slug": "animation_clips_051",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0189",
+      "type": "animation_clips",
+      "slug": "animation_clips_052",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0190",
+      "type": "animation_clips",
+      "slug": "animation_clips_053",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0191",
+      "type": "animation_clips",
+      "slug": "animation_clips_054",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0192",
+      "type": "animation_clips",
+      "slug": "animation_clips_055",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0193",
+      "type": "animation_clips",
+      "slug": "animation_clips_056",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0194",
+      "type": "animation_clips",
+      "slug": "animation_clips_057",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0195",
+      "type": "animation_clips",
+      "slug": "animation_clips_058",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0196",
+      "type": "animation_clips",
+      "slug": "animation_clips_059",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0197",
+      "type": "animation_clips",
+      "slug": "animation_clips_060",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0198",
+      "type": "animation_clips",
+      "slug": "animation_clips_061",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0199",
+      "type": "animation_clips",
+      "slug": "animation_clips_062",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0200",
+      "type": "animation_clips",
+      "slug": "animation_clips_063",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0201",
+      "type": "animation_clips",
+      "slug": "animation_clips_064",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0202",
+      "type": "animation_clips",
+      "slug": "animation_clips_065",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0203",
+      "type": "animation_clips",
+      "slug": "animation_clips_066",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0204",
+      "type": "animation_clips",
+      "slug": "animation_clips_067",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0205",
+      "type": "animation_clips",
+      "slug": "animation_clips_068",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0206",
+      "type": "animation_clips",
+      "slug": "animation_clips_069",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0207",
+      "type": "animation_clips",
+      "slug": "animation_clips_070",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0208",
+      "type": "animation_clips",
+      "slug": "animation_clips_071",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0209",
+      "type": "animation_clips",
+      "slug": "animation_clips_072",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0210",
+      "type": "animation_clips",
+      "slug": "animation_clips_073",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0211",
+      "type": "animation_clips",
+      "slug": "animation_clips_074",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0212",
+      "type": "animation_clips",
+      "slug": "animation_clips_075",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0213",
+      "type": "animation_clips",
+      "slug": "animation_clips_076",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0214",
+      "type": "animation_clips",
+      "slug": "animation_clips_077",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0215",
+      "type": "animation_clips",
+      "slug": "animation_clips_078",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0216",
+      "type": "animation_clips",
+      "slug": "animation_clips_079",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0217",
+      "type": "animation_clips",
+      "slug": "animation_clips_080",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0218",
+      "type": "animation_clips",
+      "slug": "animation_clips_081",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0219",
+      "type": "animation_clips",
+      "slug": "animation_clips_082",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0220",
+      "type": "animation_clips",
+      "slug": "animation_clips_083",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0221",
+      "type": "animation_clips",
+      "slug": "animation_clips_084",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0222",
+      "type": "animation_clips",
+      "slug": "animation_clips_085",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0223",
+      "type": "animation_clips",
+      "slug": "animation_clips_086",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0224",
+      "type": "animation_clips",
+      "slug": "animation_clips_087",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0225",
+      "type": "animation_clips",
+      "slug": "animation_clips_088",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0226",
+      "type": "animation_clips",
+      "slug": "animation_clips_089",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0227",
+      "type": "animation_clips",
+      "slug": "animation_clips_090",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0228",
+      "type": "animation_clips",
+      "slug": "animation_clips_091",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0229",
+      "type": "animation_clips",
+      "slug": "animation_clips_092",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0230",
+      "type": "animation_clips",
+      "slug": "animation_clips_093",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0231",
+      "type": "animation_clips",
+      "slug": "animation_clips_094",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0232",
+      "type": "animation_clips",
+      "slug": "animation_clips_095",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0233",
+      "type": "animation_clips",
+      "slug": "animation_clips_096",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0234",
+      "type": "animation_clips",
+      "slug": "animation_clips_097",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0235",
+      "type": "animation_clips",
+      "slug": "animation_clips_098",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0236",
+      "type": "animation_clips",
+      "slug": "animation_clips_099",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0237",
+      "type": "animation_clips",
+      "slug": "animation_clips_100",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0238",
+      "type": "animation_clips",
+      "slug": "animation_clips_101",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0239",
+      "type": "animation_clips",
+      "slug": "animation_clips_102",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0240",
+      "type": "animation_clips",
+      "slug": "animation_clips_103",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0241",
+      "type": "animation_clips",
+      "slug": "animation_clips_104",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0242",
+      "type": "animation_clips",
+      "slug": "animation_clips_105",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0243",
+      "type": "animation_clips",
+      "slug": "animation_clips_106",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0244",
+      "type": "animation_clips",
+      "slug": "animation_clips_107",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0245",
+      "type": "animation_clips",
+      "slug": "animation_clips_108",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0246",
+      "type": "animation_clips",
+      "slug": "animation_clips_109",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0247",
+      "type": "animation_clips",
+      "slug": "animation_clips_110",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0248",
+      "type": "animation_clips",
+      "slug": "animation_clips_111",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0249",
+      "type": "animation_clips",
+      "slug": "animation_clips_112",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0250",
+      "type": "animation_clips",
+      "slug": "animation_clips_113",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0251",
+      "type": "animation_clips",
+      "slug": "animation_clips_114",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0252",
+      "type": "animation_clips",
+      "slug": "animation_clips_115",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0253",
+      "type": "animation_clips",
+      "slug": "animation_clips_116",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0254",
+      "type": "animation_clips",
+      "slug": "animation_clips_117",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0255",
+      "type": "animation_clips",
+      "slug": "animation_clips_118",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0256",
+      "type": "animation_clips",
+      "slug": "animation_clips_119",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0257",
+      "type": "animation_clips",
+      "slug": "animation_clips_120",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0258",
+      "type": "animation_clips",
+      "slug": "animation_clips_121",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0259",
+      "type": "animation_clips",
+      "slug": "animation_clips_122",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0260",
+      "type": "animation_clips",
+      "slug": "animation_clips_123",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0261",
+      "type": "animation_clips",
+      "slug": "animation_clips_124",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0262",
+      "type": "animation_clips",
+      "slug": "animation_clips_125",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0263",
+      "type": "animation_clips",
+      "slug": "animation_clips_126",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0264",
+      "type": "animation_clips",
+      "slug": "animation_clips_127",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0265",
+      "type": "animation_clips",
+      "slug": "animation_clips_128",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0266",
+      "type": "animation_clips",
+      "slug": "animation_clips_129",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0267",
+      "type": "animation_clips",
+      "slug": "animation_clips_130",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0268",
+      "type": "animation_clips",
+      "slug": "animation_clips_131",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0269",
+      "type": "animation_clips",
+      "slug": "animation_clips_132",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0270",
+      "type": "animation_clips",
+      "slug": "animation_clips_133",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0271",
+      "type": "animation_clips",
+      "slug": "animation_clips_134",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0272",
+      "type": "animation_clips",
+      "slug": "animation_clips_135",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0273",
+      "type": "animation_clips",
+      "slug": "animation_clips_136",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0274",
+      "type": "animation_clips",
+      "slug": "animation_clips_137",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0275",
+      "type": "animation_clips",
+      "slug": "animation_clips_138",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0276",
+      "type": "animation_clips",
+      "slug": "animation_clips_139",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0277",
+      "type": "animation_clips",
+      "slug": "animation_clips_140",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0278",
+      "type": "animation_clips",
+      "slug": "animation_clips_141",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0279",
+      "type": "animation_clips",
+      "slug": "animation_clips_142",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0280",
+      "type": "animation_clips",
+      "slug": "animation_clips_143",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0281",
+      "type": "animation_clips",
+      "slug": "animation_clips_144",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "canonical_rig"
+      ]
+    },
+    {
+      "id": "CAP-0282",
+      "type": "webgl_release",
+      "slug": "webgl_release_001",
+      "status": "TODO",
+      "artifact": null,
+      "source_sha": null,
+      "review": null,
+      "tests": [],
+      "owner": "unassigned",
+      "blocked_by": [
+        "all_critical_green"
+      ]
+    }
+  ]
+}
