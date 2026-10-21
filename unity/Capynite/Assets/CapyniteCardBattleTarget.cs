@@ -22,6 +22,8 @@ public sealed class CapyniteCardBattleTarget : MonoBehaviour
     private float flashUntil;
     private GameObject playerActor, bossActor;
     private Renderer bossVisual;
+    private CapynitePresentationPlayback presentation;
+    private int cueSequence;
     private static readonly string[] bosses={"Chief Capivara","Maga Capira","Capitão Corpivara","Capi Dragão","Imperador Capibaron"};
 
     private void Start()
@@ -38,6 +40,10 @@ public sealed class CapyniteCardBattleTarget : MonoBehaviour
         playerActor=Make("Player creature placeholder",PrimitiveType.Capsule,new Vector3(-4,1,0),new Vector3(1.9f,1.8f,1.9f),new Color(.86f,.23f,.22f));
         bossActor=Make("Opponent creature placeholder",PrimitiveType.Capsule,new Vector3(4,1,0),new Vector3(2.5f,2.1f,2.5f),new Color(.25f,.62f,.82f));
         bossVisual=bossActor.GetComponent<Renderer>();
+        presentation = gameObject.AddComponent<CapynitePresentationPlayback>();
+        presentation.playerActor = playerActor.transform;
+        presentation.opponentActor = bossActor.transform;
+        presentation.BindSession("local_visual_demo_only");
         for(int i=0;i<9;i++) {
             var a=i*6.283185f/9f;
             Make("Backdrop tree "+i,PrimitiveType.Cylinder,new Vector3(Mathf.Cos(a)*13f,1f,Mathf.Sin(a)*10f),new Vector3(.5f,2f,.5f),new Color(.21f,.46f,.31f));
@@ -55,10 +61,11 @@ public sealed class CapyniteCardBattleTarget : MonoBehaviour
     {
         if(won||playerHP<=0)return;
         if(index==0){feedback="Troca de criatura: disponível na versão com roster.";return;}
-        if(index==5){playerHP=Math.Min(100,playerHP+16);feedback="Descanso: +16 HP";return;}
+        if(index==5){playerHP=Math.Min(100,playerHP+16);feedback="Descanso: +16 HP";EmitDemoVisual("heal", "drako", "drako");return;}
         if(energy<costs[index]){feedback="Energia insuficiente.";return;}
         energy-=costs[index];bossHP=Math.Max(0,bossHP-damages[index]);flashUntil=Time.time+.3f;
         feedback=cards[index]+" causou "+damages[index]+" de dano!";
+        EmitDemoVisual("attack", "drako", "panther");
         if(bossHP==0)NextBoss();
     }
 
@@ -75,7 +82,19 @@ public sealed class CapyniteCardBattleTarget : MonoBehaviour
         if(won||playerHP<=0)return;
         playerHP=Math.Max(0,playerHP-(8+bossStage*2));
         turn++;energy=Math.Min(8,energy+3);
+        EmitDemoVisual("attack", "panther", "drako");
         feedback=playerHP==0?"Derrota. Reinicie para tentar novamente.":"Novo turno: +3 energia.";
+    }
+
+    // Offline COSMETIC demonstration, not a Supabase gameplay result or award.
+    private void EmitDemoVisual(string action, string actorId, string targetId)
+    {
+        if (presentation == null) return;
+        ++cueSequence;
+        string json = "{\"version\":1,\"sessionId\":\"local_visual_demo_only\",\"sequence\":" + cueSequence +
+            ",\"action\":\"" + action + "\",\"actorId\":\"" + actorId +
+            "\",\"targetId\":\"" + targetId + "\"}";
+        presentation.ReceiveCue(json);
     }
 
     private void Update()
