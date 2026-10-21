@@ -1,0 +1,38 @@
+name: Capynite contracts baseline
+on:
+  pull_request:
+    paths:
+      - 'packages/game-contracts/**'
+      - 'unity/**'
+      - 'docs/architecture/CAPYNITE_UNITY_DELIVERY_PROGRAM.md'
+      - 'src/**'
+      - 'package*.json'
+      - '.github/workflows/capynite-contracts.yml'
+  workflow_dispatch:
+jobs:
+  web-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Test web and Capynite contracts
+        run: npm test
+      - name: Lint changed Capynite contracts
+        run: npx eslint packages/game-contracts/src
+      - name: Verify production manifest evidence and totals
+        run: node scripts/validate-capynite-delivery.mjs
+      - name: Test WebGL artifact validator with synthetic fixtures
+        run: node --test scripts/verify-capynite-webgl.test.mjs
+      - name: Production compile
+        run: npm run build
+# Scoped feature check: full-repository lint remains existing technical debt,
+# previously reported at 197 errors; this job does not represent that gate.
+# Unity EditMode/WebGL testing is explicitly NOT claimed by this web-only job.

@@ -27,3 +27,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Unity 6 workspace caches / generated builds (preserve Assets, Packages, ProjectSettings)
+unity/Capynite/Library/
+unity/Capynite/Temp/
+unity/Capynite/Obj/
+unity/Capynite/Logs/
+unity/Capynite/Builds/
+unity/Capynite/UserSettings/
+unity/Capynite/.vs/
+unity/Capynite/*.csproj
+unity/Capynite/*.sln
+unity-test-results/
+
+# Imported prototype binaries remain outside Git until approved/licensed.
+unity/Capynite/Assets/CapyniteImports/*.glb
+unity/Capynite/Assets/CapyniteImports/*.fbx
