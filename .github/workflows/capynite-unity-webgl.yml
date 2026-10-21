@@ -66,6 +66,30 @@ jobs:
       - name: Check real Unity binary structure
         run: node scripts/verify-capynite-webgl.mjs unity/Capynite/Builds/CardBattleWebGL
 
+      - name: Install Chromium browser smoke tools
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Execute WebGL in Chromium and capture evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/serve-capynite-webgl.py --directory unity/Capynite/Builds/CardBattleWebGL --port 8081 > /tmp/capynite-webgl-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 3
+          CAPYNITE_EVIDENCE_DIR=unity-browser-evidence node scripts/smoke-capynite-webgl.mjs http://127.0.0.1:8081/
+
+      - name: Preserve screenshots and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capynite-webgl-browser-smoke
+          path: unity-browser-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload non-production WebGL build
         uses: actions/upload-artifact@v4
         with:
@@ -73,5 +97,5 @@ jobs:
           path: unity/Capynite/Builds/CardBattleWebGL/
           if-no-files-found: error
           retention-days: 14
-# No deployment action by design: browser smoke, security and art approval
+# No deployment action by design: security and art approval
 # remain separate protected prerequisites for production release.
