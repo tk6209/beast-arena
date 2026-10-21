@@ -23,7 +23,7 @@ public static class CapyniteCardBattleBuild
     public static void Build()
     {
         CreateScene();
-        var path="Builds/CardBattleWebGL";
+        var path=Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Builds", "CardBattleWebGL"));
         Directory.CreateDirectory(path);
         var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions {
             scenes=new[]{ScenePath},locationPathName=path,target=BuildTarget.WebGL,options=BuildOptions.None
