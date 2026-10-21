@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "approval": "draft_visual_only",
+  "description": "All names/categories are proposed art subjects, not verified playable cards; game values must be derived from audited Beast Arena rules.",
+  "abilities": [
+    {
+      "id": "capynite-ability-01",
+      "displayName": "Firestorm",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/01_firestorm.png"
+    },
+    {
+      "id": "capynite-ability-02",
+      "displayName": "Draco Claw",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/02_draco_claw.png"
+    },
+    {
+      "id": "capynite-ability-03",
+      "displayName": "Flame Shield",
+      "type": "defense",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/03_flame_shield.png"
+    },
+    {
+      "id": "capynite-ability-04",
+      "displayName": "Sky Dive",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/04_sky_dive.png"
+    },
+    {
+      "id": "capynite-ability-05",
+      "displayName": "Rage Burst",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/05_rage_burst.png"
+    },
+    {
+      "id": "capynite-ability-06",
+      "displayName": "Evolve",
+      "type": "evolution",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/06_evolve.png"
+    },
+    {
+      "id": "capynite-ability-07",
+      "displayName": "Healing Light",
+      "type": "healing",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/07_healing_light.png"
+    },
+    {
+      "id": "capynite-ability-08",
+      "displayName": "Thunder Strike",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/08_thunder_strike.png"
+    },
+    {
+      "id": "capynite-ability-09",
+      "displayName": "Water Surge",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/09_water_surge.png"
+    },
+    {
+      "id": "capynite-ability-10",
+      "displayName": "Earth Wall",
+      "type": "defense",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/10_earth_wall.png"
+    },
+    {
+      "id": "capynite-ability-11",
+      "displayName": "Shadow Step",
+      "type": "switch",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/11_shadow_step.png"
+    },
+    {
+      "id": "capynite-ability-12",
+      "displayName": "Meteor Fall",
+      "type": "special",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/12_meteor_fall.png"
+    },
+    {
+      "id": "capynite-ability-13",
+      "displayName": "Water Shield",
+      "type": "defense",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/13_water_shield.png"
+    },
+    {
+      "id": "capynite-ability-14",
+      "displayName": "Spark Dash",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/14_spark_dash.png"
+    },
+    {
+      "id": "capynite-ability-15",
+      "displayName": "Stone Fist",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/15_stone_fist.png"
+    },
+    {
+      "id": "capynite-ability-16",
+      "displayName": "Leaf Guard",
+      "type": "defense",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/16_leaf_guard.png"
+    },
+    {
+      "id": "capynite-ability-17",
+      "displayName": "Ice Shard",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/17_ice_shard.png"
+    },
+    {
+      "id": "capynite-ability-18",
+      "displayName": "Solar Beam",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/18_solar_beam.png"
+    },
+    {
+      "id": "capynite-ability-19",
+      "displayName": "Energy Drain",
+      "type": "debuff",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/19_energy_drain.png"
+    },
+    {
+      "id": "capynite-ability-20",
+      "displayName": "Courage Roar",
+      "type": "buff",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/20_courage_roar.png"
+    },
+    {
+      "id": "capynite-ability-21",
+      "displayName": "Tidal Wave",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/21_tidal_wave.png"
+    },
+    {
+      "id": "capynite-ability-22",
+      "displayName": "Lava Burst",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/22_lava_burst.png"
+    },
+    {
+      "id": "capynite-ability-23",
+      "displayName": "Wind Cutter",
+      "type": "attack",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/23_wind_cutter.png"
+    },
+    {
+      "id": "capynite-ability-24",
+      "displayName": "Guardian Spirit",
+      "type": "healing",
+      "status": "concept_only",
+      "cost": null,
+      "damage": null,
+      "effectId": null,
+      "animationId": null,
+      "cardArt": "abilities/24_guardian_spirit.png"
+    }
+  ]
+}
