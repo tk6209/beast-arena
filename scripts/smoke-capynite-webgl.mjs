@@ -45,7 +45,7 @@ try {
   // Exercise the canvas with the demo's keyboard controls; this is an
   // interaction smoke, NOT evidence of rule correctness or animation fidelity.
   await page.locator("canvas").click({ position: { x: 40, y: 40 } });
-  await page.keyboard.press("Digit2");
+  await page.keyboard.press("2");
   await page.waitForTimeout(400);
   await page.keyboard.press("Enter");
   await page.waitForTimeout(600);
