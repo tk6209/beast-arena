@@ -39,3 +39,6 @@ The following five archives existed and passed ZIP CRC validation in the convers
 
 ## For an owner without a PC
 The archives are downloadable from the originating ChatGPT conversation. A machine or connected app with **binary upload capability** must transfer those actual bytes to the destination; metadata commits alone cannot accomplish binary upload. No passwords or license secrets should be placed in chat or Git.
+
+## Verified secondary private Library backup
+On 2026-10-21, the five source ZIPs plus Drako/Panther turnarounds, approved-reference screenshot, ten additional concept images and the source reference video were successfully uploaded to the user's ChatGPT Library folder `/Capynite-BeastArena-Source-Archives` (19 files total). This provides account-level recovery independent of the local runtime. **It does not make the files part of the GitHub repository**. A binary-capable bridge from Library to GitHub is still needed. Keep private licensed or third-party reference media out of public GitHub releases.
