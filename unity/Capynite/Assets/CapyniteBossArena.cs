@@ -31,13 +31,6 @@ public sealed class CapyniteBossArena : MonoBehaviour
     private Camera gameCamera;
     private readonly Vector3 center = new Vector3(0,0,0);
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
-    {
-        if (Object.FindObjectOfType<CapyniteBossArena>() == null)
-            new GameObject("Capynite Boss Arena").AddComponent<CapyniteBossArena>();
-    }
-
     private static GameObject Primitive(string name, PrimitiveType type, Vector3 pos, Vector3 scale, Color color)
     {
         var go=GameObject.CreatePrimitive(type);
@@ -86,7 +79,7 @@ public sealed class CapyniteBossArena : MonoBehaviour
     private void Update()
     {
         if(Input.GetKeyDown(KeyCode.R)){ Restart();return; }
-        for(int i=0;i<4;i++) if(Input.GetKeyDown(KeyCode.Alpha1+i)) SwitchHero(i);
+        for(int i=0;i<4;i++) if(Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) SwitchHero(i);
         if(completed)return;
         if(heroHp<=0){status="Você caiu! Pressione R para tentar novamente.";return;}
         var axis=new Vector3(Input.GetAxisRaw("Horizontal"),0,Input.GetAxisRaw("Vertical"));
