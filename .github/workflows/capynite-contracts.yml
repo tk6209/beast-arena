@@ -29,6 +29,8 @@ jobs:
         run: npx eslint packages/game-contracts/src
       - name: Verify production manifest evidence and totals
         run: node scripts/validate-capynite-delivery.mjs
+      - name: Test WebGL artifact validator with synthetic fixtures
+        run: node --test scripts/verify-capynite-webgl.test.mjs
       - name: Production compile
         run: npm run build
 # Scoped feature check: full-repository lint remains existing technical debt,
