@@ -28,14 +28,14 @@ try {
   await page.waitForFunction(() => {
     const canvas = document.querySelector("canvas");
     return Boolean(canvas && canvas.width > 0 && canvas.height > 0 && canvas.getBoundingClientRect().width > 100);
-  }, { timeout: 120000 });
+  }, undefined, { timeout: 120000 });
   // Unity's index exposes #unity-loading-bar while engine initialization runs.
   const loadingBar = page.locator("#unity-loading-bar");
   if (await loadingBar.count()) {
     await page.waitForFunction(() => {
       const node = document.querySelector("#unity-loading-bar");
       return !node || getComputedStyle(node).display === "none";
-    }, { timeout: 120000 });
+    }, undefined, { timeout: 120000 });
   }
   await page.waitForTimeout(1500);
   await page.screenshot({ path: resolve(evidencePath, "webgl-1366x768.png"), fullPage: true });
