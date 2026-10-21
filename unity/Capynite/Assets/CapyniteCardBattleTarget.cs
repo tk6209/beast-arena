@@ -83,7 +83,7 @@ public sealed class CapyniteCardBattleTarget : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.R)) UnityEngine.SceneManagement.SceneManager.LoadScene(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         if(Input.GetKeyDown(KeyCode.Return))EndTurn();
-        for(int i=0;i<6;i++)if(Input.GetKeyDown(KeyCode.Alpha1+i))Play(i);
+        for(int i=0;i<6;i++)if(Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i)))Play(i);
         if(bossVisual) bossVisual.material.color=Time.time<flashUntil?Color.white:new Color(.25f,.62f,.82f);
         if(playerActor)playerActor.transform.localScale=new Vector3(1.9f,1.8f+Mathf.Sin(Time.time*2f)*.05f,1.9f);
     }
