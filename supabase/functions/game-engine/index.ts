@@ -914,6 +914,98 @@ function handleInitGame(state: any, payload: any): any {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   ACCOUNT ACTIONS (server-authoritative economy)
+═══════════════════════════════════════════════════════════ */
+async function addCoinsXp(sb: any, uid: string, coins: number, xpGain: number) {
+  const { data: p } = await sb.from("profiles").select("coins, xp, level").eq("user_id", uid).single();
+  if (!p) return null;
+  let level = p.level || 1, xp = (p.xp || 0) + xpGain;
+  while (xp >= level * 100) { xp -= level * 100; level++; }
+  const upd = { coins: Math.max(0, (p.coins || 0) + coins), xp, level };
+  await sb.from("profiles").update(upd).eq("user_id", uid);
+  return upd;
+}
+
+async function handleAccountAction(sb: any, action: string, uid: string, payload: any): Promise<{ status: number; body: any }> {
+  const today = new Date().toISOString().split("T")[0];
+  switch (action) {
+    case "claim_daily_reward": {
+      const { data: row } = await sb.from("daily_rewards").select("*").eq("user_id", uid).maybeSingle();
+      if (row?.last_claim_date === today) {
+        return { status: 200, body: { data: { alreadyClaimed: true, coins: 0, streak: row.streak } } };
+      }
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      const streak = row?.last_claim_date === yesterday ? Math.min((row.streak || 0) + 1, 7) : 1;
+      const coins = 50 + (streak - 1) * 25;
+      if (row) await sb.from("daily_rewards").update({ last_claim_date: today, streak }).eq("user_id", uid);
+      else await sb.from("daily_rewards").insert({ user_id: uid, last_claim_date: today, streak });
+      await addCoinsXp(sb, uid, coins, 0);
+      return { status: 200, body: { data: { alreadyClaimed: false, coins, streak } } };
+    }
+    case "claim_mission_reward": {
+      const { data: um } = await sb.from("user_missions").select("*").eq("id", payload.userMissionId).eq("user_id", uid).maybeSingle();
+      if (!um) return { status: 404, body: { error: "Missão não encontrada" } };
+      if (um.claimed) return { status: 400, body: { error: "Já resgatada" } };
+      const { data: m } = await sb.from("daily_missions").select("*").eq("id", um.mission_id).single();
+      if (!m || (!um.completed && um.progress < m.target_value)) return { status: 400, body: { error: "Missão incompleta" } };
+      await sb.from("user_missions").update({ claimed: true, completed: true }).eq("id", um.id);
+      const prof = await addCoinsXp(sb, uid, m.reward_coins || 0, m.reward_xp || 0);
+      return { status: 200, body: { data: { coins: m.reward_coins, xp: m.reward_xp, profile: prof } } };
+    }
+    case "purchase_item": {
+      const { data: item } = await sb.from("shop_items").select("*").eq("id", payload.itemId).eq("active", true).maybeSingle();
+      if (!item) return { status: 404, body: { error: "Item não encontrado" } };
+      const { data: p } = await sb.from("profiles").select("coins, level").eq("user_id", uid).single();
+      if (!p || p.coins < item.price_coins) return { status: 400, body: { error: "Moedas insuficientes" } };
+      if ((p.level || 1) < item.level_required) return { status: 400, body: { error: "Nível insuficiente" } };
+      const invType = item.item_type === "monster_unlock" ? "monster" : item.item_type;
+      const { data: inv } = await sb.from("user_inventory").select("id, quantity")
+        .eq("user_id", uid).eq("item_type", invType).eq("item_key", item.item_key).maybeSingle();
+      if (inv && item.item_type === "monster_unlock") return { status: 400, body: { error: "Já desbloqueado" } };
+      await sb.from("profiles").update({ coins: p.coins - item.price_coins }).eq("user_id", uid);
+      if (inv) await sb.from("user_inventory").update({ quantity: inv.quantity + 1 }).eq("id", inv.id);
+      else await sb.from("user_inventory").insert({ user_id: uid, item_type: invType, item_key: item.item_key, quantity: 1 });
+      return { status: 200, body: { data: { coins: p.coins - item.price_coins } } };
+    }
+    case "record_battle_result": {
+      const won = !!payload.won;
+      const coinBase = Math.max(0, Math.min(500, Number(payload.coinBase) || 0));
+      const xpGain = Math.max(0, Math.min(500, Number(payload.xpGain) || 0));
+      const { data: st } = await sb.from("user_stats").select("*").eq("user_id", uid).maybeSingle();
+      const streak = won ? (st?.win_streak || 0) + 1 : 0;
+      const bonus = won && streak >= 2 ? Math.round(coinBase * 0.25 * (streak - 1)) : 0;
+      const statsUpd = {
+        total_wins: (st?.total_wins || 0) + (won ? 1 : 0),
+        total_losses: (st?.total_losses || 0) + (won ? 0 : 1),
+        win_streak: streak,
+        best_streak: Math.max(st?.best_streak || 0, streak),
+      };
+      if (st) await sb.from("user_stats").update(statsUpd).eq("user_id", uid);
+      else await sb.from("user_stats").insert({ user_id: uid, ...statsUpd });
+      const bs = payload.battleStats || {};
+      await sb.from("battle_history").insert({
+        user_id: uid, won, dificuldade: String(payload.dificuldade || "normal"),
+        mode: String(bs.mode || "ia"), monster_used: String(bs.monster_used || bs.monstroId || "desconhecido"),
+        opponent_monster: bs.opponent_monster ?? null, turns: Number(bs.turns) || 0,
+        cards_played: Number(bs.cards_played) || 0, damage_dealt: Number(bs.damage_dealt) || 0,
+      });
+      const prof = await addCoinsXp(sb, uid, coinBase + bonus, xpGain);
+      return { status: 200, body: { data: { coins: coinBase + bonus, streak, profile: prof } } };
+    }
+    case "save_card_drop": {
+      const card = payload.card || {};
+      const key = String(card.id ?? card.key ?? card.nome ?? "").slice(0, 80);
+      if (!key) return { status: 400, body: { error: "Carta inválida" } };
+      const { data: ex } = await sb.from("user_cards").select("id, quantity").eq("user_id", uid).eq("card_key", key).maybeSingle();
+      if (ex) await sb.from("user_cards").update({ quantity: ex.quantity + 1 }).eq("id", ex.id);
+      else await sb.from("user_cards").insert({ user_id: uid, card_key: key, card_data: card, raridade: String(card.raridade || "comum"), quantity: 1 });
+      return { status: 200, body: { data: { ok: true } } };
+    }
+  }
+  return { status: 400, body: { error: "Ação desconhecida" } };
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN HANDLER
 ═══════════════════════════════════════════════════════════ */
 Deno.serve(async (req) => {
@@ -950,6 +1042,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Account-level actions (no game session). Always use the verified user id, never payload.userId.
+    const ACCOUNT_ACTIONS = new Set(["claim_daily_reward", "claim_mission_reward", "purchase_item", "record_battle_result", "save_card_drop"]);
+    if (ACCOUNT_ACTIONS.has(action)) {
+      const out = await handleAccountAction(supabase, action, requesterUserId!, payload || {});
+      return new Response(JSON.stringify(out.body), {
+        status: out.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     let sessionId = rawSessionId;
     if (!sessionId && action === "init_game") {
