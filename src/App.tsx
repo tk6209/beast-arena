@@ -11,6 +11,7 @@ import AppErrorBoundary from "./components/AppErrorBoundary";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const CapiRush = lazy(() => import("./pages/CapiRush.tsx"));
 const CapiRush3D = lazy(() => import("./pages/CapiRush3D.tsx"));
+const BeastArenaV2 = lazy(() => import("./games/beastarena2/BeastArenaV2.tsx"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
@@ -33,6 +34,8 @@ const App = () => (
             <Route path="/capi-rush" element={<CapiRush />} />
             {/* Capi Rush 3D: Three.js rebuild, side by side with the 2D version. */}
             <Route path="/capi-rush-3d" element={<CapiRush3D />} />
+            {/* Beast Arena V2: portrait-first rebuild, runs side by side with the original. */}
+            <Route path="/beast-arena-v2" element={<BeastArenaV2 />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -6,12 +6,14 @@ import UniverseMark from "@/components/capynite/UniverseMark";
 import "@/brand/capynite.css";
 import capiArt from "@/assets/capirush/capirocket_portrait.webp";
 import drakoArt from "@/assets/monsters/drako.png";
+import macacoArt from "@/games/beastarena2/assets/monsters/macaco.webp";
 import capiviniArt from "@/assets/capirush/voxchick_front.webp";
 import capizozoArt from "@/assets/capirush/capininja_portrait.webp";
 import herosBg from "@/assets/capy_herois_360.webp";
 
 const WORLD_ART: Record<string, string> = {
   "beast-arena": drakoArt,
+  "beast-arena-v2": macacoArt,
   "capi-wars": capiArt,
   "capi-rush": capizozoArt,
   "capi-rush-3d": capiArt,
