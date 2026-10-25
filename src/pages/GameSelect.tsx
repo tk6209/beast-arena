@@ -16,6 +16,7 @@ const WORLD_ART: Record<string, string> = {
   "beast-arena-v2": macacoArt,
   "capi-wars": capiArt,
   "capi-rush": capizozoArt,
+  "capi-rush-3d": capiArt,
   "unknown-zone": capiviniArt,
 };
 
