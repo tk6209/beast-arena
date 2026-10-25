@@ -3,7 +3,7 @@
  * aditiva, partículas, câmera que acompanha a pista e pós-processamento leve.
  * Só desenha: toda a lógica mora em engine.ts.
  */
-import { biomeAt } from "./biome";
+import { biomeAt, isJungleAt } from "./biome";
 import { getHero, heroImage, type Hero } from "./heroes";
 import {
   BASE_SPEED,
@@ -133,6 +133,13 @@ export class Fx {
           this.shake = reduced ? 0 : 16;
           this.flash = reduced ? 0 : 0.5;
           this.flashColor = "#ff3d3d";
+          break;
+        case "level":
+          // nível novo: anel dourado largo + brilho rápido (o HUD mostra o aviso)
+          this.parts.push({ lane, y: 0.6 + s.y, z: 0.5, vl: 0, vy: 0, vz: 0, life: 0.7, max: 0.7, size: 3.4, color: PAL.gold, kind: "ring" });
+          this.burst("spark", lane, 1 + s.y, 0.6, 22, PAL.gold, 5, 0.12, 0.7);
+          this.flash = Math.max(this.flash, reduced ? 0 : 0.14);
+          this.flashColor = PAL.gold;
           break;
         case "over":
           this.shake = reduced ? 0 : 22;
@@ -567,11 +574,16 @@ function drawScenery(ctx: CanvasRenderingContext2D, v: View, s: RushState, j: nu
     const z = (i - phase) * spacing;
     if (z < -1.5) continue;
     const id = base + i;
+    // Cada peça pertence ao bioma do ponto do mundo onde está: o novo bioma chega pelo
+    // horizonte e passa pelo jogador, sempre opaco. (Antes cidade e selva eram desenhadas
+    // juntas, translúcidas, durante 100 m — o "fantasma"/máscara da transição.)
+    const jungle = isJungleAt(s.distance + z);
     for (const side of [-1, 1]) {
-      if (j < 0.999) drawCityBuilding(ctx, v, id, side, z, 1 - j);
+      if (!jungle) drawCityBuilding(ctx, v, id, side, z, 1);
       // árvores e pilares crescem rápido perto da câmera: somem antes de atravessar a tela
-      if (j > 0.001 && z > -0.2) drawJungleSlot(ctx, v, id, side, z, j * Math.min(1, (z + 0.2) / 1.2), s.time);
+      else if (z > -0.2) drawJungleSlot(ctx, v, id, side, z, Math.min(1, (z + 0.2) / 1.2), s.time);
     }
+    void j;
   }
 }
 
@@ -1155,7 +1167,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, 
   drawRoad(ctx, v, s, j);
   drawScenery(ctx, v, s, j);
   drawMist(ctx, v, s.time, j);
-  drawLamps(ctx, v, s.distance, s.time, j);
+  drawLamps(ctx, v, s.distance, s.time);
 
   // Objetos do mais longe para o mais perto.
   const pk = sc(0.5);
@@ -1174,19 +1186,29 @@ export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, 
     const z = (i - ophase) * ospace + 10;
     if (z < -3.5 || z > SPAWN_Z) continue;
     const id = obase + i;
-    items.push({ z, draw: () => drawOverhead(ctx, v, z, id, s.time, j) });
+    const jz = isJungleAt(s.distance + z) ? 1 : 0;
+    items.push({ z, draw: () => drawOverhead(ctx, v, z, id, s.time, jz) });
   }
   items.sort((a, b) => b.z - a.z);
   for (const it of items) if (it.z < SPAWN_Z + 5) it.draw();
 
-  // Neblina do horizonte (esconde o spawn e dá profundidade atmosférica)
-  const fogH = (v.base - v.horizon) * 0.42;
-  const fog = ctx.createLinearGradient(0, v.horizon - 6, 0, v.horizon + fogH);
-  fog.addColorStop(0, mix("#5a2288", "#d9b45a", j, 0.92));
-  fog.addColorStop(0.45, mix("#5a2288", "#d9b45a", j, 0.35));
-  fog.addColorStop(1, mix("#5a2288", "#d9b45a", j, 0));
+  // Neblina do horizonte: esconde o spawn sem virar "máscara". Faixa estreita que
+  // começa e termina transparente (sem borda dura) e só é densa na linha de spawn.
+  // Antes ela começava a 92% de opacidade e cobria 42% do chão por cima de tudo.
+  const D = v.base - v.horizon;
+  const spawnY = gy(v, SPAWN_Z);
+  const fogTop = v.horizon - D * 0.1;
+  const fogBot = spawnY + D * 0.12;
+  const at = (y: number) => (y - fogTop) / (fogBot - fogTop);
+  const fogCol = (a: number) => mix("#5a2288", "#cdb978", j, a);
+  const peak = 0.78 - 0.18 * j; // de dia a névoa é mais leve
+  const fog = ctx.createLinearGradient(0, fogTop, 0, fogBot);
+  fog.addColorStop(0, fogCol(0));
+  fog.addColorStop(at(v.horizon), fogCol(peak * 0.75));
+  fog.addColorStop(at(spawnY), fogCol(peak));
+  fog.addColorStop(1, fogCol(0));
   ctx.fillStyle = fog;
-  ctx.fillRect(0, v.horizon - 6, v.W, fogH + 6);
+  ctx.fillRect(0, fogTop, v.W, fogBot - fogTop);
 
   drawWeather(ctx, v, s.time, j, reduced);
   drawForeground(ctx, v, s.time, j);
@@ -1194,14 +1216,15 @@ export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, 
 
   if (!reduced) drawSpeedLines(ctx, v, s, j);
 
-  // Bloom: o que é claro "vaza" luz (neon, sol, faróis)
-  drawBloom(ctx, v, j > 0.5 ? 0.28 : 0.3);
+  // Bloom: o que é claro "vaza" luz (neon, sol, faróis). De dia a cena inteira é
+  // clara, então o bloom é mais fraco para não "lavar" a imagem.
+  drawBloom(ctx, v, 0.3 - 0.12 * j);
   drawLensFlare(ctx, v, j);
 
   // Gradação de cor por bioma (violeta de noite, âmbar de tarde)
   ctx.save();
   ctx.globalCompositeOperation = "soft-light";
-  ctx.globalAlpha = 0.28;
+  ctx.globalAlpha = 0.28 - 0.1 * j;
   ctx.fillStyle = mix("#7a3cff", "#ffb347", j);
   ctx.fillRect(0, 0, v.W, v.H);
   ctx.restore();

@@ -19,9 +19,10 @@ interface Hud {
   jet: number;
   multi: number;
   airJump: boolean;
+  level: number;
 }
 
-const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0, magnet: 0, jet: 0, multi: 0, airJump: true };
+const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0, magnet: 0, jet: 0, multi: 0, airJump: true, level: 1 };
 
 function hudOf(s: RushState): Hud {
   const r = (n: number) => Math.round(n * 10) / 10;
@@ -36,6 +37,7 @@ function hudOf(s: RushState): Hud {
     jet: r(s.jet),
     multi: r(s.multi),
     airJump: s.y <= 0 || s.jumpsLeft > 0,
+    level: s.level,
   };
 }
 const sameHud = (a: Hud, b: Hud) => (Object.keys(a) as (keyof Hud)[]).every((k) => a[k] === b[k]);
@@ -74,6 +76,9 @@ export default function CapiRush() {
   const [hud, setHud] = useState<Hud>(HUD0);
   const [best, setBest] = useState(readBest);
   const [newRecord, setNewRecord] = useState(false);
+  /** Aviso "Nível N" que aparece por ~1,8 s quando o jogador sobe de nível. */
+  const [levelUp, setLevelUp] = useState<{ level: number; key: number } | null>(null);
+  const levelTimer = useRef<number>();
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -97,6 +102,7 @@ export default function CapiRush() {
     fxRef.current = new Fx();
     pendingRef.current = { ...NO_INPUT };
     setNewRecord(false);
+    setLevelUp(null);
     setHud(HUD0);
     setPhase("playing");
   }, [setPhase]);
@@ -112,6 +118,7 @@ export default function CapiRush() {
 
   useEffect(() => {
     preloadHeroes();
+    return () => window.clearTimeout(levelTimer.current);
   }, []);
 
   /* Loop principal */
@@ -167,6 +174,11 @@ export default function CapiRush() {
         }
         fx.onEvents(events, s, heroRef.current, reduced);
         fx.update(dt, s, 0, true);
+        if (events.includes("level")) {
+          setLevelUp({ level: s.level, key: now });
+          window.clearTimeout(levelTimer.current);
+          levelTimer.current = window.setTimeout(() => setLevelUp(null), 1800);
+        }
         if (events.includes("over")) {
           setPhase("over");
           setHud({ ...hudOf(s), lives: 0, shield: false, magnet: 0, jet: 0, multi: 0 });
@@ -342,6 +354,16 @@ export default function CapiRush() {
         </div>
       </div>
 
+      {/* Aviso de nível novo */}
+      {phase === "playing" && levelUp && (
+        <div key={levelUp.key} role="status" aria-live="polite" className="pointer-events-none absolute inset-x-0 top-[28%] flex justify-center animate-in fade-in zoom-in-90 duration-300">
+          <div className="rounded-2xl border border-amber-300/40 bg-black/45 px-5 py-2 text-center backdrop-blur-md">
+            <div className="font-['Bebas_Neue'] text-4xl leading-none tracking-wider text-amber-200 drop-shadow-[0_0_18px_rgba(255,207,74,.6)]">Nível {levelUp.level}</div>
+            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-white/70">Mais rápido · mais desafios</div>
+          </div>
+        </div>
+      )}
+
       {/* Medidor de velocidade + distância */}
       {playing && (
         <div className="pointer-events-none absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 right-3 flex items-end justify-between gap-3">
@@ -351,7 +373,7 @@ export default function CapiRush() {
           </div>
           <div className="w-32 sm:w-44">
             <div className="mb-1 flex justify-between text-[10px] font-bold text-white/55">
-              <span>Velocidade</span>
+              <span>Velocidade · Nv {hud.level}</span>
               <span>{speedPct}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/10">

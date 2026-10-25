@@ -5,6 +5,7 @@
  */
 import { CAM, PAL, glow, glowE, gx, gy, hash, mix, sc, type View } from "./gfx";
 import { SPAWN_Z } from "./engine";
+import { isJungleAt } from "./biome";
 
 /* ───────── Céu vivo ───────── */
 export function drawClouds(ctx: CanvasRenderingContext2D, v: View, time: number, distance: number, j: number) {
@@ -168,7 +169,7 @@ export function drawOverhead(ctx: CanvasRenderingContext2D, v: View, z: number, 
 }
 
 /* ───────── Postes de luz / tochas ───────── */
-export function drawLamps(ctx: CanvasRenderingContext2D, v: View, distance: number, time: number, j: number) {
+export function drawLamps(ctx: CanvasRenderingContext2D, v: View, distance: number, time: number) {
   const spacing = 12;
   const base = Math.floor(distance / spacing);
   const phase = (distance % spacing) / spacing;
@@ -180,6 +181,8 @@ export function drawLamps(ctx: CanvasRenderingContext2D, v: View, distance: numb
     const u = v.unit * k;
     const y = gy(v, z);
     const fade = Math.min(1, (SPAWN_Z - z) / 16);
+    // poste de neon ou tocha, conforme o bioma daquele ponto do mundo (troca opaca)
+    const j = isJungleAt(distance + z) ? 1 : 0;
     for (const side of [-1, 1]) {
       const x = gx(v, side * 1.78, z);
       if (j < 0.999) {
@@ -262,14 +265,16 @@ export function drawWeather(ctx: CanvasRenderingContext2D, v: View, time: number
 /* ───────── Névoa baixa ───────── */
 export function drawMist(ctx: CanvasRenderingContext2D, v: View, time: number, j: number) {
   const hz = v.horizon;
+  // Brilho aditivo amarelo sobre um chão já claro (selva) vira véu: de dia a névoa é bem mais leve.
+  const k = 1 - 0.6 * j;
   for (let i = 0; i < 4; i++) {
     const y = hz + (v.base - hz) * (0.02 + i * 0.07);
     const x = ((time * (8 + i * 4) + i * 120) % (v.W * 1.6)) - v.W * 0.3;
-    glowE(ctx, x, y, v.W * 0.7, 26 + i * 10, mix("#b23d8f", "#ffe2a0", j), 0.14 + 0.05 * i);
-    glowE(ctx, v.W - x * 0.8, y + 8, v.W * 0.6, 22 + i * 8, mix("#5a3fd0", "#cfe8a0", j), 0.1 + 0.04 * i);
+    glowE(ctx, x, y, v.W * 0.7, 26 + i * 10, mix("#b23d8f", "#ffe2a0", j), (0.14 + 0.05 * i) * k);
+    glowE(ctx, v.W - x * 0.8, y + 8, v.W * 0.6, 22 + i * 8, mix("#5a3fd0", "#cfe8a0", j), (0.1 + 0.04 * i) * k);
   }
   // luz de contorno rasteira no horizonte
-  glowE(ctx, v.cx, hz + 4, v.W * 0.7, 40, mix("#ff4fa0", "#ffd27a", j), 0.35);
+  glowE(ctx, v.cx, hz + 4, v.W * 0.7, 40, mix("#ff4fa0", "#ffd27a", j), 0.35 * k);
 }
 
 /* ───────── Folhagem de primeiro plano (selva) ───────── */
@@ -346,7 +351,15 @@ export function drawBloom(ctx: CanvasRenderingContext2D, v: View, strength = 0.3
   a.imageSmoothingQuality = "high";
   b.imageSmoothingQuality = "high";
   a.clearRect(0, 0, bw, bh);
+  a.globalCompositeOperation = "source-over";
   a.drawImage(ctx.canvas, 0, 0, bw, bh);
+  // "Limiar" barato: multiplicar a imagem por ela mesma (x²) e de novo (x⁴) apaga
+  // os tons médios e deixa só neon, sol e faróis. Sem isso o bloom somava a cena
+  // inteira sobre si mesma e, de dia, virava um véu leitoso por cima de tudo.
+  a.globalCompositeOperation = "multiply";
+  a.drawImage(bloomA, 0, 0);
+  a.drawImage(bloomA, 0, 0);
+  a.globalCompositeOperation = "source-over";
   b.clearRect(0, 0, bloomB.width, bloomB.height);
   b.drawImage(bloomA, 0, 0, bloomB.width, bloomB.height);
   ctx.save();

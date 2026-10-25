@@ -10,6 +10,8 @@
  * do jogador (z = 0 é onde a capivara está; o mundo vem na direção de z = 0).
  */
 
+import { BIOME_CITY_END, BIOME_CYCLE, BIOME_JUNGLE_END, BIOME_JUNGLE_START } from "./biome";
+
 /* ───────── Constantes de jogo (fonte única de verdade) ───────── */
 export type Lane = -1 | 0 | 1;
 export const LANES: readonly Lane[] = [-1, 0, 1];
@@ -24,8 +26,17 @@ export const SLIDE_TIME = 0.7;
 
 export const BASE_SPEED = 11;
 export const MAX_SPEED = 25;
-/** Metros percorridos para ganhar +1 m/s de velocidade. */
-export const SPEED_RAMP = 70;
+/**
+ * Escala da curva de velocidade (metros). A velocidade se aproxima do teto de forma
+ * contínua: ~63% do ganho em 800 m, ~92% em 2 km. Antes subia em linha reta e
+ * travava no máximo aos ~980 m — dali em diante a corrida não ficava mais difícil.
+ */
+export const SPEED_SCALE = 800;
+/** Metros por nível (o HUD anuncia cada nível novo). */
+export const LEVEL_EVERY = 500;
+/** Tropeço ao levar dano: perde até 30% da velocidade e recupera em ~2,5 s. */
+export const STUMBLE_SLOW = 0.3;
+export const STUMBLE_TIME = 2.5;
 
 export const START_LIVES = 3;
 export const HIT_INVULN = 1.5;
@@ -98,6 +109,7 @@ export type RushEvent =
   | "gift"
   | "shield-break"
   | "hit"
+  | "level"
   | "over";
 
 export interface RushInput {
@@ -139,6 +151,12 @@ export interface RushState {
   /** Pontos extras acumulados pelo multiplicador. */
   bonus: number;
   invuln: number;
+  /** 1 logo após um tombo, decai até 0: segura a velocidade para o jogador se recompor. */
+  stumble: number;
+  /** Nível atual (1, 2, 3…), derivado da distância. */
+  level: number;
+  /** Pista livre da última fileira (para o padrão zigue-zague). */
+  lastFree: Lane | null;
   over: boolean;
 
   obstacles: Obstacle[];
@@ -180,6 +198,9 @@ export function createState(seed = 1): RushState {
     multi: 0,
     bonus: 0,
     invuln: 0,
+    stumble: 0,
+    level: 1,
+    lastFree: null,
     over: false,
     obstacles: [],
     pickups: [],
@@ -193,6 +214,38 @@ export function createState(seed = 1): RushState {
 /* ───────── Consultas ───────── */
 export const isGrounded = (s: RushState): boolean => s.y <= 0;
 export const isSliding = (s: RushState): boolean => s.slideTime > 0;
+
+/* ───────── Curva de dificuldade ───────── */
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Velocidade-alvo para a distância percorrida (sem o tropeço). */
+export function speedAt(distance: number): number {
+  return Math.min(MAX_SPEED, BASE_SPEED + (MAX_SPEED - BASE_SPEED) * (1 - Math.exp(-distance / SPEED_SCALE)));
+}
+
+export function levelAt(distance: number): number {
+  return 1 + Math.floor(Math.max(0, distance) / LEVEL_EVERY);
+}
+
+/**
+ * Pressão dos desafios de 0 a 1. Começa a subir quando entram os trens (120 m) e
+ * continua crescendo por ~1,5 km: mais fileiras com 2 pistas bloqueadas, mais
+ * paredes, menos folga entre fileiras e mais zigue-zague.
+ */
+export function pressureAt(distance: number): number {
+  return clamp01((distance - 120) / 1500);
+}
+
+/**
+ * Trechos de respiro: durante a troca de bioma (cidade ↔ selva) só vêm fileiras
+ * simples e com mais folga. A virada de cenário vira um momento de alívio e
+ * recompensa, e a tensão volta logo depois.
+ */
+export function isBreather(distance: number): boolean {
+  const c = ((distance % BIOME_CYCLE) + BIOME_CYCLE) % BIOME_CYCLE;
+  return (c >= BIOME_CITY_END && c < BIOME_JUNGLE_START) || c >= BIOME_JUNGLE_END;
+}
 
 /** Distância mínima entre fileiras: sempre dá tempo de reagir e trocar de pista. */
 export function rowGap(speed: number): number {
@@ -275,21 +328,34 @@ function shuffledLanes(s: RushState): Lane[] {
  */
 export function spawnRow(s: RushState, z: number): Obstacle[] {
   const row = s.nextRow++;
-  const kinds = allowedKinds(s.distance);
+  const breather = isBreather(s.distance);
+  const p = breather ? 0 : pressureAt(s.distance);
+  const kinds = breather ? allowedKinds(s.distance).filter((k) => k !== "train") : allowedKinds(s.distance);
   const order = shuffledLanes(s);
   const pickKind = () => kinds[Math.floor(rand(s) * kinds.length)];
 
   const roll = rand(s);
+  // Chance de bloquear só 1 pista cai de 75% (logo após os trens) para 30%.
+  const pSingle = lerp(0.75, 0.3, p);
+  // Paredes (3 pistas, todas transponíveis) a partir de 450 m: 8% → 22%.
+  const pWall = s.distance >= 450 ? lerp(0.08, 0.22, clamp01((s.distance - 450) / 1500)) : 0;
   let blocked: Lane[];
   let wallKind: ObstacleKind | null = null;
-  if (s.distance < 120 || roll < 0.35) {
+  if (s.distance < 120 || breather || roll < pSingle) {
     blocked = [order[0]];
-  } else if (s.distance >= 500 && roll > 0.85) {
+  } else if (!breather && roll > 1 - pWall) {
     // Parede: as 3 pistas ocupadas, mas só por barreiras/barras transponíveis.
     blocked = [...order];
     wallKind = rand(s) < 0.5 ? "barrier" : "bar";
   } else {
     blocked = [order[0], order[1]];
+  }
+  // Zigue-zague: com mais pressão, a pista livre tende a mudar de uma fileira para a
+  // outra, obrigando o jogador a se mexer (em vez de ficar parado numa pista segura).
+  if (blocked.length < 3 && s.lastFree !== null && rand(s) < lerp(0, 0.65, p)) {
+    const free = LANES.filter((l) => !blocked.includes(l));
+    // Fecha a pista que estava livre e libera a última bloqueada no lugar dela.
+    if (free.length === 1 && free[0] === s.lastFree) blocked = [...blocked.slice(0, -1), free[0]];
   }
 
   const obstacles = blocked.map((lane) => makeObstacle(s, row, wallKind ?? pickKind(), lane, z));
@@ -297,6 +363,7 @@ export function spawnRow(s: RushState, z: number): Obstacle[] {
 
   const span = Math.max(...obstacles.map((o) => o.len));
   const freeLane = LANES.find((l) => !blocked.includes(l));
+  s.lastFree = freeLane ?? null;
 
   // Recompensas.
   if (freeLane !== undefined && rand(s) < 0.8) {
@@ -329,7 +396,9 @@ export function spawnRow(s: RushState, z: number): Obstacle[] {
     for (let i = 0; i < 6; i++) s.pickups.push({ id: s.nextId++, kind: "coin", lane, z: z + i * 2.2, h: 1 });
   }
 
-  s.nextRowIn = span + rowGap(s.speed) + rand(s) * 8;
+  // Folga extra aleatória diminui com a pressão (10 m → 3 m); no respiro fica larga.
+  const slack = breather ? 14 : lerp(10, 3, p);
+  s.nextRowIn = span + rowGap(s.speed) + rand(s) * slack;
   return obstacles;
 }
 
@@ -435,6 +504,7 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
       } else {
         s.lives -= 1;
         s.invuln = HIT_INVULN;
+        s.stumble = 1;
         events.push("hit");
         if (s.lives <= 0) {
           s.over = true;
@@ -465,7 +535,13 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
 
   /* Progressão */
   s.distance += dz;
-  s.speed = Math.min(MAX_SPEED, BASE_SPEED + s.distance / SPEED_RAMP);
+  s.stumble = Math.max(0, s.stumble - dt / STUMBLE_TIME);
+  s.speed = speedAt(s.distance) * (1 - STUMBLE_SLOW * s.stumble);
+  const level = levelAt(s.distance);
+  if (level > s.level) {
+    s.level = level;
+    events.push("level");
+  }
   s.score = Math.floor(s.distance) + s.coins * COIN_VALUE + s.bonus;
 
   return events;
