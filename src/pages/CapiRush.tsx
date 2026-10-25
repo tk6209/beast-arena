@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, Rocket, Shield } from "lucide-react";
+import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, RefreshCw, Rocket, Shield } from "lucide-react";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 import { CAPYNITE_STORAGE } from "@/brand/capynite";
 import { BASE_SPEED, JET_TIME, MAGNET_TIME, MAX_SPEED, MULTI_TIME, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
 import { HEROES, getHero, preloadHeroes, type Hero } from "@/games/capirush/heroes";
 import { Fx, drawScene, makeView } from "@/games/capirush/render";
+import { checkForUpdate, forceUpdate } from "@/lib/appUpdate";
 
 type Phase = "ready" | "playing" | "paused" | "over";
 
@@ -19,9 +20,10 @@ interface Hud {
   jet: number;
   multi: number;
   airJump: boolean;
+  level: number;
 }
 
-const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0, magnet: 0, jet: 0, multi: 0, airJump: true };
+const HUD0: Hud = { score: 0, coins: 0, lives: START_LIVES, shield: false, meters: 0, speed: 0, magnet: 0, jet: 0, multi: 0, airJump: true, level: 1 };
 
 function hudOf(s: RushState): Hud {
   const r = (n: number) => Math.round(n * 10) / 10;
@@ -36,6 +38,7 @@ function hudOf(s: RushState): Hud {
     jet: r(s.jet),
     multi: r(s.multi),
     airJump: s.y <= 0 || s.jumpsLeft > 0,
+    level: s.level,
   };
 }
 const sameHud = (a: Hud, b: Hud) => (Object.keys(a) as (keyof Hud)[]).every((k) => a[k] === b[k]);
@@ -74,6 +77,9 @@ export default function CapiRush() {
   const [hud, setHud] = useState<Hud>(HUD0);
   const [best, setBest] = useState(readBest);
   const [newRecord, setNewRecord] = useState(false);
+  /** Aviso "Nível N" que aparece por ~1,8 s quando o jogador sobe de nível. */
+  const [levelUp, setLevelUp] = useState<{ level: number; key: number } | null>(null);
+  const levelTimer = useRef<number>();
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -97,6 +103,7 @@ export default function CapiRush() {
     fxRef.current = new Fx();
     pendingRef.current = { ...NO_INPUT };
     setNewRecord(false);
+    setLevelUp(null);
     setHud(HUD0);
     setPhase("playing");
   }, [setPhase]);
@@ -110,8 +117,23 @@ export default function CapiRush() {
     pendingRef.current[k] = true;
   }, []);
 
+  // Versão nova publicada? O botão "Atualizar" acende nas telas de menu/pausa/fim.
+  const [hasUpdate, setHasUpdate] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const check = () => void checkForUpdate().then((v) => alive && v && setHasUpdate(true));
+    check();
+    const onVis = () => !document.hidden && check();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      alive = false;
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
   useEffect(() => {
     preloadHeroes();
+    return () => window.clearTimeout(levelTimer.current);
   }, []);
 
   /* Loop principal */
@@ -167,6 +189,11 @@ export default function CapiRush() {
         }
         fx.onEvents(events, s, heroRef.current, reduced);
         fx.update(dt, s, 0, true);
+        if (events.includes("level")) {
+          setLevelUp({ level: s.level, key: now });
+          window.clearTimeout(levelTimer.current);
+          levelTimer.current = window.setTimeout(() => setLevelUp(null), 1800);
+        }
         if (events.includes("over")) {
           setPhase("over");
           setHud({ ...hudOf(s), lives: 0, shield: false, magnet: 0, jet: 0, multi: 0 });
@@ -342,6 +369,16 @@ export default function CapiRush() {
         </div>
       </div>
 
+      {/* Aviso de nível novo */}
+      {phase === "playing" && levelUp && (
+        <div key={levelUp.key} role="status" aria-live="polite" className="pointer-events-none absolute inset-x-0 top-[28%] flex justify-center animate-in fade-in zoom-in-90 duration-300">
+          <div className="rounded-2xl border border-amber-300/40 bg-black/45 px-5 py-2 text-center backdrop-blur-md">
+            <div className="font-['Bebas_Neue'] text-4xl leading-none tracking-wider text-amber-200 drop-shadow-[0_0_18px_rgba(255,207,74,.6)]">Nível {levelUp.level}</div>
+            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-white/70">Mais rápido · mais desafios</div>
+          </div>
+        </div>
+      )}
+
       {/* Medidor de velocidade + distância */}
       {playing && (
         <div className="pointer-events-none absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 right-3 flex items-end justify-between gap-3">
@@ -351,7 +388,7 @@ export default function CapiRush() {
           </div>
           <div className="w-32 sm:w-44">
             <div className="mb-1 flex justify-between text-[10px] font-bold text-white/55">
-              <span>Velocidade</span>
+              <span>Velocidade · Nv {hud.level}</span>
               <span>{speedPct}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -397,6 +434,7 @@ export default function CapiRush() {
           <PlayButton onClick={start}>JOGAR</PlayButton>
           <p className="mt-3 text-[11px] font-semibold leading-snug text-white/55">Deslize para os lados para trocar de pista, para cima para pular (de novo no ar = pulo duplo) e para baixo para rolar. Pegue ímã, foguete, x2, escudo e caixas-presente. No teclado: setas ou WASD.</p>
           {best > 0 && <div className="mt-2 text-xs font-bold text-amber-300">Recorde: {best.toLocaleString("pt-BR")}</div>}
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
 
@@ -404,6 +442,7 @@ export default function CapiRush() {
         <Overlay>
           <div className="font-['Bebas_Neue'] text-6xl leading-none text-white">PAUSADO</div>
           <PlayButton onClick={togglePause}>CONTINUAR</PlayButton>
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
 
@@ -424,9 +463,31 @@ export default function CapiRush() {
             <div className="mt-2 text-xs font-bold text-white/55">Recorde: {best.toLocaleString("pt-BR")}</div>
           )}
           <PlayButton onClick={start}>JOGAR DE NOVO</PlayButton>
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
     </main>
+  );
+}
+
+/** Limpa o cache do app e recarrega a versão mais nova publicada. */
+function UpdateButton({ available }: { available: boolean }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      data-testid="rush-update"
+      disabled={busy}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => {
+        setBusy(true);
+        void forceUpdate();
+      }}
+      className={`mx-auto mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition active:scale-[0.98] ${available ? "animate-pulse border-emerald-300/60 bg-emerald-400/15 text-emerald-100" : "border-white/15 bg-white/5 text-white/70 hover:text-white"}`}
+    >
+      <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
+      {busy ? "Atualizando…" : available ? "Nova versão — atualizar" : "Atualizar jogo"}
+    </button>
   );
 }
 
