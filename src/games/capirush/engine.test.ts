@@ -4,7 +4,6 @@ import {
   CHECKPOINT_EVERY,
   COIN_VALUE,
   CONTINUE_INVULN,
-  SPEED_RAMP,
   continueFromCheckpoint,
   HIT_INVULN,
   LANES,
@@ -12,7 +11,11 @@ import {
   NO_INPUT,
   START_LIVES,
   createState,
+  isBreather,
+  levelAt,
+  pressureAt,
   rowGap,
+  speedAt,
   spawnRow,
   step,
   type Lane,
@@ -362,6 +365,105 @@ describe("Capi Rush — progressão", () => {
   });
 });
 
+describe("Capi Rush — curva de dificuldade", () => {
+  it("a velocidade continua subindo depois de 1 km (não trava num platô cedo)", () => {
+    expect(speedAt(0)).toBe(BASE_SPEED);
+    expect(speedAt(1000)).toBeLessThan(MAX_SPEED - 2);
+    expect(speedAt(2000)).toBeGreaterThan(speedAt(1000) + 1.5);
+    expect(speedAt(3000)).toBeGreaterThan(speedAt(2000));
+    for (let d = 0; d < 6000; d += 50) expect(speedAt(d + 50)).toBeGreaterThanOrEqual(speedAt(d));
+  });
+
+  it("os primeiros 100 m continuam tranquilos para aprender", () => {
+    expect(speedAt(100)).toBeLessThan(BASE_SPEED + 2);
+  });
+
+  it("sobe de nível a cada 500 m e avisa", () => {
+    expect(levelAt(0)).toBe(1);
+    expect(levelAt(499)).toBe(1);
+    expect(levelAt(500)).toBe(2);
+    const s = quiet();
+    s.distance = 499.9;
+    const ev = run(s, 0.2);
+    expect(ev.filter((e) => e === "level")).toHaveLength(1);
+    expect(s.level).toBe(2);
+  });
+
+  it("tombo segura a velocidade e ela volta aos poucos", () => {
+    const s = quiet();
+    s.distance = 1500;
+    run(s, DT);
+    const cruise = s.speed;
+    put(s, "barrier", 0, 0.5);
+    run(s, DT);
+    expect(s.lives).toBe(START_LIVES - 1);
+    expect(s.speed).toBeLessThan(cruise * 0.8);
+    run(s, 3);
+    expect(s.speed).toBeGreaterThan(cruise * 0.98);
+  });
+
+  it("mais longe, mais fileiras bloqueiam 2 pistas", () => {
+    const share = (distance: number) => {
+      let double = 0;
+      let n = 0;
+      for (let seed = 1; seed <= 400; seed++) {
+        const s = createState(seed);
+        s.distance = distance;
+        double += spawnRow(s, 50).length >= 2 ? 1 : 0;
+        n++;
+      }
+      return double / n;
+    };
+    expect(pressureAt(130)).toBeLessThan(0.05);
+    expect(share(2200)).toBeGreaterThan(share(200) + 0.25);
+  });
+
+  it("na troca de bioma vem um respiro: sem trens e só uma pista bloqueada", () => {
+    expect(isBreather(750)).toBe(true);
+    expect(isBreather(1000)).toBe(false);
+    expect(isBreather(1550)).toBe(true);
+    // A fileira nasce à frente (z = 70) e é encontrada em 680 + 70 = 750 m, no meio da
+    // troca de bioma: tem de ser uma fileira de respiro, mesmo gerada antes da troca.
+    for (let seed = 1; seed <= 200; seed++) {
+      const s = createState(seed);
+      s.distance = 680;
+      const row = spawnRow(s, 70);
+      expect(row).toHaveLength(1);
+      expect(row[0].kind).not.toBe("train");
+    }
+    // E o inverso: gerada já dentro da troca, mas encontrada depois dela, volta ao normal.
+    let doubles = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const s = createState(seed);
+      s.distance = 760;
+      if (spawnRow(s, 70).length >= 2) doubles++;
+    }
+    expect(doubles).toBeGreaterThan(0);
+  });
+
+  it("zigue-zague: com pressão alta a pista livre costuma mudar entre fileiras", () => {
+    let moved = 0;
+    let n = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const s = createState(seed);
+      s.distance = 2500;
+      let prev: Lane | null = null;
+      for (let r = 0; r < 8; r++) {
+        // só fileiras com UMA pista livre (2 bloqueadas) contam
+        const one = spawnRow(s, 50).length === 2 ? s.lastFree : null;
+        if (one !== null && prev !== null) {
+          n++;
+          if (one !== prev) moved++;
+        }
+        prev = one;
+      }
+    }
+    // Sorteio puro mudaria em ~2/3 das vezes; o zigue-zague empurra bem acima disso.
+    expect(n).toBeGreaterThan(100);
+    expect(moved / n).toBeGreaterThan(0.8);
+  });
+});
+
 describe("Capi Rush — geração de fileiras", () => {
   it("é determinística por seed", () => {
     const a = createState(1234);
@@ -387,7 +489,7 @@ describe("Capi Rush — geração de fileiras", () => {
 
   it("toda fileira tem saída: pista livre ou só obstáculos transponíveis", () => {
     for (let seed = 1; seed <= 300; seed++) {
-      for (const distance of [0, 80, 200, 600, 3000]) {
+      for (const distance of [0, 80, 200, 600, 750, 1200, 3000, 6000]) {
         const s = createState(seed);
         s.distance = distance;
         const row = spawnRow(s, 50);
@@ -487,7 +589,8 @@ describe("Capi Rush — checkpoints", () => {
     expect(c.lives).toBe(START_LIVES);
     expect(c.distance).toBe(1000);
     expect(c.score).toBe(1000 + 12 * COIN_VALUE + 40);
-    expect(c.speed).toBeCloseTo(Math.min(MAX_SPEED, BASE_SPEED + 1000 / SPEED_RAMP));
+    expect(c.speed).toBeCloseTo(speedAt(1000));
+    expect(c.level).toBe(levelAt(1000));
     expect(c.invuln).toBe(CONTINUE_INVULN);
     expect(c.obstacles).toEqual([]);
     expect(c.nextCheckpoint).toBe(1000 + CHECKPOINT_EVERY);

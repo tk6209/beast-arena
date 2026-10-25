@@ -9,6 +9,15 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
+/**
+ * Bioma de um ponto fixo do mundo (não da câmera): peças do cenário usam isto para
+ * trocar de cidade para selva de forma opaca, no meio da transição, em vez de
+ * cruzar as duas versões com transparência.
+ */
+export function isJungleAt(worldDistance: number): boolean {
+  return biomeAt(worldDistance) >= 0.5;
+}
+
 /** 0 = CapyCity, 1 = Selva Ancestral; valores intermediários são a transição (100 m). */
 export function biomeAt(distance: number): number {
   const c = ((distance % BIOME_CYCLE) + BIOME_CYCLE) % BIOME_CYCLE;

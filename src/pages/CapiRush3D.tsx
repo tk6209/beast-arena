@@ -78,7 +78,7 @@ export default function CapiRush3D() {
   const [newRecord, setNewRecord] = useState(false);
   const [noGl, setNoGl] = useState(false);
   const [hitAt, setHitAt] = useState(0);
-  const [cpBanner, setCpBanner] = useState<{ at: number; m: number } | null>(null);
+  const [cpBanner, setCpBanner] = useState<{ at: number; m: number; level: number } | null>(null);
   const [cpAvailable, setCpAvailable] = useState<number | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
@@ -194,7 +194,7 @@ export default function CapiRush3D() {
           setHud((h) => (sameHud(h, next) ? h : next));
         }
         if (events.includes("hit")) setHitAt(now);
-        if (events.includes("checkpoint") && s.checkpoint) setCpBanner({ at: now, m: s.checkpoint.distance });
+        if (events.includes("checkpoint") && s.checkpoint) setCpBanner({ at: now, m: s.checkpoint.distance, level: s.level });
         if (events.includes("over")) setCpAvailable(s.checkpoint ? s.checkpoint.distance : null);
       }
       eventsRef.current = events;
@@ -283,7 +283,7 @@ export default function CapiRush3D() {
       {cpBanner && (
         <div key={cpBanner.at} aria-live="polite" className="rush3d-cp pointer-events-none absolute inset-x-0 top-[22%] z-20 text-center">
           <div className="rush3d-title font-['Bebas_Neue'] text-6xl leading-none text-[#6dff8a]">CHECKPOINT!</div>
-          <div className="mt-1 text-lg font-black text-white [text-shadow:0_2px_0_rgba(0,0,0,.6)]">🚩 {cpBanner.m.toLocaleString("pt-BR")} m salvos</div>
+          <div className="mt-1 text-lg font-black text-white [text-shadow:0_2px_0_rgba(0,0,0,.6)]">🚩 {cpBanner.m.toLocaleString("pt-BR")} m salvos · Nível {cpBanner.level}</div>
         </div>
       )}
       {noGl && (
