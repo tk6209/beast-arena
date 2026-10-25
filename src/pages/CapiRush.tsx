@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, Rocket, Shield } from "lucide-react";
+import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, RefreshCw, Rocket, Shield } from "lucide-react";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 import { CAPYNITE_STORAGE } from "@/brand/capynite";
 import { BASE_SPEED, JET_TIME, MAGNET_TIME, MAX_SPEED, MULTI_TIME, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
 import { HEROES, getHero, preloadHeroes, type Hero } from "@/games/capirush/heroes";
 import { Fx, drawScene, makeView } from "@/games/capirush/render";
+import { checkForUpdate, forceUpdate } from "@/lib/appUpdate";
 
 type Phase = "ready" | "playing" | "paused" | "over";
 
@@ -114,6 +115,20 @@ export default function CapiRush() {
 
   const queue = useCallback((k: keyof RushInput) => {
     pendingRef.current[k] = true;
+  }, []);
+
+  // Versão nova publicada? O botão "Atualizar" acende nas telas de menu/pausa/fim.
+  const [hasUpdate, setHasUpdate] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const check = () => void checkForUpdate().then((v) => alive && v && setHasUpdate(true));
+    check();
+    const onVis = () => !document.hidden && check();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      alive = false;
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   useEffect(() => {
@@ -419,6 +434,7 @@ export default function CapiRush() {
           <PlayButton onClick={start}>JOGAR</PlayButton>
           <p className="mt-3 text-[11px] font-semibold leading-snug text-white/55">Deslize para os lados para trocar de pista, para cima para pular (de novo no ar = pulo duplo) e para baixo para rolar. Pegue ímã, foguete, x2, escudo e caixas-presente. No teclado: setas ou WASD.</p>
           {best > 0 && <div className="mt-2 text-xs font-bold text-amber-300">Recorde: {best.toLocaleString("pt-BR")}</div>}
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
 
@@ -426,6 +442,7 @@ export default function CapiRush() {
         <Overlay>
           <div className="font-['Bebas_Neue'] text-6xl leading-none text-white">PAUSADO</div>
           <PlayButton onClick={togglePause}>CONTINUAR</PlayButton>
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
 
@@ -446,9 +463,31 @@ export default function CapiRush() {
             <div className="mt-2 text-xs font-bold text-white/55">Recorde: {best.toLocaleString("pt-BR")}</div>
           )}
           <PlayButton onClick={start}>JOGAR DE NOVO</PlayButton>
+          <UpdateButton available={hasUpdate} />
         </Overlay>
       )}
     </main>
+  );
+}
+
+/** Limpa o cache do app e recarrega a versão mais nova publicada. */
+function UpdateButton({ available }: { available: boolean }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      data-testid="rush-update"
+      disabled={busy}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => {
+        setBusy(true);
+        void forceUpdate();
+      }}
+      className={`mx-auto mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition active:scale-[0.98] ${available ? "animate-pulse border-emerald-300/60 bg-emerald-400/15 text-emerald-100" : "border-white/15 bg-white/5 text-white/70 hover:text-white"}`}
+    >
+      <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
+      {busy ? "Atualizando…" : available ? "Nova versão — atualizar" : "Atualizar jogo"}
+    </button>
   );
 }
 

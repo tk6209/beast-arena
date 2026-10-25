@@ -419,13 +419,23 @@ describe("Capi Rush — curva de dificuldade", () => {
     expect(isBreather(750)).toBe(true);
     expect(isBreather(1000)).toBe(false);
     expect(isBreather(1550)).toBe(true);
+    // A fileira nasce à frente (z = 70) e é encontrada em 680 + 70 = 750 m, no meio da
+    // troca de bioma: tem de ser uma fileira de respiro, mesmo gerada antes da troca.
     for (let seed = 1; seed <= 200; seed++) {
       const s = createState(seed);
-      s.distance = 750;
-      const row = spawnRow(s, 50);
+      s.distance = 680;
+      const row = spawnRow(s, 70);
       expect(row).toHaveLength(1);
       expect(row[0].kind).not.toBe("train");
     }
+    // E o inverso: gerada já dentro da troca, mas encontrada depois dela, volta ao normal.
+    let doubles = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const s = createState(seed);
+      s.distance = 760;
+      if (spawnRow(s, 70).length >= 2) doubles++;
+    }
+    expect(doubles).toBeGreaterThan(0);
   });
 
   it("zigue-zague: com pressão alta a pista livre costuma mudar entre fileiras", () => {

@@ -328,7 +328,9 @@ function shuffledLanes(s: RushState): Lane[] {
  */
 export function spawnRow(s: RushState, z: number): Obstacle[] {
   const row = s.nextRow++;
-  const breather = isBreather(s.distance);
+  // A fileira nasce ~70 m à frente: o respiro vale para onde ela será ENCONTRADA,
+  // senão as fileiras difíceis geradas antes da troca de bioma chegam durante ela.
+  const breather = isBreather(s.distance + z);
   const p = breather ? 0 : pressureAt(s.distance);
   const kinds = breather ? allowedKinds(s.distance).filter((k) => k !== "train") : allowedKinds(s.distance);
   const order = shuffledLanes(s);

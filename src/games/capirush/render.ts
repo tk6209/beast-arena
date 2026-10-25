@@ -1192,23 +1192,8 @@ export function drawScene(ctx: CanvasRenderingContext2D, v: View, s: RushState, 
   items.sort((a, b) => b.z - a.z);
   for (const it of items) if (it.z < SPAWN_Z + 5) it.draw();
 
-  // Neblina do horizonte: esconde o spawn sem virar "máscara". Faixa estreita que
-  // começa e termina transparente (sem borda dura) e só é densa na linha de spawn.
-  // Antes ela começava a 92% de opacidade e cobria 42% do chão por cima de tudo.
-  const D = v.base - v.horizon;
-  const spawnY = gy(v, SPAWN_Z);
-  const fogTop = v.horizon - D * 0.1;
-  const fogBot = spawnY + D * 0.12;
-  const at = (y: number) => (y - fogTop) / (fogBot - fogTop);
-  const fogCol = (a: number) => mix("#5a2288", "#cdb978", j, a);
-  const peak = 0.78 - 0.18 * j; // de dia a névoa é mais leve
-  const fog = ctx.createLinearGradient(0, fogTop, 0, fogBot);
-  fog.addColorStop(0, fogCol(0));
-  fog.addColorStop(at(v.horizon), fogCol(peak * 0.75));
-  fog.addColorStop(at(spawnY), fogCol(peak));
-  fog.addColorStop(1, fogCol(0));
-  ctx.fillStyle = fog;
-  ctx.fillRect(0, fogTop, v.W, fogBot - fogTop);
+  // Sem faixa de neblina no horizonte: ela virava uma "máscara" por cima do cenário.
+  // Os objetos já nascem bem pequenos lá no fundo, então não precisam ser escondidos.
 
   drawWeather(ctx, v, s.time, j, reduced);
   drawForeground(ctx, v, s.time, j);

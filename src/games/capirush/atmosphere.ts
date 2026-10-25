@@ -264,9 +264,10 @@ export function drawWeather(ctx: CanvasRenderingContext2D, v: View, time: number
 
 /* ───────── Névoa baixa ───────── */
 export function drawMist(ctx: CanvasRenderingContext2D, v: View, time: number, j: number) {
+  if (j >= 1) return;
   const hz = v.horizon;
   // Brilho aditivo amarelo sobre um chão já claro (selva) vira véu: de dia a névoa é bem mais leve.
-  const k = 1 - 0.6 * j;
+  const k = 1 - j; // na selva, nenhuma névoa sobre o chão
   for (let i = 0; i < 4; i++) {
     const y = hz + (v.base - hz) * (0.02 + i * 0.07);
     const x = ((time * (8 + i * 4) + i * 120) % (v.W * 1.6)) - v.W * 0.3;
