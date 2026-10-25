@@ -4,8 +4,8 @@
  * player) maps to world -Z; the hero runs in place at the origin.
  */
 import * as THREE from "three";
-import { BASE_SPEED, MAX_SPEED, isSliding, type Obstacle, type Pickup, type RushEvent, type RushState } from "../capirush/engine";
-import { buildCapybara, poseCapybara, tintCapybara, type CapyHeroId, type CapyPose, type CapyRig } from "../capy3d/capybara";
+import { BASE_SPEED, CHECKPOINT_EVERY, MAX_SPEED, isSliding, type Obstacle, type Pickup, type RushEvent, type RushState } from "../capirush/engine";
+import { buildCapybara, kickJelly, poseCapybara, tintCapybara, type CapyHeroId, type CapyPose, type CapyRig } from "../capy3d/capybara";
 import { inked, toon } from "../capy3d/toon";
 import { facadeTexture, glowTexture, sidewalkTexture, skyTexture, starTexture, stripeTexture, trackTexture, trainSideTexture } from "../capy3d/textures";
 
@@ -41,6 +41,8 @@ export class Rush3D {
   private heroHolder = new THREE.Group();
   private track!: THREE.Mesh;
   private trackTex: THREE.CanvasTexture;
+  private gate: THREE.Group;
+  private gateGlow = 0;
   private walkTex: THREE.CanvasTexture;
   private walks: THREE.Mesh[] = [];
   private decor: Decor[] = [];
@@ -116,6 +118,8 @@ export class Rush3D {
     this.buildDecor();
     this.buildSkyline();
 
+    this.gate = this.buildGate();
+    this.scene.add(this.gate);
     this.scene.add(this.heroHolder);
     this.shieldBubble = new THREE.Mesh(
       new THREE.SphereGeometry(1.15, 32, 20),
@@ -290,6 +294,78 @@ export class Rush3D {
       const x = (rnd() - 0.5) * 260;
       m.position.set(x, h / 2 - 2, far ? -235 : -205);
       this.scene.add(m);
+    }
+  }
+
+  /** Checkpoint arch spanning the tracks: flag banner on two striped towers. */
+  private buildGate(): THREE.Group {
+    const g = new THREE.Group();
+    const span = LANE_W * 3 + 1.6;
+    const towerMat = new THREE.MeshToonMaterial({ map: stripeTexture("#ffffff", "#2fb85a", 4) });
+    for (const sx of [-1, 1]) {
+      const t = inked(new THREE.BoxGeometry(0.5, 5.2, 0.5), towerMat, 0.03);
+      t.position.set((sx * span) / 2, 2.6, 0);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), toon("#ffd34a", { emissive: "#b07a00", emissiveIntensity: 0.5 }));
+      cap.position.set((sx * span) / 2, 5.4, 0);
+      g.add(t, cap);
+    }
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 96;
+    const x = c.getContext("2d")!;
+    for (let i = 0; i < 32; i++) {
+      for (let j = 0; j < 6; j++) {
+        x.fillStyle = (i + j) % 2 ? "#1b1b22" : "#ffffff";
+        x.fillRect(i * 16, j * 16, 16, 16);
+      }
+    }
+    x.fillStyle = "#2fb85a";
+    x.fillRect(40, 14, 432, 68);
+    x.strokeStyle = "#ffffff";
+    x.lineWidth = 6;
+    x.strokeRect(40, 14, 432, 68);
+    x.fillStyle = "#ffffff";
+    x.font = "bold 54px Impact, 'Bebas Neue', sans-serif";
+    x.textAlign = "center";
+    x.textBaseline = "middle";
+    x.fillText("CHECKPOINT", 256, 50);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const banner = inked(new THREE.BoxGeometry(span, 1.1, 0.2), [toon("#1b1b22"), toon("#1b1b22"), toon("#1b1b22"), toon("#1b1b22"), new THREE.MeshToonMaterial({ map: tex }), new THREE.MeshToonMaterial({ map: tex })] as unknown as THREE.Material, 0.03);
+    banner.position.y = 4.6;
+    g.add(banner);
+    const glow = new THREE.Mesh(
+      new THREE.PlaneGeometry(span, 4.2),
+      new THREE.MeshBasicMaterial({ color: 0x6dff8a, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
+    );
+    glow.position.y = 2.1;
+    glow.name = "glow";
+    g.add(glow);
+    g.visible = false;
+    return g;
+  }
+
+  private placeGate(s: RushState, dt: number) {
+    const next = s.nextCheckpoint;
+    const prev = next - CHECKPOINT_EVERY;
+    let z: number | null = null;
+    if (next - s.distance < 140) z = next - s.distance;
+    else if (prev > 0 && s.distance - prev < 12) z = prev - s.distance;
+    this.gate.visible = z !== null;
+    if (z === null) return;
+    this.gate.position.set(0, 0, wz(z));
+    this.gateGlow = Math.max(0, this.gateGlow - dt);
+    const glow = this.gate.getObjectByName("glow") as THREE.Mesh;
+    (glow.material as THREE.MeshBasicMaterial).opacity = 0.1 + 0.05 * Math.sin(this.time * 5) + this.gateGlow * 0.5;
+  }
+
+  private celebrateCheckpoint(px: number) {
+    this.gateGlow = 1;
+    this.pickupFlash = 1;
+    const cols = [0x2fb85a, 0xffd34a, 0xff5c8a, 0x38e1ff, 0xffffff];
+    for (let i = 0; i < 60; i++) {
+      const v = new THREE.Vector3((Math.random() - 0.5) * 8, 3 + Math.random() * 5, 2 + Math.random() * 6);
+      this.spawn(new THREE.Vector3(px + (Math.random() - 0.5) * 6, 4.5, -1), cols[i % cols.length], v, 1.2 + Math.random() * 0.6, 0.35, 0.15, 7, this.starTex, false);
     }
   }
 
@@ -618,8 +694,12 @@ export class Rush3D {
         this.burst(new THREE.Vector3(px, 1.2, 0), 0xffffff, 20, 5);
       }
       if (e === "over") this.fall = 0.0001;
+      if (e === "checkpoint") this.celebrateCheckpoint(px);
     }
-    if (this.wasAir && !air && phase === "playing") this.dust(px, 8);
+    if (this.wasAir && !air && phase === "playing") {
+      this.dust(px, 8);
+      kickJelly(hero, 7);
+    }
     this.wasAir = air;
 
     // World scroll.
@@ -630,6 +710,7 @@ export class Rush3D {
       it.obj.position.z = ((((it.base + d) % DECOR_LEN) + DECOR_LEN) % DECOR_LEN) - (DECOR_LEN - 18);
     }
     this.syncDynamic(s);
+    this.placeGate(s, dt);
 
     // Hero placement + pose.
     const laneVel = (s.laneX - this.lastLaneX) / Math.max(dt, 1e-3);
@@ -648,7 +729,7 @@ export class Rush3D {
     if (phase === "ready") mode = Math.floor(this.time / 3.5) % 3 === 1 ? "wave" : "idle";
     else if (phase === "over") mode = "fall";
     else if (s.jet > 0) mode = "fly";
-    else if (isSliding(s)) mode = "roll";
+    else if (isSliding(s)) mode = "squash";
     else if (air) mode = "air";
     const blend = 1 - Math.pow(0.0005, dt);
     poseCapybara(hero, { t: this.time, mode, phase: this.runPhase, effort: phase === "playing" ? effort : 0, vy: s.vy, lean: phase === "playing" ? this.lean : 0, flip: this.flip, fall: this.fall }, blend);

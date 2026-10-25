@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronsUp, Coins, Heart, Magnet, Pause, Play, Rocket, Shield } from "lucide-react";
 import UniverseBackLink from "@/components/capynite/UniverseBackLink";
 import { CAPYNITE_STORAGE } from "@/brand/capynite";
-import { BASE_SPEED, JET_TIME, MAGNET_TIME, MAX_SPEED, MULTI_TIME, NO_INPUT, START_LIVES, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
+import { BASE_SPEED, JET_TIME, MAGNET_TIME, MAX_SPEED, MULTI_TIME, NO_INPUT, START_LIVES, continueFromCheckpoint, createState, step, type RushInput, type RushState } from "@/games/capirush/engine";
 import { HEROES, getHero, preloadHeroes, type Hero } from "@/games/capirush/heroes";
 import { Rush3D } from "@/games/capirush3d/world";
 import "./capirush3d.css";
@@ -78,6 +78,8 @@ export default function CapiRush3D() {
   const [newRecord, setNewRecord] = useState(false);
   const [noGl, setNoGl] = useState(false);
   const [hitAt, setHitAt] = useState(0);
+  const [cpBanner, setCpBanner] = useState<{ at: number; m: number } | null>(null);
+  const [cpAvailable, setCpAvailable] = useState<number | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -104,6 +106,16 @@ export default function CapiRush3D() {
     pendingRef.current = { ...NO_INPUT };
     setNewRecord(false);
     setHud(HUD0);
+    setPhase("playing");
+  }, [setPhase]);
+
+  const continueRun = useCallback(() => {
+    const next = continueFromCheckpoint(stateRef.current, (Date.now() & 0x7fffffff) || 1);
+    if (!next) return;
+    stateRef.current = next;
+    pendingRef.current = { ...NO_INPUT };
+    setNewRecord(false);
+    setHud(hudOf(next));
     setPhase("playing");
   }, [setPhase]);
 
@@ -182,6 +194,8 @@ export default function CapiRush3D() {
           setHud((h) => (sameHud(h, next) ? h : next));
         }
         if (events.includes("hit")) setHitAt(now);
+        if (events.includes("checkpoint") && s.checkpoint) setCpBanner({ at: now, m: s.checkpoint.distance });
+        if (events.includes("over")) setCpAvailable(s.checkpoint ? s.checkpoint.distance : null);
       }
       eventsRef.current = events;
       world.frame(ph === "paused" ? 0 : dt, s, events, ph);
@@ -266,6 +280,12 @@ export default function CapiRush3D() {
   return (
     <main className="relative h-[100dvh] w-full select-none overflow-hidden bg-[#8fd3ff] text-white">
       {hitAt > 0 && <div key={hitAt} aria-hidden className="pointer-events-none absolute inset-0 z-10 animate-[rush3dHit_.45s_ease-out_forwards] bg-[radial-gradient(circle,transparent_45%,rgba(255,40,40,.55))]" />}
+      {cpBanner && (
+        <div key={cpBanner.at} aria-live="polite" className="rush3d-cp pointer-events-none absolute inset-x-0 top-[22%] z-20 text-center">
+          <div className="rush3d-title font-['Bebas_Neue'] text-6xl leading-none text-[#6dff8a]">CHECKPOINT!</div>
+          <div className="mt-1 text-lg font-black text-white [text-shadow:0_2px_0_rgba(0,0,0,.6)]">🚩 {cpBanner.m.toLocaleString("pt-BR")} m salvos</div>
+        </div>
+      )}
       {noGl && (
         <div className="absolute inset-0 z-30 grid place-items-center bg-[#050611] p-6 text-center">
           <div>
@@ -430,7 +450,18 @@ export default function CapiRush3D() {
           ) : (
             <div className="mt-2 text-xs font-bold text-white/55">Recorde: {best.toLocaleString("pt-BR")}</div>
           )}
-          <PlayButton onClick={start}>JOGAR DE NOVO</PlayButton>
+          {cpAvailable !== null && (
+            <button
+              type="button"
+              onClick={continueRun}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="mt-4 inline-flex min-h-14 w-full flex-col items-center justify-center rounded-2xl border-[3px] border-[#1b2c6b] bg-gradient-to-b from-[#7dff9a] to-[#22b04f] px-6 font-['Bebas_Neue'] text-3xl leading-none tracking-wider text-[#06281a] shadow-[0_6px_0_#0d6b2c] transition active:translate-y-1"
+            >
+              CONTINUAR DO CHECKPOINT
+              <span className="font-sans text-xs font-black tracking-normal">🚩 a partir de {cpAvailable.toLocaleString("pt-BR")} m</span>
+            </button>
+          )}
+          <PlayButton onClick={start}>{cpAvailable !== null ? "RECOMEÇAR DO ZERO" : "JOGAR DE NOVO"}</PlayButton>
         </Overlay>
       )}
     </main>
