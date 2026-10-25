@@ -53,3 +53,30 @@ describe('mobile orientation and initialization', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+describe('Android rotation lock (Samsung A73 and similar)', () => {
+  it('offers a full-screen landscape button that enters fullscreen and locks orientation', async () => {
+    const lock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.screen, 'orientation', { configurable: true, value: { lock } });
+    const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(document.documentElement, 'requestFullscreen', { configurable: true, value: requestFullscreen });
+    render(<OrientationGate><StatefulGame /></OrientationGate>);
+    lock.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /tela cheia na horizontal/i }));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(requestFullscreen).toHaveBeenCalled();
+    expect(lock).toHaveBeenCalledWith('landscape');
+  });
+
+  it('warns when the phone is lying sideways but the screen did not rotate', () => {
+    render(<OrientationGate><StatefulGame /></OrientationGate>);
+    const tilt = (t: number) => {
+      const e = new Event('deviceorientation') as Event & { beta: number; gamma: number };
+      Object.defineProperties(e, { beta: { value: 5 }, gamma: { value: 85 }, timeStamp: { value: t } });
+      act(() => { window.dispatchEvent(e); });
+    };
+    tilt(100);
+    tilt(1200);
+    expect(screen.getByRole('alert').textContent).toMatch(/Rotação automática está desligada/);
+  });
+});
