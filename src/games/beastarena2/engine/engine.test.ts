@@ -80,7 +80,7 @@ describe("motor", () => {
 
   it("escudo absorve dano, Garra de Aço perfura", () => {
     const { state } = createBattle({ seed: 7, player: "drako", enemy: "panther" });
-    let s = limpo(state);
+    const s = limpo(state);
     s.fighters.enemy.escudo = 50;
     const [s1, pancada] = comCarta(s, "pancada");
     const r1 = step(s1, { type: "jogar", uid: pancada.uid });
