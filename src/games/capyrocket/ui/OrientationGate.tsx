@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LandscapeActions from "@/components/game/LandscapeActions";
 
 /**
  * Gate de landscape — cópia mínima e vendorizada do gate do Beast Arena, com
@@ -114,6 +115,7 @@ function RotateOverlay() {
           tela na horizontal. Vire o aparelho para o modo paisagem para jogar.
         </p>
       </div>
+      <LandscapeActions accent="#ffb347" text="#1a1206" />
     </div>
   );
 }

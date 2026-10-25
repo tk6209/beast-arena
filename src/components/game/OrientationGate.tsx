@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LandscapeActions from "./LandscapeActions";
 
 /**
  * OrientationGate — força landscape no padrão de jogos comerciais (Brawl Stars, Clash Royale).
@@ -171,6 +172,8 @@ function RotateOverlay() {
           tela na horizontal. Vire o aparelho para o modo paisagem para jogar.
         </p>
       </div>
+
+      <LandscapeActions accent="#38e1ff" />
 
       <div style={{ display: "flex", gap: 8 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
