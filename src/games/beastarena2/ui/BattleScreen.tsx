@@ -77,6 +77,7 @@ export function BattleScreen({ player, enemy, dificuldade, seed, onEnd, onExit }
   const [toast, setToast] = useState<string | null>(null);
   const [info, setInfo] = useState<Side | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [initError, setInitError] = useState(false);
   const [muted, setMutedState] = useState(isMuted());
   const [hint, setHint] = useState<0 | 1 | 2>(() => {
     try {
@@ -304,7 +305,14 @@ export function BattleScreen({ player, enemy, dificuldade, seed, onEnd, onExit }
     const ro = new ResizeObserver(() => relayout());
     ro.observe(host);
     (async () => {
-      arena = await Arena.create(host, player, enemy);
+      try {
+        arena = await Arena.create(host, player, enemy);
+      } catch (err) {
+        // WebGL unavailable or art failed to load: Arena.create already cleaned up.
+        console.error("Beast Arena V2: falha ao iniciar a arena", err);
+        if (!cancelled) setInitError(true);
+        return;
+      }
       if (cancelled) {
         arena.destroy();
         return;
@@ -522,6 +530,20 @@ export function BattleScreen({ player, enemy, dificuldade, seed, onEnd, onExit }
       {intro && <VsIntro player={player} enemy={enemy} />}
 
       {info && view && <MonsterInfo id={view[info].monsterId} onClose={() => setInfo(null)} />}
+
+      {initError && (
+        <div className="ba2-modal" role="alertdialog">
+          <div className="ba2-modal-box">
+            <div className="ba2-modal-title">Não deu pra abrir a arena</div>
+            <div className="ba2-info-sub">Seu aparelho não conseguiu carregar os gráficos. Tente de novo.</div>
+            <div className="ba2-modal-actions">
+              <button className="ba2-btn" onClick={onExit}>
+                Voltar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmExit && (
         <div className="ba2-modal" onClick={() => setConfirmExit(false)}>

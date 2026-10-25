@@ -43,6 +43,7 @@ export class Arena {
   private camera = new Container();
   private world = new Container();
   private bg = new Sprite();
+  private bgKey = "";
   private rays: Sprite[] = [];
   private back = new Container();
   private front = new Container();
@@ -65,7 +66,12 @@ export class Arena {
 
   static async create(host: HTMLElement, player: string, enemy: string): Promise<Arena> {
     const a = new Arena(player, enemy);
-    await a.init(host);
+    try {
+      await a.init(host);
+    } catch (err) {
+      a.destroy();
+      throw err;
+    }
     return a;
   }
 
@@ -186,7 +192,15 @@ export class Arena {
     const top = insets.top;
     const ah = Math.max(120, h - insets.top - insets.bottom);
     const horizon = top + ah * (portrait ? 0.3 : 0.36);
-    this.bg.texture = paintBackdrop(w, h, horizon, this.pal, Math.min(window.devicePixelRatio || 1, 2));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Hand size changes trigger layout too; only repaint (and free the old canvas) when the backdrop really changes.
+    const key = `${Math.round(w)}x${Math.round(h)}@${Math.round(horizon)}:${dpr}`;
+    if (key !== this.bgKey) {
+      const old = this.bgKey ? this.bg.texture : null;
+      this.bg.texture = paintBackdrop(w, h, horizon, this.pal, dpr);
+      this.bgKey = key;
+      old?.destroy(true);
+    }
     this.bg.width = w;
     this.bg.height = h;
     this.camera.pivot.set(w / 2, h / 2);
@@ -818,6 +832,10 @@ export class Arena {
   destroy() {
     this.destroyed = true;
     this.anim.clear();
+    if (this.bgKey) {
+      this.bg.texture.destroy(true);
+      this.bgKey = "";
+    }
     try {
       this.app?.destroy(true, { children: true });
     } catch {
