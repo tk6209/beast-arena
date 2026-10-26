@@ -43,6 +43,11 @@ export const HIT_INVULN = 1.5;
 export const SHIELD_INVULN = 0.7;
 export const COIN_VALUE = 10;
 
+/** A checkpoint gate every N metres: losing all lives lets you continue from the last one passed. */
+export const CHECKPOINT_EVERY = 500;
+/** Grace period after continuing, so the first row never hits instantly. */
+export const CONTINUE_INVULN = 2.5;
+
 /* Poderes (segundos) */
 export const MAGNET_TIME = 9;
 export const JET_TIME = 5;
@@ -110,6 +115,7 @@ export type RushEvent =
   | "shield-break"
   | "hit"
   | "level"
+  | "checkpoint"
   | "over";
 
 export interface RushInput {
@@ -165,6 +171,17 @@ export interface RushState {
   nextRow: number;
   /** Metros até o próximo spawn (negativo = deve spawnar agora). */
   nextRowIn: number;
+
+  /** Distância do próximo portal de checkpoint. */
+  nextCheckpoint: number;
+  /** Último checkpoint atravessado (null = nenhum ainda). */
+  checkpoint: Checkpoint | null;
+}
+
+export interface Checkpoint {
+  distance: number;
+  coins: number;
+  bonus: number;
 }
 
 /* ───────── RNG determinístico (mulberry32) ───────── */
@@ -208,7 +225,30 @@ export function createState(seed = 1): RushState {
     nextRow: 1,
     // Primeira fileira a 35 m: dá ~3 s para o jogador entender os controles.
     nextRowIn: -(SPAWN_Z - 35),
+    nextCheckpoint: CHECKPOINT_EVERY,
+    checkpoint: null,
   };
+}
+
+/**
+ * Nova corrida a partir do último checkpoint: mesma distância, moedas e bônus
+ * (logo o mesmo placar), vidas cheias, pista limpa e uns segundos de proteção.
+ * Retorna null se nenhum checkpoint foi atravessado.
+ */
+export function continueFromCheckpoint(prev: RushState, seed: number): RushState | null {
+  const cp = prev.checkpoint;
+  if (!cp) return null;
+  const s = createState(seed);
+  s.distance = cp.distance;
+  s.coins = cp.coins;
+  s.bonus = cp.bonus;
+  s.speed = speedAt(s.distance);
+  s.level = levelAt(s.distance);
+  s.score = Math.floor(s.distance) + s.coins * COIN_VALUE + s.bonus;
+  s.checkpoint = { ...cp };
+  s.nextCheckpoint = cp.distance + CHECKPOINT_EVERY;
+  s.invuln = CONTINUE_INVULN;
+  return s;
 }
 
 /* ───────── Consultas ───────── */
@@ -545,6 +585,13 @@ export function step(s: RushState, dt: number, input: RushInput): RushEvent[] {
     events.push("level");
   }
   s.score = Math.floor(s.distance) + s.coins * COIN_VALUE + s.bonus;
+
+  /* Checkpoint: só conta se o herói ainda está de pé ao cruzar o portal. */
+  if (!s.over && s.distance >= s.nextCheckpoint) {
+    s.checkpoint = { distance: s.nextCheckpoint, coins: s.coins, bonus: s.bonus };
+    s.nextCheckpoint += CHECKPOINT_EVERY;
+    events.push("checkpoint");
+  }
 
   return events;
 }

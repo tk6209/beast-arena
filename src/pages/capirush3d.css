@@ -25,3 +25,24 @@
     opacity: 0;
   }
 }
+.rush3d-cp {
+  animation: rush3dCp 1.8s cubic-bezier(0.2, 1.3, 0.4, 1) forwards;
+}
+@keyframes rush3dCp {
+  0% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}

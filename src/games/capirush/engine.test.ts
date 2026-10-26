@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_SPEED,
+  CHECKPOINT_EVERY,
   COIN_VALUE,
+  CONTINUE_INVULN,
+  continueFromCheckpoint,
   HIT_INVULN,
   LANES,
   MAX_SPEED,
@@ -554,5 +557,53 @@ describe("Capi Rush — percurso é jogável", () => {
     }
     expect(hits).toEqual([]);
     expect(s.distance).toBeGreaterThan(900);
+  });
+});
+
+describe("Capi Rush — checkpoints", () => {
+  it("marca checkpoint ao cruzar cada portal, guardando moedas e bônus", () => {
+    const s = quiet();
+    s.distance = CHECKPOINT_EVERY - 1;
+    s.coins = 7;
+    s.bonus = 30;
+    const ev = run(s, 0.5);
+    expect(ev.filter((e) => e === "checkpoint")).toHaveLength(1);
+    expect(s.checkpoint).toEqual({ distance: CHECKPOINT_EVERY, coins: 7, bonus: 30 });
+    expect(s.nextCheckpoint).toBe(CHECKPOINT_EVERY * 2);
+  });
+
+  it("sem checkpoint não há como continuar", () => {
+    const s = quiet();
+    s.over = true;
+    expect(continueFromCheckpoint(s, 2)).toBeNull();
+  });
+
+  it("continuar volta ao checkpoint com vidas cheias, mesmo placar e proteção", () => {
+    const s = quiet();
+    s.checkpoint = { distance: 1000, coins: 12, bonus: 40 };
+    s.distance = 1234;
+    s.lives = 0;
+    s.over = true;
+    const c = continueFromCheckpoint(s, 5)!;
+    expect(c.over).toBe(false);
+    expect(c.lives).toBe(START_LIVES);
+    expect(c.distance).toBe(1000);
+    expect(c.score).toBe(1000 + 12 * COIN_VALUE + 40);
+    expect(c.speed).toBeCloseTo(speedAt(1000));
+    expect(c.level).toBe(levelAt(1000));
+    expect(c.invuln).toBe(CONTINUE_INVULN);
+    expect(c.obstacles).toEqual([]);
+    expect(c.nextCheckpoint).toBe(1000 + CHECKPOINT_EVERY);
+  });
+
+  it("a corrida continuada não é atingida durante a proteção, mesmo com obstáculo na cara", () => {
+    const s = quiet();
+    s.checkpoint = { distance: 500, coins: 0, bonus: 0 };
+    s.over = true;
+    const c = continueFromCheckpoint(s, 9)!;
+    c.nextRowIn = 1e9;
+    put(c, "train", 0, 0.5, 40);
+    expect(run(c, 1)).not.toContain("hit");
+    expect(c.lives).toBe(START_LIVES);
   });
 });
