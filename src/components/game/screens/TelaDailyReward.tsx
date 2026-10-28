@@ -9,7 +9,7 @@ interface Props {
 }
 
 
-export default function TelaDailyReward({ user, onClose }: Props) {
+export default function TelaDailyReward({ onClose }: Props) {
   const [claimed, setClaimed] = useState(false);
   const [streakRewards, setStreakRewards] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
