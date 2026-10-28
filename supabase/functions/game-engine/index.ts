@@ -1043,7 +1043,8 @@ Deno.serve(async (req) => {
         matched.push(row.card_data);
       }
       // Enforce 10 validated cards, otherwise use the engine's server-built starter deck.
-      payload.players[0].deck = cards.length === 10 && matched.length === 10 ? matched : undefined;
+      payload.players[0].deck = cards.length === 10 && matched.length === 10
+        ? matched.map((card, index) => ({ ...card, id: index + 1 })) : undefined;
       delete payload.playerDeck;
     }
     let sessionId = rawSessionId;
