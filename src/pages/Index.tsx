@@ -56,6 +56,7 @@ export default function Index() {
   const [nomeJogador, setNomeJogador] = useState<string>("Jogador");
   const [monstroP1, setMonstroP1] = useState<string>("");
   const [salaId, setSalaId] = useState<string | null>(null);
+  const [lastBattleSessionId, setLastBattleSessionId] = useState<string | null>(null);
   const [slotLocal, setSlotLocal] = useState<number>(0);
   const [vencedor, setVencedor] = useState<Jogador | null>(null);
   const [dificuldade, setDificuldade] = useState<Dificuldade>(
@@ -214,7 +215,8 @@ export default function Index() {
     setTela("batalha");
   }, []);
 
-  const handleFim = (v: Jogador | null, stats?: BattleStats) => {
+  const handleFim = (v: Jogador | null, stats?: BattleStats, battleSessionId?: string | null) => {
+    setLastBattleSessionId(battleSessionId || null);
     setVencedor(v);
     setLastBattleStats(stats);
     const ganhou = Boolean(v);
@@ -471,7 +473,7 @@ export default function Index() {
           nomeJogador={nomeJogador}
           salaId={salaId}
           slotLocal={slotLocal}
-          onFim={(v, stats) => { handleFim(v, stats); setIsCampaignContinue(false); }}
+          onFim={(v, stats, battleSessionId) => { handleFim(v, stats, battleSessionId); setIsCampaignContinue(false); }}
           dificuldade={dificuldade}
           aiMonstroId={currentOpponent}
           skipPowerSelect={isCampaignContinue && !!lastPowerId}
@@ -496,6 +498,7 @@ export default function Index() {
           userId={user?.id}
           dificuldade={dificuldade}
           battleStats={lastBattleStats}
+          sessionId={lastBattleSessionId}
         />
       );
 
