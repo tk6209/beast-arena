@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import MonsterAvatar from "@/components/game/MonsterAvatar";
 import { MONSTROS } from "@/game/data";
@@ -29,7 +29,7 @@ const MODES:{id:Mode;title:string;sub:string}[] = [
   {id:"friends",title:"Sala com amigos",sub:"Convite e QR Code"},
 ];
 function SmallAction({label,onClick,children}:{
-  label:string;onClick:()=>void;children:React.ReactNode;
+  label:string;onClick:()=>void;children:ReactNode;
 }){
   return <button type="button" onClick={onClick} aria-label={label}
     className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-yellow-300/50 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-yellow-300">
