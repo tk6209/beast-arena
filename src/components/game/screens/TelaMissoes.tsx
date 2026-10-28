@@ -5,6 +5,7 @@ import BtnMain from "@/components/game/BtnMain";
 import { supabase } from "@/integrations/supabase/client";
 import { claimMissionReward } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
+import { toast } from 'sonner';
 
 interface Props {
   user: User;
@@ -59,10 +60,10 @@ export default function TelaMissoes({ user, onVoltar }: Props) {
     if (!mission || um.claimed) return;
 
     try {
-      await claimMissionReward({ userId: user.id, userMissionId: um.id });
+      await claimMissionReward({ userMissionId: um.id });
       setUserMissions(prev => prev.map(u => u.id === um.id ? { ...u, claimed: true } : u));
-    } catch {
-      // server-authoritative path unavailable
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Resgate indisponível. Nenhum saldo foi alterado.');
     }
   }
 

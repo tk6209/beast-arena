@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { claimDailyReward } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
@@ -17,6 +16,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
   const [streak, setStreak] = useState(1);
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     checkAndClaim();
@@ -24,7 +24,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
 
   async function checkAndClaim() {
     try {
-      const { data } = await claimDailyReward({ userId: user.id });
+      const { data } = await claimDailyReward();
       if (data?.alreadyClaimed) {
         setAlreadyClaimed(true);
       } else {
@@ -32,17 +32,8 @@ export default function TelaDailyReward({ user, onClose }: Props) {
       }
       setReward(data?.coins ?? 0);
       setStreak(data?.streak ?? 1);
-    } catch {
-      const { data } = await supabase
-        .from("daily_rewards")
-        .select("last_claim_date, streak")
-        .eq("user_id", user.id)
-        .single();
-      const today = new Date().toISOString().split("T")[0];
-      if (data?.last_claim_date === today) {
-        setAlreadyClaimed(true);
-      }
-      setStreak(data?.streak ?? 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Recompensa indisponível. Nenhum saldo foi alterado.');
     } finally {
       setLoading(false);
     }
@@ -77,7 +68,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
           animation: "rewardBounce .5s ease forwards",
         }}
       >
-        {alreadyClaimed ? (
+        {error ? <p role="alert" className="text-foreground">{error}</p> : alreadyClaimed ? (
           <>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#ffd54f", letterSpacing: 2 }}>

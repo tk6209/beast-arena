@@ -1,0 +1,78 @@
+{
+  "target": "disposable PostgreSQL 17, synthetic schema",
+  "checks": [
+    {
+      "scenario": "2 concurrent daily claims",
+      "observed": {
+        "before": 100,
+        "after": 110,
+        "ledger": 1,
+        "identical_receipts": 2
+      },
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "10 concurrent daily claims",
+      "observed": {
+        "before": 100,
+        "after": 110,
+        "ledger": 1,
+        "identical_receipts": 10
+      },
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "daily canonical proposal days 1\u20137",
+      "observed": [
+        10,
+        15,
+        20,
+        30,
+        40,
+        50,
+        75
+      ],
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "RPC grants, guest, missing owner",
+      "observed": "Rejected, balance unchanged",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "direct monetary/session writes",
+      "observed": "All tested authenticated INSERT/UPDATE/DELETE grants revoked",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "profile name versus coins",
+      "observed": "Name update allowed; coin update denied (fixture lacks production name trigger)",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "replayed/stale/cross-user battle settlement",
+      "observed": "Always denied; no balance/history mutation",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "deck ownership/canonical data/10 cards/max 2 copies",
+      "observed": "Valid owned deck accepted; 8 cards, 3 copies, forged data, cross-user, over-inventory denied",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "property sweep nonnegative/exactly-once daily",
+      "observed": "21 starting balances, 42 calls, one ledger per fixture",
+      "conclusion": "PASS"
+    },
+    {
+      "scenario": "late server failure ACID rollback",
+      "observed": {
+        "before": "30",
+        "after": "30",
+        "claims": 0,
+        "ledger": 0
+      },
+      "conclusion": "PASS"
+    }
+  ]
+}

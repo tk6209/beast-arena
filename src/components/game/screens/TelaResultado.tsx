@@ -7,7 +7,6 @@ import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { supabase } from "@/integrations/supabase/client";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
-import { recordBattleResult } from "@/game/serverApi";
 import { MONSTROS } from "@/game/data";
 import type { Jogador } from "@/game/engine";
 
@@ -141,8 +140,9 @@ export default function TelaResultado({
   const monsterGlow = monstroId && MONSTROS[monstroId] ? MONSTROS[monstroId].glow || "#00e5ff" : "#00e5ff";
   const canContinue = g && !campaignFinished && campaignIndex < campaignTotal - 1;
 
-  const coinBase = g ? (dificuldade === "facil" ? 10 : dificuldade === "avancado" ? 40 : 20) : 3;
-  const xpGain   = g ? (dificuldade === "facil" ? 20 : dificuldade === "avancado" ? 50 : 30) : 8;
+  // No projected credits: authoritative settlement is not activated in this cycle.
+  const coinBase = 0;
+  const xpGain = 0;
 
   const [phase, setPhase]             = useState(0);
   const [streak, setStreak]           = useState(0);
@@ -175,44 +175,9 @@ export default function TelaResultado({
       setTimeout(() => setPhase(5), 3000),  // xp bar
       setTimeout(() => setPhase(6), 3800),  // buttons
     ];
-    if (userId) saveProgress(userId);
     return () => ts.forEach(clearTimeout);
   }, []);
 
-  async function saveProgress(uid: string) {
-    try {
-      const [{ data: prof }, { data: stats }] = await Promise.all([
-        supabase.from("profiles").select("xp,coins,level").eq("user_id", uid).single(),
-        supabase.from("user_stats").select("win_streak,best_streak,total_wins,total_losses").eq("user_id", uid).single(),
-      ]);
-
-      const curLvl = prof?.level || 1;
-      const curXp  = prof?.xp || 0;
-      const curStreak = g ? ((stats?.win_streak || 0) + 1) : 0;
-      const sb = g && curStreak >= 2 ? Math.round(coinBase * 0.25 * (curStreak - 1)) : 0;
-
-      setOldLevel(curLvl); setOldXp(curXp); setXpMax(curLvl * 100);
-      if (g) { setStreak(curStreak); setStreakBonus(sb); }
-
-      let lvl = curLvl, xp = curXp + xpGain;
-      if (xp >= curLvl * 100) { xp -= curLvl * 100; lvl++; setTimeout(() => { setShowLvlUp(true); setTimeout(() => setShowLvlUp(false), 2400); }, 2800); }
-      setNewLevel(lvl); setNewXp(xp);
-
-      try {
-        await recordBattleResult({
-          userId: uid,
-          won: g,
-          dificuldade,
-          coinBase,
-          xpGain,
-          battleStats,
-        });
-      } catch (err) {
-        console.warn("record_battle_result unavailable", err);
-        toast("⚠️ Progresso não sincronizado. Tente novamente em instantes.", { duration: 3500 });
-      }
-    } catch (e) { console.error(e); }
-  }
 
   return (
     <div style={{
@@ -295,7 +260,8 @@ export default function TelaResultado({
         )}
 
         {/* Rewards */}
-        {phase >= 4 && (
+        {phase >= 4 && <p role="status" className="text-muted-foreground">{userId ? 'Recompensas indisponíveis. Nenhum saldo foi alterado.' : 'Partida demonstrativa: sem recompensas persistidas.'}</p>}
+        {false && phase >= 4 && (
           <div style={{ width:"100%",maxWidth:298,display:"flex",flexDirection:"column",gap:8 }}>
             {g && streak >= 2 && <StreakBadge streak={streak} />}
             <div style={{ display:"flex",gap:8 }}>

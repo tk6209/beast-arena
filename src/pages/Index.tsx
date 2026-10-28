@@ -25,7 +25,6 @@ import MonsterUnlockOverlay from "@/components/game/MonsterUnlockOverlay";
 import { MONSTROS } from "@/game/data";
 import { supabase } from "@/integrations/supabase/client";
 import { loadPrefsFromDB } from "@/game/audioPreferences";
-import { postBattleProgression } from "@/game/postBattle";
 import AccountPrompt from "@/components/game/AccountPrompt";
 import ScreenTransition from "@/components/game/ScreenTransition";
 import type { Jogador } from "@/game/engine";
@@ -225,10 +224,7 @@ export default function Index() {
         setCampaignFinished(true);
       }
     }
-    // Season Pass XP (TelaResultado handles stats/missions/achievements)
-    if (user && stats) {
-      postBattleProgression(user.id, ganhou, stats, monstroP1 || "panther").catch(console.error);
-    }
+    // Local results never grant persistent progression. Settlement requires server provenance.
     // Acquisition funnel: after 1st win as guest, show account prompt
     if (!user && ganhou) {
       const wins = parseInt(localStorage.getItem("beast_guest_wins") || "0") + 1;

@@ -3,7 +3,7 @@ import { MONSTROS, PODERES, type CartaData } from "@/game/data";
 import BattleIntro from "@/components/game/BattleIntro";
 import { criarJ, type Jogador, type LogEntry } from "@/game/engine";
 import { criarSessao, ouvirSessao, fecharCanal, type GameSession } from "@/game/multiplayer";
-import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
+import { initGame, choosePower, playCard, passTurn, comboCards } from "@/game/serverApi";
 import { supabase } from "@/integrations/supabase/client";
 import { falar, markGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
@@ -195,10 +195,11 @@ export default function TelaBatalha({
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1, powerLevel }
         ], dificuldade, aiMonstroId);
         if (!sid && result.sessionId) sid = result.sessionId;
-        sessionIdRef.current = sid!;
+        if (!sid) throw new Error('Sessão não criada.');
+        sessionIdRef.current = sid;
         setServerState(result.state);
         if (skipPowerSelect && lastPowerId) {
-          const pr = await choosePower(sid!, slotLocal, lastPowerId);
+          const pr = await choosePower(sid, slotLocal, lastPowerId);
           setServerState(pr.state);
           sfxPoder(); startBattleMusic();
         }
@@ -212,7 +213,7 @@ export default function TelaBatalha({
 
   useEffect(() => {
     const sid = sessionIdRef.current;
-    if (!sid) return;
+    if (!sid || sid.startsWith('demo:')) return;
     const ch = ouvirSessao(sid, (session: GameSession) => {
       if (session.state_json && typeof session.state_json === "object") {
         const ns = session.state_json as unknown as ServerState;
@@ -355,7 +356,7 @@ export default function TelaBatalha({
     for (const evt of (evts || [])) {
       if (evt.type === "card_drop" && evt.card && evt.slot === slotLocal) {
         setCardDropped(evt.card);
-        if (userId) saveCardDrop(userId, evt.card).catch(console.error);
+        // Preview only: collection grants require a recorded server settlement.
       }
       if (evt.type === "game_over") {
         const winner = evt.winner ?? evt.winner;
