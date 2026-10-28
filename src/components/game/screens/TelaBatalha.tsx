@@ -195,10 +195,11 @@ export default function TelaBatalha({
           { slot: slotLocal, nome: nomeJogador, monstroId: monstroP1, powerLevel }
         ], dificuldade, aiMonstroId);
         if (!sid && result.sessionId) sid = result.sessionId;
-        sessionIdRef.current = sid!;
+        if (!sid) throw new Error('Sessão não criada.');
+        sessionIdRef.current = sid;
         setServerState(result.state);
         if (skipPowerSelect && lastPowerId) {
-          const pr = await choosePower(sid!, slotLocal, lastPowerId);
+          const pr = await choosePower(sid, slotLocal, lastPowerId);
           setServerState(pr.state);
           sfxPoder(); startBattleMusic();
         }

@@ -1,10 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 import { requireVerifiedEconomy } from './economyAvailability';
+import { runDemoAction } from './demoEngine';
+
+const demoSessions = new Map<string, any>();
 
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const FN_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/game-engine`;
 
 async function callEngine(action: string, sessionId: string | null, payload: any): Promise<any> {
+  if (sessionId?.startsWith('demo:')) {
+    const state = demoSessions.get(sessionId);
+    if (!state) throw new Error('Partida demonstrativa expirada. Inicie novamente.');
+    if (state.fase === 'resultado') throw new Error('Partida já encerrada.');
+    const result = runDemoAction(action, state, payload);
+    if (result.error) throw new Error(result.error);
+    demoSessions.set(sessionId, result.state);
+    // Never imply the demo grants a collection card.
+    return { ...result, events: result.events.filter((e: any) => e.type !== 'card_drop'), sessionId };
+  }
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
@@ -35,7 +48,17 @@ export async function initGame(
   aiMonstroId?: string,
   playerDeck?: any[]
 ) {
-  return callEngine("init_game", sessionId, { modo, players, dificuldade, aiMonstroId, playerDeck });
+  if (!sessionId && modo === 'ai') {
+    const demoId = `demo:${crypto.randomUUID()}`;
+    const result = runDemoAction('init_game', {}, {
+      modo: 'ai', dificuldade, aiMonstroId,
+      players: players.map(p => ({ slot: p.slot, nome: p.nome, monstroId: p.monstroId, powerLevel: 1 })),
+    });
+    demoSessions.set(demoId, result.state);
+    return { ...result, sessionId: demoId, rewardEligible: false };
+  }
+  // Existing remote init has no verified owner provenance; do not create more unsafe sessions.
+  requireVerifiedEconomy();
 }
 
 /** Save a card earned in battle to user collection */
