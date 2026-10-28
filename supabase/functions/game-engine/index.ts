@@ -916,93 +916,44 @@ function handleInitGame(state: any, payload: any): any {
 /* ═══════════════════════════════════════════════════════════
    ACCOUNT ACTIONS (server-authoritative economy)
 ═══════════════════════════════════════════════════════════ */
-async function addCoinsXp(sb: any, uid: string, coins: number, xpGain: number) {
-  const { data: p } = await sb.from("profiles").select("coins, xp, level").eq("user_id", uid).single();
-  if (!p) return null;
-  let level = p.level || 1, xp = (p.xp || 0) + xpGain;
-  while (xp >= level * 100) { xp -= level * 100; level++; }
-  const upd = { coins: Math.max(0, (p.coins || 0) + coins), xp, level };
-  await sb.from("profiles").update(upd).eq("user_id", uid);
-  return upd;
-}
-
-async function handleAccountAction(sb: any, action: string, uid: string, payload: any): Promise<{ status: number; body: any }> {
-  const today = new Date().toISOString().split("T")[0];
-  switch (action) {
-    case "claim_daily_reward": {
-      const { data: row } = await sb.from("daily_rewards").select("*").eq("user_id", uid).maybeSingle();
-      if (row?.last_claim_date === today) {
-        return { status: 200, body: { data: { alreadyClaimed: true, coins: 0, streak: row.streak } } };
-      }
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-      const streak = row?.last_claim_date === yesterday ? Math.min((row.streak || 0) + 1, 7) : 1;
-      const coins = 50 + (streak - 1) * 25;
-      if (row) await sb.from("daily_rewards").update({ last_claim_date: today, streak }).eq("user_id", uid);
-      else await sb.from("daily_rewards").insert({ user_id: uid, last_claim_date: today, streak });
-      await addCoinsXp(sb, uid, coins, 0);
-      return { status: 200, body: { data: { alreadyClaimed: false, coins, streak } } };
-    }
-    case "claim_mission_reward": {
-      const { data: um } = await sb.from("user_missions").select("*").eq("id", payload.userMissionId).eq("user_id", uid).maybeSingle();
-      if (!um) return { status: 404, body: { error: "Missão não encontrada" } };
-      if (um.claimed) return { status: 400, body: { error: "Já resgatada" } };
-      const { data: m } = await sb.from("daily_missions").select("*").eq("id", um.mission_id).single();
-      if (!m || (!um.completed && um.progress < m.target_value)) return { status: 400, body: { error: "Missão incompleta" } };
-      await sb.from("user_missions").update({ claimed: true, completed: true }).eq("id", um.id);
-      const prof = await addCoinsXp(sb, uid, m.reward_coins || 0, m.reward_xp || 0);
-      return { status: 200, body: { data: { coins: m.reward_coins, xp: m.reward_xp, profile: prof } } };
-    }
-    case "purchase_item": {
-      const { data: item } = await sb.from("shop_items").select("*").eq("id", payload.itemId).eq("active", true).maybeSingle();
-      if (!item) return { status: 404, body: { error: "Item não encontrado" } };
-      const { data: p } = await sb.from("profiles").select("coins, level").eq("user_id", uid).single();
-      if (!p || p.coins < item.price_coins) return { status: 400, body: { error: "Moedas insuficientes" } };
-      if ((p.level || 1) < item.level_required) return { status: 400, body: { error: "Nível insuficiente" } };
-      const invType = item.item_type === "monster_unlock" ? "monster" : item.item_type;
-      const { data: inv } = await sb.from("user_inventory").select("id, quantity")
-        .eq("user_id", uid).eq("item_type", invType).eq("item_key", item.item_key).maybeSingle();
-      if (inv && item.item_type === "monster_unlock") return { status: 400, body: { error: "Já desbloqueado" } };
-      await sb.from("profiles").update({ coins: p.coins - item.price_coins }).eq("user_id", uid);
-      if (inv) await sb.from("user_inventory").update({ quantity: inv.quantity + 1 }).eq("id", inv.id);
-      else await sb.from("user_inventory").insert({ user_id: uid, item_type: invType, item_key: item.item_key, quantity: 1 });
-      return { status: 200, body: { data: { coins: p.coins - item.price_coins } } };
-    }
-    case "record_battle_result": {
-      const won = !!payload.won;
-      const coinBase = Math.max(0, Math.min(500, Number(payload.coinBase) || 0));
-      const xpGain = Math.max(0, Math.min(500, Number(payload.xpGain) || 0));
-      const { data: st } = await sb.from("user_stats").select("*").eq("user_id", uid).maybeSingle();
-      const streak = won ? (st?.win_streak || 0) + 1 : 0;
-      const bonus = won && streak >= 2 ? Math.round(coinBase * 0.25 * (streak - 1)) : 0;
-      const statsUpd = {
-        total_wins: (st?.total_wins || 0) + (won ? 1 : 0),
-        total_losses: (st?.total_losses || 0) + (won ? 0 : 1),
-        win_streak: streak,
-        best_streak: Math.max(st?.best_streak || 0, streak),
-      };
-      if (st) await sb.from("user_stats").update(statsUpd).eq("user_id", uid);
-      else await sb.from("user_stats").insert({ user_id: uid, ...statsUpd });
-      const bs = payload.battleStats || {};
-      await sb.from("battle_history").insert({
-        user_id: uid, won, dificuldade: String(payload.dificuldade || "normal"),
-        mode: String(bs.mode || "ia"), monster_used: String(bs.monster_used || bs.monstroId || "desconhecido"),
-        opponent_monster: bs.opponent_monster ?? null, turns: Number(bs.turns) || 0,
-        cards_played: Number(bs.cards_played) || 0, damage_dealt: Number(bs.damage_dealt) || 0,
-      });
-      const prof = await addCoinsXp(sb, uid, coinBase + bonus, xpGain);
-      return { status: 200, body: { data: { coins: coinBase + bonus, streak, profile: prof } } };
-    }
-    case "save_card_drop": {
-      const card = payload.card || {};
-      const key = String(card.id ?? card.key ?? card.nome ?? "").slice(0, 80);
-      if (!key) return { status: 400, body: { error: "Carta inválida" } };
-      const { data: ex } = await sb.from("user_cards").select("id, quantity").eq("user_id", uid).eq("card_key", key).maybeSingle();
-      if (ex) await sb.from("user_cards").update({ quantity: ex.quantity + 1 }).eq("id", ex.id);
-      else await sb.from("user_cards").insert({ user_id: uid, card_key: key, card_data: card, raridade: String(card.raridade || "comum"), quantity: 1 });
-      return { status: 200, body: { data: { ok: true } } };
-    }
+// Authorized account actions: each RPC is one ACID database transaction.
+// No client-provided rewards, winner, inventory, prices, or card definitions.
+async function handleAccountAction(sb: any, action: string, uid: string, payload: any) {
+  const uuid = (value: unknown) =>
+    typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  const forbidden = ["coinBase", "xpGain", "won", "card", "battleStats", "reward_coins", "reward_xp"];
+  if (forbidden.some(key => Object.prototype.hasOwnProperty.call(payload, key)))
+    return { status: 422, body: { error: "Recompensas e resultados só podem ser determinados pelo servidor." } };
+  const rpcMap: Record<string, { fn: string; args: Record<string, unknown> }> = {
+    claim_daily_reward: { fn: "game_claim_daily", args: { p_uid: uid } },
+    claim_mission_reward: { fn: "game_claim_mission", args: { p_uid: uid, p_mission: payload.userMissionId } },
+    purchase_item: { fn: "game_purchase", args: { p_uid: uid, p_item: payload.itemId, p_request: payload.requestId } },
+    record_battle_result: { fn: "game_settle_battle", args: { p_uid: uid, p_session: payload.sessionId } },
+  };
+  if (action === "save_card_drop") {
+    return { status: 403, body: { error: "Drops são emitidos somente ao finalizar uma sessão verificada." } };
   }
-  return { status: 400, body: { error: "Ação desconhecida" } };
+  if (action === "get_economy_config") {
+    const { data, error } = await sb.from("game_economy_config").select("version,rules").eq("active", true).single();
+    return error ? { status: 503, body: { error: "Configuração indisponível" } }
+      : { status: 200, body: { data } };
+  }
+  const call = rpcMap[action];
+  if (!call) return { status: 400, body: { error: "Ação desconhecida" } };
+  if (action === "claim_mission_reward" && !uuid(payload.userMissionId) ||
+      action === "purchase_item" && (!uuid(payload.itemId) || !uuid(payload.requestId)) ||
+      action === "record_battle_result" && !uuid(payload.sessionId)) {
+    return { status: 422, body: { error: "Identificador inválido ou ausente" } };
+  }
+  const { data, error } = await sb.rpc(call.fn, call.args);
+  if (error) {
+    console.error("Account RPC rejected:", call.fn, error.code, error.message);
+    const e = String(error.message || "");
+    const expected = /already_claimed|already_owned|idempotency_key_reused|insufficient_coins|mission_incomplete|level_required|battle_not_settleable|not_session_owner|session_not_found|item_unavailable|mission_not_found|request_id_required|invalid_difficulty/;
+    const code = expected.test(e) ? 409 : 503;
+    return { status: code, body: { error: expected.test(e) ? e.split("\n")[0] : "Não foi possível confirmar a operação. Nenhum crédito deve ser presumido." } };
+  }
+  return { status: 200, body: { data } };
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1044,7 +995,7 @@ Deno.serve(async (req) => {
     );
 
     // Account-level actions (no game session). Always use the verified user id, never payload.userId.
-    const ACCOUNT_ACTIONS = new Set(["claim_daily_reward", "claim_mission_reward", "purchase_item", "record_battle_result", "save_card_drop"]);
+    const ACCOUNT_ACTIONS = new Set(["claim_daily_reward", "claim_mission_reward", "purchase_item", "record_battle_result", "save_card_drop", "get_economy_config"]);
     if (ACCOUNT_ACTIONS.has(action)) {
       const out = await handleAccountAction(supabase, action, requesterUserId!, payload || {});
       return new Response(JSON.stringify(out.body), {
@@ -1052,6 +1003,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Initialization may never claim another player's session or arbitrary monster/level/deck.
+    // AI rewards are enabled only for an authenticated owner in slot 0.
+    if (action === "init_game" && !rawSessionId) {
+      if (payload?.modo !== "ai" ||
+          !Array.isArray(payload?.players) || payload.players.length !== 1 ||
+          payload.players[0]?.slot !== 0 ||
+          !MONSTROS[payload.players[0]?.monstroId] ||
+          !["facil", "medio", "avancado"].includes(payload.dificuldade || "medio")) {
+        return new Response(JSON.stringify({ error: "Configuração da sessão inválida" }), {
+          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const monster = payload.players[0].monstroId;
+      const { data: owned } = await supabase.from("user_inventory")
+        .select("id").eq("user_id",requesterUserId).eq("item_type","monster").eq("item_key",monster).maybeSingle();
+      if (!owned && monster !== "panther" && monster !== "banana") {
+        return new Response(JSON.stringify({ error: "Monstro não desbloqueado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: mPower } = await supabase.from("user_monsters")
+        .select("power_level").eq("user_id",requesterUserId).eq("monster_id",monster).maybeSingle();
+      payload.players[0].powerLevel = Math.max(1, Math.min(11, Number(mPower?.power_level || 1)));
+      // Never use playerDeck or pc.deck from request. Server validates owned cards.
+      const { data: saved } = await supabase.from("player_decks")
+        .select("cards").eq("user_id",requesterUserId).eq("monster_id",monster).maybeSingle();
+      const { data: ownedCards } = await supabase.from("user_cards")
+        .select("card_key,card_data,quantity").eq("user_id",requesterUserId);
+      const cards = Array.isArray(saved?.cards) ? saved.cards : [];
+      const matched: any[] = [];
+      const counts = new Map<string,number>();
+      for (const card of cards) {
+        const row = (ownedCards || []).find((entry: any) =>
+          entry.card_data?.nome === card?.nome && entry.card_data?.tipo === card?.tipo);
+        if (!row) { matched.length = 0; break; }
+        const key = String(row.card_key);
+        const current = (counts.get(key) || 0) + 1;
+        if (current > Math.min(2,Number(row.quantity) || 0)) { matched.length=0; break; }
+        counts.set(key,current);
+        matched.push(row.card_data);
+      }
+      // Enforce 10 validated cards, otherwise use the engine's server-built starter deck.
+      payload.players[0].deck = cards.length === 10 && matched.length === 10 ? matched : undefined;
+      delete payload.playerDeck;
+    }
     let sessionId = rawSessionId;
     if (!sessionId && action === "init_game") {
       const joinCode = Math.random().toString(36).slice(2, 7).toUpperCase();
@@ -1064,9 +1058,20 @@ Deno.serve(async (req) => {
     }
 
 
+    // Existing sessions are immutable once finished, including repeated init_game.
+    if (sessionId && action === "init_game" && rawSessionId) {
+      const { data: gp } = await supabase.from("game_players")
+        .select("slot").eq("session_id",sessionId).eq("user_id",requesterUserId).maybeSingle();
+      const { data: old } = await supabase.from("game_sessions")
+        .select("status").eq("id",sessionId).maybeSingle();
+      if (!gp || !old || old.status === "finished") {
+        return new Response(JSON.stringify({ error: "Sessão não autorizada ou encerrada" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
     // Enforce slot ownership for state-mutating actions on existing sessions.
     const MUTATING_ACTIONS = new Set(["choose_power", "play_card", "pass_turn", "combo_cards"]);
-    if (sessionId && MUTATING_ACTIONS.has(action) && payload?.slot !== undefined) {
+    if (sessionId && MUTATING_ACTIONS.has(action)) {
       if (!isAuthenticated || !requesterUserId) {
         return new Response(JSON.stringify({ error: "Autenticação necessária" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -1087,11 +1092,17 @@ Deno.serve(async (req) => {
     }
 
     let state: any = {};
+    let previousUpdatedAt: string | null = null;
     if (sessionId && action !== "init_game") {
       const { data: session } = await supabase
         .from("game_sessions")
-        .select("state_json, current_turn, status")
+        .select("state_json, current_turn, status, updated_at")
         .eq("id", sessionId).single();
+      if (!session || session.status === "finished") {
+        return new Response(JSON.stringify({ error: "Sessão inexistente ou encerrada" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      previousUpdatedAt = session.updated_at;
       if (session?.state_json) state = session.state_json;
     }
 
@@ -1115,19 +1126,44 @@ Deno.serve(async (req) => {
     }
 
     if (sessionId) {
-      await supabase.from("game_sessions").update({
+      if (action === "init_game" && !rawSessionId) {
+        const p = result.state.players[0];
+        const { error: gpError } = await supabase.from("game_players").insert({
+          session_id: sessionId, user_id: requesterUserId, slot: 0,
+          nickname: String(payload.players[0].nome || "Jogador").slice(0,40),
+          monster_id: p.monstro.id, hp: p.hp, max_hp: p.maxHp,
+          state_json: { user_id: requesterUserId },
+        });
+        if (gpError) throw new Error("Falha ao vincular a sessão ao usuário");
+      }
+      let writing = supabase.from("game_sessions").update({
         state_json: result.state,
         current_turn: result.state.currentTurn || 0,
         status: result.state.fase === "resultado" ? "finished" : "active",
       }).eq("id", sessionId);
+      if (previousUpdatedAt) writing = writing.eq("updated_at", previousUpdatedAt);
+      const { data: savedSession, error: stateError } = await writing.select("id").maybeSingle();
+      if (stateError || !savedSession) {
+        return new Response(JSON.stringify({ error: "Conflito de estado: atualize a partida" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
       for (const evt of (result.events || [])) {
-        await supabase.from("game_events").insert({
+        const { error: eventError } = await supabase.from("game_events").insert({
           session_id: sessionId,
           player_slot: payload?.slot ?? 0,
           event_type: evt.type,
           payload_json: evt,
         });
+        if (eventError) throw new Error("Falha ao persistir evento de batalha");
+      }
+      if (result.state?.fase === "resultado" && result.state?.modo === "ai") {
+        const { error: rewardError } = await supabase.rpc("game_settle_battle",
+          { p_uid: requesterUserId, p_session: sessionId });
+        if (rewardError) {
+          // Keep battle finished but do not invent a reward. The idempotent RPC is retryable.
+          console.error("Pending battle settlement:", sessionId, rewardError.code, rewardError.message);
+        }
       }
     }
 
