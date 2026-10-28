@@ -4,6 +4,7 @@ import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { toast } from 'sonner';
 
 interface Props {
   user: User;
@@ -39,10 +40,7 @@ export default function TelaSeasonPass({ user, onVoltar }: Props) {
   }
 
   async function claimTier(tier: number) {
-    if (!pass) return;
-    const claimed = [...(pass.claimed_tiers || []), tier];
-    await supabase.from("season_pass").update({ claimed_tiers: claimed }).eq("user_id", user.id);
-    setPass({ ...pass, claimed_tiers: claimed });
+    toast('Resgate temporariamente indisponível. Nenhuma recompensa foi alterada.');
   }
 
   const currentXp = pass?.xp || 0;

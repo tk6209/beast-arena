@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { requireVerifiedEconomy } from './economyAvailability';
 
 /** XP Boost multiplier (e.g. 2x). Could vary per item_key in the future. */
 const BOOST_MULTIPLIER: Record<string, number> = {
@@ -31,14 +32,5 @@ export async function getActiveXpBoost(userId: string): Promise<XpBoostStatus> {
 
 /** Consume one charge of the active boost. Returns new remaining or null. */
 export async function consumeXpBoost(userId: string): Promise<number | null> {
-  const status = await getActiveXpBoost(userId);
-  if (!status.active || !status.itemKey) return null;
-  const newQty = Math.max(0, status.remaining - 1);
-  await supabase
-    .from("user_inventory")
-    .update({ quantity: newQty })
-    .eq("user_id", userId)
-    .eq("item_type", "xp_boost")
-    .eq("item_key", status.itemKey);
-  return newQty;
+  requireVerifiedEconomy();
 }

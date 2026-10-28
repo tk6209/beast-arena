@@ -98,8 +98,8 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
         setCoins(c => c - item.price_coins);
         setMessage("⚡ Boost XP 2x ativado para 5 partidas!");
       }
-    } catch {
-      setMessage("Compra não autorizada no cliente. Tente novamente.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Compra indisponível. Nenhum saldo foi alterado.");
       setBuying(null);
       setTimeout(() => setMessage(null), 2500);
       return;

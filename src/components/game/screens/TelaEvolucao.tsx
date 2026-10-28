@@ -10,6 +10,7 @@ import {
 import MonsterAvatar from "@/components/game/MonsterAvatar";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { toast } from "@/hooks/use-toast";
+import { requireVerifiedEconomy } from '@/game/economyAvailability';
 
 interface Props {
   user: User;
@@ -47,7 +48,7 @@ export default function TelaEvolucao({ user, monstroId, onVoltar }: Props) {
       // Seed if missing (shouldn't happen after backfill, but safe)
       const seed = { monster_id: monstroId, power_level: 1, shards: 0,
         selected_gadget: null, selected_star_power: null, selected_hyper: null, selected_gear: null };
-      await supabase.from("user_monsters").insert({ user_id: user.id, ...seed });
+      // Read-only placeholder, never grant ownership from the device.
       setUm(seed);
     }
   }
@@ -70,44 +71,14 @@ export default function TelaEvolucao({ user, monstroId, onVoltar }: Props) {
     if (busy || !cost || !canUp) return;
     setBusy(true);
     try {
-      const newPl = um!.power_level + 1;
-      const newShards = um!.shards - cost.shards;
-      const newCoins  = coins - cost.coins;
-      const { error: e1 } = await supabase.from("user_monsters")
-        .update({ power_level: newPl, shards: newShards })
-        .eq("user_id", user.id).eq("monster_id", monstroId);
-      if (e1) throw e1;
-      const { error: e2 } = await supabase.from("profiles")
-        .update({ coins: newCoins }).eq("user_id", user.id);
-      if (e2) throw e2;
-
-      setUm({ ...um!, power_level: newPl, shards: newShards });
-      setCoins(newCoins);
-      setShowLvlUp(true);
-      setTimeout(() => setShowLvlUp(false), 1400);
-
-      const slot = unlocksPerkAt(newPl);
-      if (slot) {
-        setTimeout(() => setPerkPicker(slot), 1000);
-      } else {
-        toast({ title: `🎉 ${m.nome} subiu para PL ${newPl}!`, description: `HP +${hpNext - hpNow} · Dano +${atkNext - atkNow}` });
-      }
+      requireVerifiedEconomy();
     } catch (e: any) {
       toast({ title: "Erro ao evoluir", description: e.message, variant: "destructive" });
     } finally { setBusy(false); }
   }
 
   async function escolherPerk(slot: PerkSlot, perkId: string) {
-    const col = `selected_${slot}` as const;
-    const patch: Record<string, string> = { [col]: perkId };
-    const { error } = await supabase.from("user_monsters")
-      .update(patch as any)
-      .eq("user_id", user.id).eq("monster_id", monstroId);
-    if (error) { toast({ title: "Erro", description: error.message, variant:"destructive" }); return; }
-    setUm({ ...um!, [col]: perkId } as any);
-    setPerkPicker(null);
-    const perk = getPerk(slot, perkId)!;
-    toast({ title: `${perk.emoji} ${perk.nome} desbloqueado!`, description: perk.desc });
+    toast({ title: 'Seleção indisponível', description: 'Nenhuma progressão foi alterada.', variant: 'destructive' });
   }
 
   const shardCost  = cost?.shards ?? 0;

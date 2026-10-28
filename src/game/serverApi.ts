@@ -97,15 +97,15 @@ export async function purchaseShopItem(payload: {
   itemType: string;
   itemKey: string;
   quantity?: number;
-}) {
+}): Promise<{ data: { coins: number; eventKey: string } }> {
   requireVerifiedEconomy();
 }
 
-export async function claimDailyReward(payload: { userId: string }) {
+export async function claimDailyReward(payload: { userId: string }): Promise<{ data: { alreadyClaimed: boolean; coins: number; streak: number } }> {
   requireVerifiedEconomy();
 }
 
-export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
+export async function claimMissionReward(payload: { userId: string; userMissionId: string }): Promise<{ data: { coins: number; xp: number } }> {
   requireVerifiedEconomy();
 }
 
