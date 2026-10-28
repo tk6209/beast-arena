@@ -302,7 +302,7 @@ export default function TelaResultado({
                 <span style={{ fontSize:24,animation:"coinPop .5s .3s ease both" }}>💰</span>
                 <div>
                   <div style={{ fontFamily:"Bangers,cursive",fontSize:24,color:"#ffd54f",letterSpacing:1,lineHeight:1 }}>
-                    +<Counter target={coinBase + streakBonus} color="#ffd54f" />
+                    +<Counter target={coinBase} color="#ffd54f" />
                   </div>
                   <div style={{ fontFamily:"Nunito,sans-serif",fontSize:9,color:"rgba(255,213,79,.6)" }}>
                     MOEDAS{streakBonus > 0 ? ` (+${streakBonus})` : ""}
