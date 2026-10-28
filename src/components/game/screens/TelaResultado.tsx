@@ -7,6 +7,7 @@ import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
 import { supabase } from "@/integrations/supabase/client";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
+import { recordBattleResult, type SettlementReceipt } from "@/game/serverApi";
 import { MONSTROS } from "@/game/data";
 import type { Jogador } from "@/game/engine";
 
@@ -18,7 +19,7 @@ interface TelaResultadoProps {
   vencedor: Jogador | null; nomeJogador?: string;
   onRecomecar: () => void; onSair: () => void; onContinuar?: () => void;
   campaignFinished?: boolean; campaignWins?: number; campaignTotal?: number;
-  campaignIndex?: number; userId?: string; dificuldade?: string; battleStats?: BattleStats;
+  campaignIndex?: number; userId?: string; dificuldade?: string; battleStats?: BattleStats; sessionId?: string|null;
 }
 
 function Counter({ target, duration = 1100, color = "#ffd54f" }:
@@ -132,7 +133,7 @@ const CSS = `
 export default function TelaResultado({
   vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0,
-  campaignIndex = 0, userId, dificuldade = "medio", battleStats,
+  campaignIndex = 0, userId, dificuldade = "medio", battleStats, sessionId,
 }: TelaResultadoProps) {
   const g = !!vencedor;
   const monstroId = vencedor?.monstro?.id;
@@ -140,9 +141,12 @@ export default function TelaResultado({
   const monsterGlow = monstroId && MONSTROS[monstroId] ? MONSTROS[monstroId].glow || "#00e5ff" : "#00e5ff";
   const canContinue = g && !campaignFinished && campaignIndex < campaignTotal - 1;
 
-  // No projected credits: authoritative settlement is not activated in this cycle.
-  const coinBase = 0;
-  const xpGain = 0;
+  // Production stays fail-closed until the SQL+HTTP P0 gate enables verified settlement.
+  const enabled=import.meta.env.VITE_BEAST_TRUSTED_ECONOMY==='true';
+  const [reward,setReward]=useState<SettlementReceipt|null>(null);
+  const [rewardError,setRewardError]=useState<string|null>(null);
+  const coinBase=reward?.coins||0;
+  const xpGain=reward?.xp||0;
 
   const [phase, setPhase]             = useState(0);
   const [streak, setStreak]           = useState(0);
@@ -178,6 +182,18 @@ export default function TelaResultado({
     return () => ts.forEach(clearTimeout);
   }, []);
 
+
+  useEffect(()=>{
+    if(!enabled||!userId||!sessionId||sessionId.startsWith('demo:'))return;
+    let alive=true;
+    recordBattleResult({sessionId}).then(({data})=>{
+      if(!alive)return;
+      if(typeof data?.coins!=='number'||typeof data?.xp!=='number')throw new Error('Recibo inválido.');
+      setReward(data);setStreak(data.streak||0);setStreakBonus(data.bonus||0);
+      if(data.profile){setNewLevel(data.profile.level);setNewXp(data.profile.xp);setXpMax(data.profile.level*100);}
+    }).catch(e=>{if(alive)setRewardError(e instanceof Error?e.message:'Sem confirmação do servidor.');});
+    return()=>{alive=false;};
+  },[enabled,userId,sessionId]);
 
   return (
     <div style={{
@@ -260,8 +276,12 @@ export default function TelaResultado({
         )}
 
         {/* Rewards */}
-        {phase >= 4 && <p role="status" className="text-muted-foreground">{userId ? 'Recompensas indisponíveis. Nenhum saldo foi alterado.' : 'Partida demonstrativa: sem recompensas persistidas.'}</p>}
-        {false && phase >= 4 && (
+        {phase >= 4 && !reward && <p role="status" className="text-muted-foreground">
+          {!enabled||!userId||!sessionId||sessionId.startsWith('demo:')
+            ? 'Partida demonstrativa/quarentena: nenhuma recompensa persistida.'
+            : rewardError ? 'Recompensa não confirmada: '+rewardError : 'Confirmando com o servidor…'}
+        </p>}
+        {!!reward && phase >= 4 && (
           <div style={{ width:"100%",maxWidth:298,display:"flex",flexDirection:"column",gap:8 }}>
             {g && streak >= 2 && <StreakBadge streak={streak} />}
             <div style={{ display:"flex",gap:8 }}>
@@ -271,7 +291,7 @@ export default function TelaResultado({
                 <span style={{ fontSize:24,animation:"coinPop .5s .3s ease both" }}>💰</span>
                 <div>
                   <div style={{ fontFamily:"Bangers,cursive",fontSize:24,color:"#ffd54f",letterSpacing:1,lineHeight:1 }}>
-                    +<Counter target={coinBase + streakBonus} color="#ffd54f" />
+                    +<Counter target={coinBase} color="#ffd54f" />
                   </div>
                   <div style={{ fontFamily:"Nunito,sans-serif",fontSize:9,color:"rgba(255,213,79,.6)" }}>
                     MOEDAS{streakBonus > 0 ? ` (+${streakBonus})` : ""}
