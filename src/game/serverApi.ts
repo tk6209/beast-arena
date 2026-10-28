@@ -71,6 +71,11 @@ export async function initGame(
 
 /** Save a card earned in battle to user collection */
 // Card drops are granted only by verified session settlement. No client method.
+/** Legacy compatibility: an untrusted caller can NEVER mint a card. */
+export async function saveCardDrop(_userId: string, _card: unknown): Promise<void> {
+  requireVerifiedEconomy();
+}
+
 
 /** Load player deck for a monster */
 export async function loadPlayerDeck(userId: string, monstroId: string): Promise<any[] | null> {
