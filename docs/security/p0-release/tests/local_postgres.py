@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'postgres', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
+BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'host=127.0.0.1 port=55439 user=lovable dbname=postgres sslmode=disable', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
 def sql(query, ok=True):
     out = subprocess.run(BASE + ['-c', query], capture_output=True, text=True)
     if ok and out.returncode: raise AssertionError(out.stderr)
