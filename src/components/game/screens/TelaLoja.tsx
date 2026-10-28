@@ -70,17 +70,14 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
     setBuying(item.id);
 
     try {
-      await purchaseShopItem({
-        userId: user.id,
-        itemId: item.id,
-        itemType: item.item_type,
-        itemKey: item.item_key,
-        quantity: 1,
-      });
+      const requestId = crypto.randomUUID();
+      const { data: receipt } = await purchaseShopItem({ itemId: item.id, requestId });
+      if (typeof receipt?.coins !== "number") throw new Error("Recibo inválido.");
+      // Server is authoritative for balances; never locally subtract the displayed price.
+      setCoins(receipt.coins);
 
       if (item.item_type === "monster_unlock") {
         setOwnedItems(prev => new Set([...prev, invKey]));
-        setCoins(c => c - item.price_coins);
         setMessage(`${item.emoji} ${item.name} desbloqueado! 🎉`);
         try {
           const { triggerMonsterUnlock } = await import("@/components/game/MonsterUnlockOverlay");
@@ -88,14 +85,12 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
         } catch {}
       } else if (item.item_type === "swarm_pack") {
         const swarmItems = generatePackSwarms(item.item_key);
-        setCoins(c => c - item.price_coins);
         setPackReveal({
           items: swarmItems.map(s => ({ nome: s.nome, emoji: s.emoji, raridade: s.raridade })),
           showing: true,
           currentIdx: 0,
         });
       } else if (item.item_type === "xp_boost") {
-        setCoins(c => c - item.price_coins);
         setMessage("⚡ Boost XP 2x ativado para 5 partidas!");
       }
     } catch {
