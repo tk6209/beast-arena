@@ -365,6 +365,7 @@ export default function Index() {
             onAmigos={() => setTela("amigos")}
             onColecao={() => setTela("colecao")}
             onEvoluir={() => { setMonstroMode("evolution"); setTela("monstro"); }}
+            onTrocar={() => { setMonstroMode("battle"); setTela("monstro"); }}
             onLogout={handleLogout}
           />
         </>
