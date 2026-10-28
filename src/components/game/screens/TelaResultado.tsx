@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { toast } from "sonner";
 import { falar } from "@/game/voice";
 import { pageBg, DS } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import { sfxVitoria, sfxDerrota } from "@/game/sfx";
-import { supabase } from "@/integrations/supabase/client";
 import { MONSTER_IMAGES } from "@/game/monsterImages";
 import { recordBattleResult } from "@/game/serverApi";
 import { MONSTROS } from "@/game/data";
