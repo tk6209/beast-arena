@@ -54,14 +54,14 @@ CREATE POLICY "Users view own reward ledger" ON public.game_reward_ledger
 -- Defense-in-depth: writable game state must be exclusive to the authenticated server.
 -- Front-end write flows must be moved to trusted endpoints BEFORE production cutover.
 REVOKE INSERT, UPDATE, DELETE ON public.game_sessions, public.game_players, public.game_events
-  FROM anon, authenticated;
+  FROM PUBLIC, anon, authenticated;
 REVOKE INSERT, UPDATE, DELETE ON public.user_cards, public.battle_history,
   public.user_inventory, public.user_missions, public.user_stats,
   public.daily_rewards, public.user_monsters, public.season_pass,
-  public.player_leagues, public.gem_transactions FROM anon, authenticated;
+  public.player_leagues, public.gem_transactions FROM PUBLIC, anon, authenticated;
 -- Prevent coins, gems, XP and levels being changed through profiles.update() or forged inserts.
 -- Account creation already occurs via the handle_new_user SECURITY DEFINER trigger.
-REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM PUBLIC, anon, authenticated;
 GRANT UPDATE (display_name, avatar_url) ON public.profiles TO authenticated;
 -- Client reads remain supported under existing owner-only RLS policies.
 
@@ -196,9 +196,99 @@ BEGIN
   SELECT * INTO v_session FROM public.game_sessions WHERE id=p_session FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'session_not_found'; END IF;
   IF v_session.status::text<>'finished'
-     OR v_session.state_json->>'fase'<>'resultado'
-     OR v_session.state_json->>'modo'<>'ai'
-     OR (v_session.state_json->>'vencedor') !~ '^[01]$'
+     OR coalesce(v_session.state_json->>'fase','')<>'resultado'
+     OR coalesce(v_session.state_json->>'modo','')<>'ai'
+     OR coalesce(v_session.state_json->>'vencedor','') !~ '^[01]
+  THEN RAISE EXCEPTION 'battle_not_settleable'; END IF;
+  SELECT slot INTO v_slot FROM public.game_players
+    WHERE session_id=p_session AND user_id=p_uid;
+  IF NOT FOUND OR v_slot<>0 THEN RAISE EXCEPTION 'not_session_owner'; END IF;
+  PERFORM 1 FROM public.profiles WHERE user_id=p_uid FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'profile_missing'; END IF;
+  SELECT * INTO v_existing FROM public.game_reward_ledger
+    WHERE user_id=p_uid AND event_key='battle:'||p_session::text;
+  IF FOUND THEN RETURN jsonb_build_object('alreadyProcessed',true,'coins',v_existing.coins_delta,
+    'xp',v_existing.xp_delta,'streak',coalesce((v_existing.metadata->>'streak')::int,0)); END IF;
+  v_diff:=v_session.state_json->>'dificuldade';
+  SELECT rules INTO STRICT v_rules FROM public.game_economy_config WHERE active;
+  IF v_diff NOT IN ('facil','medio','avancado') OR NOT (v_rules->'battle' ? v_diff)
+  THEN RAISE EXCEPTION 'invalid_difficulty'; END IF;
+  v_won:=(v_session.state_json->>'vencedor')::int = v_slot;
+  INSERT INTO public.user_stats(user_id) VALUES(p_uid) ON CONFLICT(user_id) DO NOTHING;
+  SELECT win_streak INTO v_streak FROM public.user_stats WHERE user_id=p_uid FOR UPDATE;
+  v_streak:=CASE WHEN v_won THEN least(coalesce(v_streak,0)+1,100000) ELSE 0 END;
+  v_coins:=CASE WHEN v_won THEN (v_rules->'battle'->v_diff->>'win_coins')::int
+                        ELSE (v_rules->'loss'->>'coins')::int END;
+  v_xp:=CASE WHEN v_won THEN (v_rules->'battle'->v_diff->>'win_xp')::int
+                     ELSE (v_rules->'loss'->>'xp')::int END;
+  v_bonus:=CASE WHEN v_won THEN
+    round(v_coins*coalesce((v_rules->>'win_streak_bonus_pct')::numeric,0)*
+      greatest(0,least(v_streak,coalesce((v_rules->>'win_streak_bonus_max')::int,5))-1))::int
+    ELSE 0 END;
+  v_coins:=v_coins+v_bonus;
+  IF v_coins<0 OR v_xp<0 THEN RAISE EXCEPTION 'invalid_battle_economy'; END IF;
+  v_meta:=jsonb_build_object('session_id',p_session,'won',v_won,'streak',v_streak,
+    'difficulty',v_diff,'bonus',v_bonus,'config_version',(SELECT version FROM public.game_economy_config WHERE active));
+  INSERT INTO public.game_reward_ledger(user_id,event_key,kind,coins_delta,xp_delta,metadata)
+    VALUES(p_uid,'battle:'||p_session::text,'battle',v_coins,v_xp,v_meta);
+  UPDATE public.user_stats SET
+    total_wins=coalesce(total_wins,0)+CASE WHEN v_won THEN 1 ELSE 0 END,
+    total_losses=coalesce(total_losses,0)+CASE WHEN v_won THEN 0 ELSE 1 END,
+    win_streak=v_streak,
+    best_streak=greatest(coalesce(best_streak,0),v_streak)
+    WHERE user_id=p_uid;
+  INSERT INTO public.battle_history(user_id,session_id,won,monster_used,opponent_monster,mode,dificuldade,turns)
+    VALUES(p_uid,p_session,v_won,
+      coalesce(v_session.state_json->'players'->0->'monstro'->>'id','panther'),
+      v_session.state_json->'players'->1->'monstro'->>'id',
+      'ai',v_diff,coalesce((v_session.state_json->>'turno')::int,0));
+  UPDATE public.season_pass SET xp=xp+CASE WHEN v_won
+    THEN coalesce((v_rules->>'season_win_xp')::int,20) ELSE coalesce((v_rules->>'season_loss_xp')::int,5) END
+    WHERE user_id=p_uid;
+  INSERT INTO public.user_monsters(user_id,monster_id,power_level,shards,total_battles)
+    VALUES(p_uid,coalesce(v_session.state_json->'players'->0->'monstro'->>'id','panther'),1,
+      CASE WHEN v_won THEN (v_rules->>'shards_win')::int ELSE (v_rules->>'shards_loss')::int END,1)
+    ON CONFLICT(user_id,monster_id) DO UPDATE
+    SET shards=public.user_monsters.shards+excluded.shards,
+      total_battles=public.user_monsters.total_battles+1;
+  -- Only server-generated events may yield a card; game_events client writes are revoked.
+  IF v_won THEN
+    SELECT ge.payload_json->'card' INTO v_card FROM public.game_events ge
+    WHERE ge.session_id=p_session AND ge.event_type='card_drop' AND (ge.payload_json->>'slot')::int=v_slot
+    ORDER BY ge.created_at DESC LIMIT 1;
+    IF v_card IS NOT NULL AND v_card ? 'nome' AND v_card ? 'tipo' THEN
+      v_card_key:=left(v_card->>'nome'||':'||v_card->>'tipo',80);
+      INSERT INTO public.user_cards(user_id,card_key,card_data,raridade,quantity)
+        VALUES(p_uid,v_card_key,v_card,coalesce(v_card->>'raridade','comum'),1)
+        ON CONFLICT(user_id,card_key) DO UPDATE SET quantity=public.user_cards.quantity+1;
+    END IF;
+  END IF;
+  -- Update only battle-count missions; event-level stats must come from verified game events.
+  UPDATE public.user_missions um SET
+    progress=least(dm.target_value,um.progress+CASE WHEN dm.mission_type='play_battles' THEN 1
+      WHEN dm.mission_type='win_battles' AND v_won THEN 1 ELSE 0 END),
+    completed=um.completed OR um.progress+CASE WHEN dm.mission_type='play_battles' THEN 1
+      WHEN dm.mission_type='win_battles' AND v_won THEN 1 ELSE 0 END>=dm.target_value
+    FROM public.daily_missions dm
+    WHERE um.user_id=p_uid AND um.mission_id=dm.id
+      AND um.assigned_date=(now() AT TIME ZONE 'UTC')::date AND NOT um.claimed
+      AND dm.mission_type IN ('play_battles','win_battles');
+  v_profile:=public.game_apply_progress(p_uid,v_coins,v_xp);
+  RETURN jsonb_build_object('alreadyProcessed',false,'coins',v_coins,'xp',v_xp,
+    'bonus',v_bonus,'streak',v_streak,'won',v_won,'profile',v_profile);
+END $$;
+
+REVOKE ALL ON FUNCTION public.game_apply_progress(uuid,integer,integer) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.game_claim_daily(uuid) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.game_claim_mission(uuid,uuid) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.game_purchase(uuid,uuid,uuid) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.game_settle_battle(uuid,uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.game_apply_progress(uuid,integer,integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.game_claim_daily(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.game_claim_mission(uuid,uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.game_purchase(uuid,uuid,uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.game_settle_battle(uuid,uuid) TO service_role;
+
   THEN RAISE EXCEPTION 'battle_not_settleable'; END IF;
   SELECT slot INTO v_slot FROM public.game_players
     WHERE session_id=p_session AND user_id=p_uid;
