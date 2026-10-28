@@ -213,7 +213,7 @@ export default function TelaBatalha({
 
   useEffect(() => {
     const sid = sessionIdRef.current;
-    if (!sid) return;
+    if (!sid || sid.startsWith('demo:')) return;
     const ch = ouvirSessao(sid, (session: GameSession) => {
       if (session.state_json && typeof session.state_json === "object") {
         const ns = session.state_json as unknown as ServerState;
