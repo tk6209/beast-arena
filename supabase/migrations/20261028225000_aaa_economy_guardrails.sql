@@ -66,7 +66,7 @@ REVOKE INSERT, UPDATE, DELETE ON public.user_cards, public.battle_history,
 -- Prevent coins, gems, XP and levels being changed through profiles.update() or forged inserts.
 -- Account creation already occurs via the handle_new_user SECURITY DEFINER trigger.
 REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM PUBLIC, anon, authenticated;
-GRANT UPDATE (display_name, avatar_url) ON public.profiles TO authenticated;
+GRANT UPDATE (display_name, display_name_normalized, name_changed_at, avatar_url) ON public.profiles TO authenticated;
 -- Client reads remain supported under existing owner-only RLS policies.
 
 -- SQL functions run in the same DB transaction as the caller's RPC, with all
