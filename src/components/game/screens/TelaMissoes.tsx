@@ -59,7 +59,7 @@ export default function TelaMissoes({ user, onVoltar }: Props) {
     if (!mission || um.claimed) return;
 
     try {
-      await claimMissionReward({ userId: user.id, userMissionId: um.id });
+      await claimMissionReward({ userMissionId: um.id });
       setUserMissions(prev => prev.map(u => u.id === um.id ? { ...u, claimed: true } : u));
     } catch {
       // server-authoritative path unavailable
