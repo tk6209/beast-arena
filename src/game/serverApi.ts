@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { requireVerifiedEconomy } from './economyAvailability';
 
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const FN_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/game-engine`;
@@ -39,7 +40,7 @@ export async function initGame(
 
 /** Save a card earned in battle to user collection */
 export async function saveCardDrop(userId: string, card: any): Promise<void> {
-  return callEngine("save_card_drop", null, { userId, card });
+  requireVerifiedEconomy();
 }
 
 /** Load player deck for a monster */
@@ -57,11 +58,12 @@ export async function loadPlayerDeck(userId: string, monstroId: string): Promise
 /** Save player deck */
 export async function savePlayerDeck(userId: string, monstroId: string, cards: any[]): Promise<void> {
   const { supabase } = await import("@/integrations/supabase/client");
-  await supabase.from("player_decks").upsert({
+  const { error } = await supabase.from("player_decks").upsert({
     user_id: userId,
     monster_id: monstroId,
     cards,
   }, { onConflict: "user_id,monster_id" });
+  if (error) throw error;
 }
 
 export async function choosePower(sessionId: string, slot: number, powerId: string) {
@@ -80,15 +82,13 @@ export async function comboCards(sessionId: string, slot: number, cardId1: numbe
   return callEngine("combo_cards", sessionId, { slot, cardId1, cardId2 });
 }
 
-export async function recordBattleResult(payload: {
-  userId: string;
-  won: boolean;
-  dificuldade: string;
-  coinBase: number;
-  xpGain: number;
-  battleStats?: any;
-}) {
-  return callEngine("record_battle_result", null, payload);
+export interface SettlementReceipt {
+  coins: number; xp: number; streak: number; streakBonus: number;
+  profile: { coins: number; xp: number; level: number };
+  configVersion: string; eventKey: string;
+}
+export async function recordBattleResult(payload: { sessionId: string }): Promise<{ data: SettlementReceipt }> {
+  requireVerifiedEconomy();
 }
 
 export async function purchaseShopItem(payload: {
@@ -98,15 +98,15 @@ export async function purchaseShopItem(payload: {
   itemKey: string;
   quantity?: number;
 }) {
-  return callEngine("purchase_item", null, payload);
+  requireVerifiedEconomy();
 }
 
 export async function claimDailyReward(payload: { userId: string }) {
-  return callEngine("claim_daily_reward", null, payload);
+  requireVerifiedEconomy();
 }
 
 export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
-  return callEngine("claim_mission_reward", null, payload);
+  requireVerifiedEconomy();
 }
 
 /** Accept a friend request: insert friendship + mark request accepted */
