@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { claimDailyReward } from "@/game/serverApi";
+import { claimDailyReward, getEconomyConfig } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -9,10 +8,11 @@ interface Props {
   onClose: () => void;
 }
 
-const STREAK_REWARDS = [10, 15, 20, 30, 40, 50, 75]; // coins per streak day
 
 export default function TelaDailyReward({ user, onClose }: Props) {
   const [claimed, setClaimed] = useState(false);
+  const [streakRewards, setStreakRewards] = useState<number[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [reward, setReward] = useState(0);
   const [streak, setStreak] = useState(1);
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
@@ -24,30 +24,24 @@ export default function TelaDailyReward({ user, onClose }: Props) {
 
   async function checkAndClaim() {
     try {
-      const { data } = await claimDailyReward({ userId: user.id });
-      if (data?.alreadyClaimed) {
-        setAlreadyClaimed(true);
-      } else {
-        setClaimed(true);
+      const config = await getEconomyConfig();
+      const official = config.data?.rules?.daily_coins;
+      if (!Array.isArray(official) || official.length !== 7 || official.some(n => !Number.isInteger(n) || n < 0)) {
+        throw new Error("Tabela de recompensas não validada.");
       }
-      setReward(data?.coins ?? 0);
-      setStreak(data?.streak ?? 1);
-    } catch {
-      const { data } = await supabase
-        .from("daily_rewards")
-        .select("last_claim_date, streak")
-        .eq("user_id", user.id)
-        .single();
-      const today = new Date().toISOString().split("T")[0];
-      if (data?.last_claim_date === today) {
-        setAlreadyClaimed(true);
-      }
-      setStreak(data?.streak ?? 1);
+      setStreakRewards(official);
+      const { data } = await claimDailyReward();
+      setAlreadyClaimed(Boolean(data?.alreadyClaimed));
+      setClaimed(!data?.alreadyClaimed);
+      setReward(Number(data?.coins) || 0);
+      setStreak(Number(data?.streak) || 1);
+    } catch (e) {
+      // Fail closed: no browser-side grant or inferred 'already claimed' status.
+      setError(e instanceof Error ? e.message : "Recompensa indisponível. Nenhum saldo foi alterado.");
     } finally {
       setLoading(false);
     }
   }
-
 
   if (loading) return null;
 
@@ -77,7 +71,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
           animation: "rewardBounce .5s ease forwards",
         }}
       >
-        {alreadyClaimed ? (
+        {error ? (<p role="alert" style={{color:"#ffaaaa",padding:16}}>{error}</p>) : alreadyClaimed ? (
           <>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
             <div style={{ fontFamily: "Bangers, cursive", fontSize: 22, color: "#ffd54f", letterSpacing: 2 }}>
@@ -105,7 +99,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
             <div style={{
               display: "flex", justifyContent: "center", gap: 4, marginTop: 12,
             }}>
-              {STREAK_REWARDS.map((r, i) => (
+              {streakRewards.map((r, i) => (
                 <div key={i} style={{
                   width: 28, height: 28, borderRadius: 6,
                   background: i < streak ? "rgba(255,213,79,.2)" : "rgba(255,255,255,.05)",
