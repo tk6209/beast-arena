@@ -37,11 +37,7 @@ export async function initGame(
   return callEngine("init_game", sessionId, { modo, players, dificuldade, aiMonstroId, playerDeck });
 }
 
-/** Save a card earned in battle to user collection */
-export async function saveCardDrop(userId: string, card: any): Promise<void> {
-  return callEngine("save_card_drop", null, { userId, card });
-}
-
+/** Card rewards are written by the server's authenticated battle settlement. */
 /** Load player deck for a monster */
 export async function loadPlayerDeck(userId: string, monstroId: string): Promise<any[] | null> {
   const { supabase } = await import("@/integrations/supabase/client");
@@ -57,11 +53,13 @@ export async function loadPlayerDeck(userId: string, monstroId: string): Promise
 /** Save player deck */
 export async function savePlayerDeck(userId: string, monstroId: string, cards: any[]): Promise<void> {
   const { supabase } = await import("@/integrations/supabase/client");
-  await supabase.from("player_decks").upsert({
+  if (!Array.isArray(cards) || cards.length !== 10) throw new Error("O baralho deve conter exatamente 10 cartas.");
+  const { error } = await supabase.from("player_decks").upsert({
     user_id: userId,
     monster_id: monstroId,
     cards,
   }, { onConflict: "user_id,monster_id" });
+  if (error) throw error;
 }
 
 export async function choosePower(sessionId: string, slot: number, powerId: string) {
@@ -80,33 +78,36 @@ export async function comboCards(sessionId: string, slot: number, cardId1: numbe
   return callEngine("combo_cards", sessionId, { slot, cardId1, cardId2 });
 }
 
-export async function recordBattleResult(payload: {
-  userId: string;
-  won: boolean;
-  dificuldade: string;
-  coinBase: number;
-  xpGain: number;
-  battleStats?: any;
-}) {
-  return callEngine("record_battle_result", null, payload);
+export interface BattleSettlement {
+  alreadyProcessed: boolean;
+  coins: number;
+  xp: number;
+  streak: number;
+  bonus?: number;
+  won?: boolean;
+  profile?: { coins: number; xp: number; level: number };
 }
 
-export async function purchaseShopItem(payload: {
-  userId: string;
-  itemId: string;
-  itemType: string;
-  itemKey: string;
-  quantity?: number;
-}) {
+/** Idempotent settlement; game winner, loot, and rewards always come from the server. */
+export async function recordBattleResult(sessionId: string): Promise<{ data: BattleSettlement }> {
+  return callEngine("record_battle_result", null, { sessionId });
+}
+
+/** Idempotency key is scoped to the purchase attempt; double clicks reuse the same key. */
+export async function purchaseShopItem(payload: { itemId: string; requestId: string }) {
   return callEngine("purchase_item", null, payload);
 }
 
-export async function claimDailyReward(payload: { userId: string }) {
-  return callEngine("claim_daily_reward", null, payload);
+export async function claimDailyReward() {
+  return callEngine("claim_daily_reward", null, {});
 }
 
-export async function claimMissionReward(payload: { userId: string; userMissionId: string }) {
+export async function claimMissionReward(payload: { userMissionId: string }) {
   return callEngine("claim_mission_reward", null, payload);
+}
+
+export async function getEconomyConfig(): Promise<{ data: { version: number; rules: { daily_coins: number[] } } }> {
+  return callEngine("get_economy_config", null, {});
 }
 
 /** Accept a friend request: insert friendship + mark request accepted */
