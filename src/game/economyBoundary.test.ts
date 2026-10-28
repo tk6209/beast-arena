@@ -11,9 +11,9 @@ describe('P0 quarantine: no unverified monetary request leaves the device', () =
     ['forged card', () => saveCardDrop('forged-user', { id: 'fake', valor: 999 })],
     ['guest settlement', () => recordBattleResult({ sessionId: null } as never)],
     ['cross-user settlement', () => recordBattleResult({ sessionId: 'other' } as never)],
-    ['daily', () => claimDailyReward({ userId: 'user' })],
-    ['mission', () => claimMissionReward({ userId: 'user', userMissionId: 'mission' })],
-    ['purchase', () => purchaseShopItem({ userId: 'user', itemId: 'item', itemType: 'monster', itemKey: 'panther' })],
+    ['daily', () => claimDailyReward()],
+    ['mission', () => claimMissionReward({ userMissionId: 'mission' })],
+    ['purchase', () => purchaseShopItem({ itemId: 'item', eventKey: 'event' })],
   ])('%s fails closed without auth reads or writes', async (_, call) => {
     vi.mocked(supabase.auth.getSession).mockClear();
     await expect(call()).rejects.toMatchObject({ code: 'ECONOMY_NOT_ACTIVATED', status: 503 });

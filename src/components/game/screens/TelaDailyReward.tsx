@@ -24,7 +24,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
 
   async function checkAndClaim() {
     try {
-      const { data } = await claimDailyReward({ userId: user.id });
+      const { data } = await claimDailyReward();
       if (data?.alreadyClaimed) {
         setAlreadyClaimed(true);
       } else {

@@ -70,32 +70,23 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
     setBuying(item.id);
 
     try {
-      await purchaseShopItem({
-        userId: user.id,
+      const { data: receipt } = await purchaseShopItem({
         itemId: item.id,
-        itemType: item.item_type,
-        itemKey: item.item_key,
-        quantity: 1,
+        eventKey: crypto.randomUUID(),
       });
+      setCoins(receipt.coins);
 
       if (item.item_type === "monster_unlock") {
         setOwnedItems(prev => new Set([...prev, invKey]));
-        setCoins(c => c - item.price_coins);
         setMessage(`${item.emoji} ${item.name} desbloqueado! 🎉`);
         try {
           const { triggerMonsterUnlock } = await import("@/components/game/MonsterUnlockOverlay");
           triggerMonsterUnlock(item.item_key);
         } catch {}
       } else if (item.item_type === "swarm_pack") {
-        const swarmItems = generatePackSwarms(item.item_key);
-        setCoins(c => c - item.price_coins);
-        setPackReveal({
-          items: swarmItems.map(s => ({ nome: s.nome, emoji: s.emoji, raridade: s.raridade })),
-          showing: true,
-          currentIdx: 0,
-        });
+        // Pack contents must come from an atomic server receipt, never local RNG.
+        setMessage('Conteúdo do pacote aguardando confirmação do servidor.');
       } else if (item.item_type === "xp_boost") {
-        setCoins(c => c - item.price_coins);
         setMessage("⚡ Boost XP 2x ativado para 5 partidas!");
       }
     } catch (e) {

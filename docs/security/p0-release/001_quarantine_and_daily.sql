@@ -26,7 +26,7 @@ REVOKE INSERT, UPDATE, DELETE ON public.battle_history, public.user_cards,
  public.game_players, public.game_sessions FROM anon, authenticated;
 -- Keep name settings without allowing insert-based currency injection.
 REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM anon, authenticated;
-GRANT UPDATE(display_name, name_changed_at, avatar_url) ON public.profiles TO authenticated;
+GRANT UPDATE(display_name, display_name_normalized, name_changed_at, avatar_url) ON public.profiles TO authenticated;
 
 CREATE FUNCTION public.p0_economy_config()
 RETURNS jsonb LANGUAGE sql IMMUTABLE SET search_path=pg_catalog,public AS $$

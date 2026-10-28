@@ -17,7 +17,7 @@ def sql(query, ok=True):
 sql('''CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-CREATE TABLE profiles(user_id uuid PRIMARY KEY,coins integer NOT NULL DEFAULT 0,xp integer DEFAULT 0,level integer DEFAULT 1,display_name text DEFAULT 'Jogador',name_changed_at timestamptz,avatar_url text);
+CREATE TABLE profiles(user_id uuid PRIMARY KEY,coins integer NOT NULL DEFAULT 0,xp integer DEFAULT 0,level integer DEFAULT 1,display_name text DEFAULT 'Jogador',display_name_normalized text,name_changed_at timestamptz,avatar_url text);
 CREATE TABLE daily_rewards(user_id uuid UNIQUE,last_claim_date date,streak integer);
 CREATE TABLE user_cards(user_id uuid,card_key text,card_data jsonb,quantity integer,UNIQUE(user_id,card_key));
 CREATE TABLE user_monsters(user_id uuid,monster_id text);

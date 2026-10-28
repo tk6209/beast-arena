@@ -115,20 +115,17 @@ export async function recordBattleResult(payload: { sessionId: string }): Promis
 }
 
 export async function purchaseShopItem(payload: {
-  userId: string;
   itemId: string;
-  itemType: string;
-  itemKey: string;
-  quantity?: number;
+  eventKey: string;
 }): Promise<{ data: { coins: number; eventKey: string } }> {
   requireVerifiedEconomy();
 }
 
-export async function claimDailyReward(payload: { userId: string }): Promise<{ data: { alreadyClaimed: boolean; coins: number; streak: number } }> {
+export async function claimDailyReward(payload: Record<string, never> = {}): Promise<{ data: { alreadyClaimed: boolean; coins: number; streak: number } }> {
   requireVerifiedEconomy();
 }
 
-export async function claimMissionReward(payload: { userId: string; userMissionId: string }): Promise<{ data: { coins: number; xp: number } }> {
+export async function claimMissionReward(payload: { userMissionId: string }): Promise<{ data: { coins: number; xp: number } }> {
   requireVerifiedEconomy();
 }
 
