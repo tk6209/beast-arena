@@ -51,6 +51,10 @@ DROP POLICY IF EXISTS "Users view own reward ledger" ON public.game_reward_ledge
 CREATE POLICY "Users view own reward ledger" ON public.game_reward_ledger
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
+-- Old sessions were writable by authenticated clients before this migration.
+-- They are not eligible for settlement, regardless of their apparent outcome.
+ALTER TABLE public.game_sessions ADD COLUMN IF NOT EXISTS trust_version integer NOT NULL DEFAULT 0;
+ALTER TABLE public.game_sessions ADD CONSTRAINT game_sessions_trust_version_nonnegative CHECK (trust_version >= 0);
 -- Defense-in-depth: writable game state must be exclusive to the authenticated server.
 -- Front-end write flows must be moved to trusted endpoints BEFORE production cutover.
 REVOKE INSERT, UPDATE, DELETE ON public.game_sessions, public.game_players, public.game_events
@@ -195,7 +199,7 @@ BEGIN
   -- Lock authoritative game state. The browser cannot INSERT/UPDATE this table.
   SELECT * INTO v_session FROM public.game_sessions WHERE id=p_session FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'session_not_found'; END IF;
-  IF v_session.status::text<>'finished'
+  IF v_session.trust_version<>1 OR v_session.status::text<>'finished'
      OR coalesce(v_session.state_json->>'fase','')<>'resultado'
      OR coalesce(v_session.state_json->>'modo','')<>'ai'
      OR coalesce(v_session.state_json->>'vencedor','') !~ '^[01]
