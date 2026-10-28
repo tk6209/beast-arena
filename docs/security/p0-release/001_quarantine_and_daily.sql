@@ -28,6 +28,13 @@ REVOKE INSERT, UPDATE, DELETE ON public.battle_history, public.user_cards,
 REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM anon, authenticated;
 GRANT UPDATE(display_name, name_changed_at, avatar_url) ON public.profiles TO authenticated;
 
+CREATE FUNCTION public.p0_economy_config()
+RETURNS jsonb LANGUAGE sql IMMUTABLE SET search_path=pg_catalog,public AS $$
+SELECT '{"version":"p0-initial-proposal-v1","approval":"initial-proposal","daily":[10,15,20,30,40,50,75],"battle":{"facil":{"win":{"coins":10,"xp":20},"loss":{"coins":3,"xp":8}},"medio":{"win":{"coins":20,"xp":30},"loss":{"coins":3,"xp":8}},"avancado":{"win":{"coins":40,"xp":50},"loss":{"coins":3,"xp":8}}},"streak":{"maximumRewardedWins":5,"bonusBasisPointsPerWin":2500},"deck":{"size":10,"maxCopies":2}}'::jsonb;
+$$;
+REVOKE ALL ON FUNCTION public.p0_economy_config() FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.p0_economy_config() TO service_role;
+
 CREATE FUNCTION public.p0_claim_daily(_user_id uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = pg_catalog, public
@@ -57,7 +64,7 @@ BEGIN
       'eventKey', key, 'configVersion', 'p0-initial-proposal-v1', 'balance', p.coins);
   END IF;
   streak_day := CASE WHEN d.last_claim_date=day-1 THEN least(greatest(d.streak,1)+1,7) ELSE 1 END;
-  amount := (ARRAY[10,15,20,30,40,50,75])[streak_day];
+  amount := (public.p0_economy_config()->'daily'->>(streak_day-1))::integer;
   UPDATE public.profiles SET coins=coins+amount WHERE user_id=_user_id;
   INSERT INTO public.daily_rewards(user_id,last_claim_date,streak) VALUES (_user_id,day,streak_day)
     ON CONFLICT(user_id) DO UPDATE SET last_claim_date=EXCLUDED.last_claim_date,streak=EXCLUDED.streak;
