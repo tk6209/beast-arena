@@ -70,6 +70,32 @@ for session in ['00000000-0000-4000-8000-000000000003', OTHER]:
 assert sql(f"SELECT coins FROM profiles WHERE user_id='{UID}'")==before
 assert sql('SELECT count(*) FROM battle_history')=='0'
 report('replayed/stale/cross-user battle settlement', 'Always denied; no balance/history mutation')
+# New deck writes: five owned canonical cards, two copies each. No balance/progression grants.
+sql(f"INSERT INTO user_monsters VALUES ('{UID}','panther')")
+deck=[]
+for i in range(5):
+    card={'id':i+1,'tipo':'ataque','valor':10}
+    sql(f"INSERT INTO user_cards VALUES ('{UID}','card{i}','{json.dumps(card)}',2)")
+    deck.extend([{**card,'card_key':f'card{i}'}]*2)
+def write_deck(cards,owner=UID,ok=True):
+    return sql(f"SET ROLE authenticated; SET request.jwt.claim.sub='{UID}'; INSERT INTO player_decks VALUES ('{owner}','panther','{json.dumps(cards)}')",ok=ok)
+write_deck(deck)
+write_deck(deck[:8],ok=False)
+write_deck([deck[0]]*3+deck[3:],ok=False)
+forged=[{**deck[0],'valor':500}]+deck[1:]
+write_deck(forged,ok=False)
+write_deck(deck,owner=OTHER,ok=False)
+sql(f"UPDATE user_cards SET quantity=1 WHERE user_id='{UID}' AND card_key='card0'")
+write_deck(deck,ok=False)
+report('deck ownership/canonical data/10 cards/max 2 copies', 'Valid owned deck accepted; 8 cards, 3 copies, forged data, cross-user, over-inventory denied')
+# Property sweep: for all synthetic starting balances 0..20, the one-shot daily operation is nonnegative.
+for starting in range(21):
+    sql(f"DELETE FROM p0_economy_ledger WHERE user_id='{UID}'; DELETE FROM daily_rewards WHERE user_id='{UID}'; UPDATE profiles SET coins={starting} WHERE user_id='{UID}'")
+    a=json.loads(sql(f"SET ROLE service_role; SELECT p0_claim_daily('{UID}')"))
+    b=json.loads(sql(f"SET ROLE service_role; SELECT p0_claim_daily('{UID}')"))
+    assert a==b and a['balance']==starting+10 and a['balance']>=0
+    assert sql(f"SELECT count(*) FROM p0_economy_ledger WHERE user_id='{UID}'")=='1'
+report('property sweep nonnegative/exactly-once daily', '21 starting balances, 42 calls, one ledger per fixture')
 # Force a late SQL error to prove the profile update rolls back with the claim and ledger.
 sql(f"DELETE FROM p0_economy_ledger WHERE user_id='{UID}'; DELETE FROM daily_rewards WHERE user_id='{UID}'")
 sql("CREATE FUNCTION fail_ledger() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected server error'; END $$; CREATE TRIGGER fail_ledger BEFORE INSERT ON p0_economy_ledger FOR EACH ROW EXECUTE FUNCTION fail_ledger();")
