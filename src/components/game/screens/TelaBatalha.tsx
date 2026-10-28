@@ -3,7 +3,7 @@ import { MONSTROS, PODERES, type CartaData } from "@/game/data";
 import BattleIntro from "@/components/game/BattleIntro";
 import { criarJ, type Jogador, type LogEntry } from "@/game/engine";
 import { criarSessao, ouvirSessao, fecharCanal, type GameSession } from "@/game/multiplayer";
-import { initGame, choosePower, playCard, passTurn, comboCards, saveCardDrop } from "@/game/serverApi";
+import { initGame, choosePower, playCard, passTurn, comboCards } from "@/game/serverApi";
 import { supabase } from "@/integrations/supabase/client";
 import { falar, markGesture } from "@/game/voice";
 import { sfxAtaque, sfxDefesa, sfxEvolucao, sfxSwarm, sfxCura, sfxExplode, sfxTap, sfxPassar, sfxPoder, sfxVitoria, sfxDerrota } from "@/game/sfx";
@@ -46,7 +46,7 @@ export interface BattleStats {
 interface TelaBatalhaProps {
   modo: string; monstroP1: string; nomeJogador?: string;
   salaId?: string | null; slotLocal?: number;
-  onFim: (vencedor: Jogador | null, stats: BattleStats) => void;
+  onFim: (vencedor: Jogador | null, stats: BattleStats, sessionId?: string | null) => void;
   dificuldade?: string; aiMonstroId?: string;
   skipPowerSelect?: boolean; lastPowerId?: string;
   onPowerChosen?: (powerId: string) => void; userId?: string;
@@ -355,7 +355,7 @@ export default function TelaBatalha({
     for (const evt of (evts || [])) {
       if (evt.type === "card_drop" && evt.card && evt.slot === slotLocal) {
         setCardDropped(evt.card);
-        if (userId) saveCardDrop(userId, evt.card).catch(console.error);
+        // Card drops are persisted only by the server-side settlement RPC.
       }
       if (evt.type === "game_over") {
         const winner = evt.winner ?? evt.winner;
@@ -370,7 +370,7 @@ export default function TelaBatalha({
           } else { sfxDerrota(); hapticError(); screenShake("md"); }
         }), 1400);
         stopBattleMusic();
-        setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats), 2000);
+        setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats, sessionIdRef.current), 2000);
       }
     }
   }
@@ -825,7 +825,7 @@ export default function TelaBatalha({
             }}>
               {serverState.vencedor===slotLocal ? "🏆  VITÓRIA!" : "💀  DERROTA!"}
             </div>
-            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor===slotLocal?p1Display:null,bStats)} style={{ marginTop:10 }}>
+            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor===slotLocal?p1Display:null,bStats,sessionIdRef.current)} style={{ marginTop:10 }}>
               CONTINUAR →
             </BtnMain>
           </div>
