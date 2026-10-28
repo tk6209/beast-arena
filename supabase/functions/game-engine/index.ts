@@ -1059,6 +1059,12 @@ Deno.serve(async (req) => {
     }
 
 
+    // A reinitialization must never replace an existing AI battle or mint extra rewards.
+    // Old multiplayer sessions remain under hold until the join protocol is authenticated.
+    if (action === "init_game" && rawSessionId && payload?.modo !== "multi") {
+      return new Response(JSON.stringify({ error: "Reinicialização de batalha não autorizada" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     // Existing sessions are immutable once finished, including repeated init_game.
     if (sessionId && action === "init_game" && rawSessionId) {
       const { data: gp } = await supabase.from("game_players")
