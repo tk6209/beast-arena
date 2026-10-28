@@ -52,7 +52,7 @@ Every row is one independently verifiable output. Dependencies refer to IDs in t
 | P0.04 DONE | proposed values → typed versioned config | docs/security/p0-release/economyConfig.ts + SQL function | .03 | exact daily array; TS/SQL equality test |
 | P0.05 DONE | client monetary call → rejection before network | economyAvailability.ts, serverApi.ts | .02 | 9 RED failures before / 9 PASS after |
 | P0.06 DONE | onFim/drop → no React progression/history/card grant | Index.tsx, TelaBatalha.tsx, postBattle.ts | .05 | unit suite; reviewed call removals |
-| P0.07 DONE | result render → no pre-credited coin/XP/level | TelaResultado.tsx | .05 | source review; browser result check pending at initial documentation |
+| P0.07 DONE | result render → no pre-credited coin/XP/level | TelaResultado.tsx | .05 | browser-mounted actual result status, reward_counter_absent=true; not full authenticated E2E |
 | P0.08 DONE | claim/store failure → explicit no-balance-change message | DailyReward, Missoes, Loja | .05 | typed callers compile; full monetary UI E2E RED |
 | P0.09 DONE | gem/boost/evolution/pass caller → zero direct write | gems.ts, xpBoost.ts, Evolucao, SeasonPass | .05 | source mutation review; tests .05 |
 | P0.10 DONE | legacy rules → memory-only noneligible AI round | demoEngine.ts, serverApi.ts | .05 | actual browser turn=1; eligible=false; reward rejection 503 |
@@ -106,18 +106,21 @@ Every row is one independently verifiable output. Dependencies refer to IDs in t
 | ACID late error | force ledger INSERT trigger to raise | no partial credit/claim | 30→30; claims=0; ledger=0 | DONE local |
 | Property invariants | 21 initial balances, two daily calls each | nonnegative, exactly one credit | all 42 calls satisfy | DONE finite property sweep, not exhaustive proof |
 | Guest demo | init, choose fogo, pass turn | playable; no persisted rewards | actual browser demo=true, eligible=false, turn=1; settlement=503 | DONE engine/browser module; full UI guest entry RED |
-| Server failure messaging | unavailable boundary | helpful error, no visual pre-credit | client 503 message; counters not rendered | DONE source/unit; UI screenshot result pending |
+| Server failure messaging | unavailable boundary | helpful error, no visual pre-credit | client 503 message; counters not rendered; browser-mounted result status screenshot | DONE component browser check; full authenticated E2E RED |
 
 ## Verification and evidence inventory
 
 - First RED run: 1 file, **9 failed** (`/tmp/p0-red.log`).
-- Full available suite: **26 files, 180 tests passed** (`/tmp/p0-unit.log`).
+- Full final available suite: **26 files, 180 tests passed** (`/tmp/p0-all-final.log`, 22:18:09 UTC).
   Existing React act warnings and multiple auth-client warning remain; no false clean-console claim.
 - Focused final boundary/config/demo suite: **21 tests passed** (`/tmp/p0-focused-final.log`).
 - Local PostgreSQL report: `docs/security/p0-release/evidence/local-postgres.json` (synthetic only).
 - Browser module proof: `/tmp/browser/p0/check_demo.py`, initial landing screenshot
   `/tmp/browser/p0/start.png`; demo turn and reward rejection printed. This does not prove login E2E.
-- Harness latest automatic build/typecheck: **build OK 2026-10-28T22:16:29Z**.
+- Result component browser proof: `/tmp/browser/p0/check_result.py`; actual message
+  “Partida demonstrativa: sem recompensas persistidas.”; reward_counter_absent=true;
+  element screenshot `/tmp/browser/p0/result-status.png`. Component mounted in browser, not a full navigation journey.
+- Harness automatic build/typecheck: **build OK 2026-10-28T22:18:01Z**.
   Manual build/typecheck not run (platform runs them automatically); server candidate Deno integration
   typecheck/deploy not run. SQL parsed/executed locally; live policies not altered.
 
@@ -129,3 +132,15 @@ All live unsafe account handlers must be replaced together; enabling the daily R
 Rollback retains additive ledger audit data and restores only captured reviewed safe ACLs;
 see p0-release/ROLLBACK.md. Full production antifraud is explicitly **not delivered** this turn.
 No AI Gateway model or cosmetic AAA feature was invented or deployed.
+
+## Changed file inventory
+
+- Root: AGENTS.md, roadmap.md.
+- Client game: demoEngine.ts, economyAvailability.ts, economyBoundary.test.ts,
+  p0Release.test.ts, serverApi.ts, postBattle.ts, gems.ts, xpBoost.ts.
+- Client screens: TelaBatalha.tsx, TelaDailyReward.tsx, TelaEvolucao.tsx,
+  TelaLoja.tsx, TelaMissoes.tsx, TelaResultado.tsx, TelaSeasonPass.tsx; src/pages/Index.tsx.
+- Documentation: this file; docs/security/p0-release/{001_quarantine_and_daily.sql,
+  ROLLBACK.md, accountBoundary.ts, economyConfig.ts, tests/local_postgres.py,
+  evidence/local-postgres.json}.
+- supabase/functions and supabase/migrations: **unchanged**; no candidate applied remotely.

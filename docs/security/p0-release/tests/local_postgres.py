@@ -4,16 +4,23 @@ Run after local initdb; creates synthetic fixtures, NOT a production schema clon
 import concurrent.futures
 import json
 import subprocess
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'host=127.0.0.1 port=55439 user=lovable dbname=p0second sslmode=disable', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
+BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'host=127.0.0.1 port=55439 user=lovable dbname=postgres sslmode=disable', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
 def sql(query, ok=True):
     out = subprocess.run(BASE + ['-c', query], capture_output=True, text=True)
     if ok and out.returncode: raise AssertionError(out.stderr)
     if not ok: assert out.returncode != 0, 'Expected database rejection'
     return out.stdout.strip()
 
+for role in ['anon','authenticated','service_role']:
+    if sql(f"SELECT count(*) FROM pg_roles WHERE rolname='{role}'")=='0':
+        sql(f"CREATE ROLE {role}" + (' BYPASSRLS' if role=='service_role' else ''))
+database='p0_'+uuid.uuid4().hex
+sql(f'CREATE DATABASE {database}')
+BASE[BASE.index('-d')+1]=f'host=127.0.0.1 port=55439 user=lovable dbname={database} sslmode=disable'
 sql('''
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
