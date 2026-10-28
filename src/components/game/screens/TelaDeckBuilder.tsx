@@ -12,7 +12,10 @@ import type { CartaData } from "@/game/data";
 
 interface Props { user: User; onVoltar: () => void; }
 
-const DECK_SIZE = 8;
+const DECK_SIZE = 10;
+
+type PlayStyle = 'aggro' | 'control' | 'defensive' | 'combo';
+interface DeckAdvice { deckKeys: string[]; name: string; strategy: string; tips: string[]; source: 'ai_gateway'|'deterministic_fallback'; }
 
 interface OwnedCard { card_key: string; card_data: CartaData; quantity: number; raridade: string; }
 
@@ -24,6 +27,11 @@ export default function TelaDeckBuilder({ user, onVoltar }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [playStyle,setPlayStyle] = useState<PlayStyle>('aggro');
+  const [advisorBusy,setAdvisorBusy] = useState(false);
+  const [advice,setAdvice] = useState<DeckAdvice|null>(null);
+  const [preferredCardKeys,setPreferredCardKeys] = useState<string[]>([]);
+  const [advisorError,setAdvisorError] = useState<string|null>(null);
 
   // Load owned cards once
   useEffect(() => { (async () => {
@@ -42,14 +50,59 @@ export default function TelaDeckBuilder({ user, onVoltar }: Props) {
   })(); }, [user.id, selMonster]);
 
   function toggleCard(c: CartaData) {
-    const inDeck = deck.find(d => d.id === c.id);
-    if (inDeck) { setDeck(deck.filter(d => d.id !== c.id)); return; }
-    if (deck.length >= DECK_SIZE) { setToast(`Máximo ${DECK_SIZE} cartas`); setTimeout(() => setToast(null), 1500); return; }
-    setDeck([...deck, c]);
+    const key = (x: CartaData) => x.nome + ':' + x.tipo;
+    const ownedCard = owned.find(item => key(item.card_data)===key(c));
+    if (!ownedCard) { setToast('Carta não possuída'); return; }
+    const already = deck.filter(item=>key(item)===key(c)).length;
+    const allowed = Math.min(2,ownedCard.quantity);
+    if (already >= allowed) { setToast('Limite de cópias desta carta'); return; }
+    if (deck.length >= DECK_SIZE) { setToast('Máximo 10 cartas'); return; }
+    setDeck([...deck, {...ownedCard.card_data,id:deck.length+1}]);
+  }
+
+  async function recommendDeck() {
+    setAdvisorBusy(true); setAdvisorError(null); setAdvice(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Faça login para receber recomendações.');
+      const project=import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res=await fetch('https://'+project+'.supabase.co/functions/v1/ai-deck-advisor',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Authorization':'Bearer '+session.access_token},
+        body:JSON.stringify({monsterId:selMonster,playStyle,
+          preferredCardKeys:preferredCardKeys.length?preferredCardKeys:undefined})
+      });
+      const body=await res.json();
+      if (!res.ok) throw new Error(body.message || body.error || 'Coach indisponível.');
+      const suggestion: DeckAdvice=body.data;
+      if (!suggestion || !Array.isArray(suggestion.deckKeys) || suggestion.deckKeys.length!==DECK_SIZE)
+        throw new Error('Resposta inválida do recomendador.');
+      const counts=new Map<string,number>();
+      for(const key of suggestion.deckKeys){
+        const item=owned.find(row=>row.card_key===key);
+        if(!item)throw new Error('O recomendador usou uma carta não possuída.');
+        const count=(counts.get(key)||0)+1;
+        if(count>Math.min(2,item.quantity))throw new Error('O recomendador excedeu a quantidade possuída.');
+        counts.set(key,count);
+      }
+      setAdvice(suggestion);
+    }catch(e){setAdvisorError(e instanceof Error?e.message:'Coach indisponível.');}
+    finally{setAdvisorBusy(false);}
+  }
+  function applyAdvice(){
+    if(!advice)return;
+    const next=advice.deckKeys.map((key,index)=>{
+      const card=owned.find(item=>item.card_key===key);
+      if(!card)throw new Error('Coleção alterada; atualize a sugestão.');
+      return {...card.card_data,id:index+1};
+    });
+    if(next.length!==DECK_SIZE)return;
+    setDeck(next);setToast('Deck aplicado. Revise e clique em SALVAR.');
   }
 
   async function handleSave() {
-    if (deck.length === 0) { setToast("Deck vazio"); setTimeout(() => setToast(null), 1500); return; }
+    if (deck.length !== DECK_SIZE) { setToast("Monte um deck completo de 10 cartas"); setTimeout(() => setToast(null), 1500); return; }
     setSaving(true);
     try {
       await savePlayerDeck(user.id, selMonster, deck);
@@ -104,8 +157,8 @@ export default function TelaDeckBuilder({ user, onVoltar }: Props) {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, justifyItems: "center" }}>
-              {deck.map(c => (
-                <div key={c.id} onClick={() => toggleCard(c)} style={{ cursor: "pointer" }}>
+              {deck.map((c,i) => (
+                <div key={i} onClick={() => setDeck(prev => prev.filter((_,j)=>j!==i))} style={{ cursor: "pointer" }}>
                   <Carta carta={c} mini sel />
                 </div>
               ))}
@@ -143,6 +196,54 @@ export default function TelaDeckBuilder({ user, onVoltar }: Props) {
           </div>
         )}
 
+        <section aria-label="Coach tático de baralhos" style={{
+          background:'rgba(0,229,255,.055)',border:'1px solid rgba(0,229,255,.35)',
+          borderRadius:14,padding:14,marginBottom:16}}>
+          <h2 style={{color:DS.cyan,fontFamily:DS.fontDisplay,fontSize:20,marginBottom:8}}>COACH TÁTICO · AI</h2>
+          <p style={{color:'#aab5c5',fontSize:12,marginBottom:10}}>
+            Escolha seu estilo. O coach usa somente cartas possuídas e disponíveis na sua coleção.
+          </p>
+          <label style={{display:'block',color:'#fff',fontSize:12,marginBottom:6}} htmlFor="style-deck">Estilo de jogo</label>
+          <select id="style-deck" value={playStyle} onChange={e=>setPlayStyle(e.target.value as PlayStyle)}
+            style={{width:'100%',padding:'10px',background:'#18213a',color:'#fff',border:'1px solid #42516c',
+              borderRadius:8,fontSize:14,marginBottom:12}}>
+            <option value="aggro">Agressivo</option><option value="control">Controle</option>
+            <option value="defensive">Defensivo</option><option value="combo">Combo</option>
+          </select>
+          <div style={{color:'#aab5c5',fontSize:11,marginBottom:8}}>Cartas favoritas para considerar (opcional)</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:12}}>
+            {owned.map(item=>(
+              <label key={item.card_key} style={{display:'flex',gap:4,alignItems:'center',borderRadius:6,
+                background:'#18213a',color:'#e1e8f3',padding:'6px',fontSize:11}}>
+                <input type="checkbox" checked={preferredCardKeys.includes(item.card_key)}
+                  onChange={e=>setPreferredCardKeys(prev=>e.target.checked?
+                    [...prev,item.card_key]:prev.filter(key=>key!==item.card_key))}/>
+                {item.card_data.nome} ×{item.quantity}
+              </label>
+            ))}
+          </div>
+          <button type="button" disabled={advisorBusy || owned.length===0} onClick={recommendDeck}
+            style={{width:'100%',minHeight:44,borderRadius:9,border:0,background:DS.cyan,
+              fontWeight:900,color:'#041322',cursor:'pointer'}}>
+            {advisorBusy?'ANALISANDO...':'RECOMENDAR DECK E ESTRATÉGIA'}
+          </button>
+          {advisorError&&<p role="alert" style={{color:'#ff9c9c',fontSize:12,marginTop:10}}>{advisorError}</p>}
+          {advice&&(
+            <div style={{paddingTop:12}}>
+              <strong style={{color:'#fff'}}>{advice.name}</strong>
+              <p style={{color:'#ccd8e8',fontSize:12,marginTop:6}}>{advice.strategy}</p>
+              <ol style={{color:'#ccd8e8',fontSize:12,paddingLeft:20,margin:'8px 0'}}>
+                {advice.tips.map((tip,i)=><li key={i}>{tip}</li>)}
+              </ol>
+              <p style={{color:'#94a3b8',fontSize:10}}>
+                {advice.source==='ai_gateway'?'Sugestão do modelo via AI Gateway':'Sugestão determinística — modelo não disponível ou inválido'}
+              </p>
+              <button type="button" onClick={applyAdvice}
+                style={{width:'100%',minHeight:44,borderRadius:8,border:'1px solid #78fac5',
+                  color:'#78fac5',background:'transparent',fontWeight:800}}>APLICAR DECK</button>
+            </div>
+          )}
+        </section>
         <div style={{ display: "grid", gap: 8 }}>
           <BtnMain variant="gold" onClick={handleSave} disabled={saving}>
             {saving ? "SALVANDO…" : "💾 SALVAR DECK"}
