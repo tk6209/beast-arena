@@ -20,6 +20,7 @@ interface TelaResultadoProps {
   onRecomecar: () => void; onSair: () => void; onContinuar?: () => void;
   campaignFinished?: boolean; campaignWins?: number; campaignTotal?: number;
   campaignIndex?: number; userId?: string; dificuldade?: string; battleStats?: BattleStats;
+  sessionId?: string | null;
 }
 
 function Counter({ target, duration = 1100, color = "#ffd54f" }:
@@ -133,7 +134,7 @@ const CSS = `
 export default function TelaResultado({
   vencedor, nomeJogador = "Jogador", onRecomecar, onSair, onContinuar,
   campaignFinished, campaignWins = 0, campaignTotal = 0,
-  campaignIndex = 0, userId, dificuldade = "medio", battleStats,
+  campaignIndex = 0, userId, dificuldade = "medio", battleStats, sessionId,
 }: TelaResultadoProps) {
   const g = !!vencedor;
   const monstroId = vencedor?.monstro?.id;
@@ -141,8 +142,11 @@ export default function TelaResultado({
   const monsterGlow = monstroId && MONSTROS[monstroId] ? MONSTROS[monstroId].glow || "#00e5ff" : "#00e5ff";
   const canContinue = g && !campaignFinished && campaignIndex < campaignTotal - 1;
 
-  const coinBase = g ? (dificuldade === "facil" ? 10 : dificuldade === "avancado" ? 40 : 20) : 3;
-  const xpGain   = g ? (dificuldade === "facil" ? 20 : dificuldade === "avancado" ? 50 : 30) : 8;
+  // Display only amounts returned by the verified session settlement.
+  const [reward, setReward] = useState<{coins:number;xp:number;streak:number;bonus?:number;profile?:{xp:number;level:number}} | null>(null);
+  const [rewardError, setRewardError] = useState<string | null>(null);
+  const coinBase = reward?.coins || 0;
+  const xpGain = reward?.xp || 0;
 
   const [phase, setPhase]             = useState(0);
   const [streak, setStreak]           = useState(0);
@@ -175,44 +179,32 @@ export default function TelaResultado({
       setTimeout(() => setPhase(5), 3000),  // xp bar
       setTimeout(() => setPhase(6), 3800),  // buttons
     ];
-    if (userId) saveProgress(userId);
+    // No trust in client-computed victory or battleStats for any economic mutation.
     return () => ts.forEach(clearTimeout);
   }, []);
 
-  async function saveProgress(uid: string) {
-    try {
-      const [{ data: prof }, { data: stats }] = await Promise.all([
-        supabase.from("profiles").select("xp,coins,level").eq("user_id", uid).single(),
-        supabase.from("user_stats").select("win_streak,best_streak,total_wins,total_losses").eq("user_id", uid).single(),
-      ]);
-
-      const curLvl = prof?.level || 1;
-      const curXp  = prof?.xp || 0;
-      const curStreak = g ? ((stats?.win_streak || 0) + 1) : 0;
-      const sb = g && curStreak >= 2 ? Math.round(coinBase * 0.25 * (curStreak - 1)) : 0;
-
-      setOldLevel(curLvl); setOldXp(curXp); setXpMax(curLvl * 100);
-      if (g) { setStreak(curStreak); setStreakBonus(sb); }
-
-      let lvl = curLvl, xp = curXp + xpGain;
-      if (xp >= curLvl * 100) { xp -= curLvl * 100; lvl++; setTimeout(() => { setShowLvlUp(true); setTimeout(() => setShowLvlUp(false), 2400); }, 2800); }
-      setNewLevel(lvl); setNewXp(xp);
-
-      try {
-        await recordBattleResult({
-          userId: uid,
-          won: g,
-          dificuldade,
-          coinBase,
-          xpGain,
-          battleStats,
-        });
-      } catch (err) {
-        console.warn("record_battle_result unavailable", err);
-        toast("⚠️ Progresso não sincronizado. Tente novamente em instantes.", { duration: 3500 });
+  useEffect(() => {
+    if (!userId || !sessionId) return;
+    let cancelled = false;
+    recordBattleResult(sessionId).then(({ data }) => {
+      if (cancelled) return;
+      if (typeof data?.coins !== "number" || typeof data?.xp !== "number") {
+        throw new Error("Recompensa não confirmada pelo servidor.");
       }
-    } catch (e) { console.error(e); }
-  }
+      setReward(data);
+      setStreak(data.streak || 0);
+      setStreakBonus(data.bonus || 0);
+      if (data.profile) {
+        setNewLevel(data.profile.level);
+        setNewXp(data.profile.xp);
+        setXpMax(data.profile.level * 100);
+      }
+    }).catch((err) => {
+      if (!cancelled) setRewardError(err instanceof Error ? err.message : "Falha na confirmação.");
+    });
+    return () => { cancelled = true; };
+  }, [userId, sessionId]);
+
 
   return (
     <div style={{
@@ -295,7 +287,14 @@ export default function TelaResultado({
         )}
 
         {/* Rewards */}
-        {phase >= 4 && (
+        {phase >= 4 && !reward && (
+          <p role="status" style={{ color:"#a6adbc",fontSize:12,textAlign:"center" }}>
+            {rewardError ? `Recompensa não confirmada: ${rewardError}` :
+              userId && sessionId ? "Confirmando recompensa com o servidor…" :
+              "Partida sem sessão elegível: nenhuma recompensa persistida."}
+          </p>
+        )}
+        {phase >= 4 && reward && (
           <div style={{ width:"100%",maxWidth:298,display:"flex",flexDirection:"column",gap:8 }}>
             {g && streak >= 2 && <StreakBadge streak={streak} />}
             <div style={{ display:"flex",gap:8 }}>
