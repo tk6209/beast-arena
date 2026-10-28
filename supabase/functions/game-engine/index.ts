@@ -1052,7 +1052,7 @@ Deno.serve(async (req) => {
       const joinCode = Math.random().toString(36).slice(2, 7).toUpperCase();
       const { data: newSess, error: sessErr } = await supabase
         .from("game_sessions")
-        .insert({ join_code: joinCode, status: "waiting", state_json: {}, current_turn: 0 })
+        .insert({ join_code: joinCode, status: "waiting", state_json: {}, current_turn: 0, trust_version: 1 })
         .select("id").single();
       if (sessErr) throw new Error(`Erro ao criar sessão: ${sessErr.message}`);
       sessionId = newSess.id;
