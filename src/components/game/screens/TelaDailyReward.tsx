@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { claimDailyReward } from "@/game/serverApi";
+import { claimDailyReward, getEconomyConfig } from "@/game/serverApi";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -8,11 +8,11 @@ interface Props {
   onClose: () => void;
 }
 
-const STREAK_REWARDS = [10, 15, 20, 30, 40, 50, 75]; // coins per streak day
 
-export default function TelaDailyReward({ user, onClose }: Props) {
+export default function TelaDailyReward({ onClose }: Props) {
   const [claimed, setClaimed] = useState(false);
   const [reward, setReward] = useState(0);
+  const [streakRewards, setStreakRewards] = useState<number[]>([]);
   const [streak, setStreak] = useState(1);
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,13 @@ export default function TelaDailyReward({ user, onClose }: Props) {
 
   async function checkAndClaim() {
     try {
+      // Never show fictional reward values: use the same canonical server configuration.
+      const cfg = await getEconomyConfig();
+      const values = cfg.data?.rules?.daily_coins;
+      if (!Array.isArray(values) || values.length !== 7 || values.some(v => !Number.isInteger(v) || v < 0)) {
+        throw new Error("Configuração de recompensas não validada.");
+      }
+      setStreakRewards(values);
       const { data } = await claimDailyReward();
       if (data?.alreadyClaimed) {
         setAlreadyClaimed(true);
@@ -96,7 +103,7 @@ export default function TelaDailyReward({ user, onClose }: Props) {
             <div style={{
               display: "flex", justifyContent: "center", gap: 4, marginTop: 12,
             }}>
-              {STREAK_REWARDS.map((r, i) => (
+              {streakRewards.map((r, i) => (
                 <div key={i} style={{
                   width: 28, height: 28, borderRadius: 6,
                   background: i < streak ? "rgba(255,213,79,.2)" : "rgba(255,255,255,.05)",
