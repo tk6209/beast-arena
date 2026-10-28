@@ -7,14 +7,14 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'host=127.0.0.1 port=55439 user=lovable dbname=postgres sslmode=disable', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
+BASE = ['psql', '-h', '127.0.0.1', '-p', '55439', '-U', 'lovable', '-d', 'host=127.0.0.1 port=55439 user=lovable dbname=p0second sslmode=disable', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1']
 def sql(query, ok=True):
     out = subprocess.run(BASE + ['-c', query], capture_output=True, text=True)
     if ok and out.returncode: raise AssertionError(out.stderr)
     if not ok: assert out.returncode != 0, 'Expected database rejection'
     return out.stdout.strip()
 
-sql('''CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
+sql('''
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 CREATE TABLE profiles(user_id uuid PRIMARY KEY,coins integer NOT NULL DEFAULT 0,xp integer DEFAULT 0,level integer DEFAULT 1,display_name text DEFAULT 'Jogador',display_name_normalized text,name_changed_at timestamptz,avatar_url text);
