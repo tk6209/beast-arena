@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_PUBLIC_URL } from "@/integrations/supabase/client";
 import { requireVerifiedEconomy } from './economyAvailability';
 import { runDemoAction } from './demoEngine';
 
@@ -7,8 +7,7 @@ const demoSessions = new Map<string, any>();
 const TRUSTED_ECONOMY_ENABLED = import.meta.env.VITE_BEAST_TRUSTED_ECONOMY === 'true';
 function assertEconomyCutover(){ if(!TRUSTED_ECONOMY_ENABLED) requireVerifiedEconomy(); }
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const FN_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/game-engine`;
+const FN_URL = `${import.meta.env.VITE_SUPABASE_URL || SUPABASE_PUBLIC_URL}/functions/v1/game-engine`;
 
 async function callEngine(action: string, sessionId: string | null, payload: any): Promise<any> {
   if (sessionId?.startsWith('demo:')) {
