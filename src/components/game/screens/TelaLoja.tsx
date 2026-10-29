@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { pageBg } from "@/game/styles";
 import BtnMain from "@/components/game/BtnMain";
 import ChromeNoise from "@/components/game/ChromeNoise";
@@ -38,6 +38,8 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
   const [ownedItems, setOwnedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
+  const purchaseInFlight = useRef(false);
+  const requestIds = useRef(new Map<string,string>());
   const [message, setMessage] = useState<string | null>(null);
   const [packReveal, setPackReveal] = useState<PackReveal | null>(null);
   const [tab, setTab] = useState<"monstros" | "packs">("monstros");
@@ -60,21 +62,25 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
   }
 
   async function buyItem(item: ShopItem) {
-    if (buying) return;
+    if (buying || purchaseInFlight.current) return;
     if (coins < item.price_coins) { setMessage("Moedas insuficientes! 💸"); setTimeout(() => setMessage(null), 2000); return; }
     if (level < item.level_required) { setMessage(`Precisa de LV ${item.level_required}! 🔒`); setTimeout(() => setMessage(null), 2000); return; }
 
     const invKey = item.item_type === "monster_unlock" ? `monster:${item.item_key}` : `${item.item_type}:${item.item_key}`;
     if (item.item_type === "monster_unlock" && ownedItems.has(invKey)) { setMessage("Já desbloqueado! ✅"); setTimeout(() => setMessage(null), 2000); return; }
 
+    purchaseInFlight.current = true;
     setBuying(item.id);
 
     try {
       const { data: receipt } = await purchaseShopItem({
         itemId: item.id,
-        eventKey: crypto.randomUUID(),
+        requestId: requestIds.current.get(item.id) || (() => {
+          const value = crypto.randomUUID(); requestIds.current.set(item.id,value); return value;
+        })(),
       });
       setCoins(receipt.coins);
+      requestIds.current.delete(item.id);
 
       if (item.item_type === "monster_unlock") {
         setOwnedItems(prev => new Set([...prev, invKey]));
@@ -91,11 +97,13 @@ export default function TelaLoja({ user, onVoltar }: TelaLojaProps) {
       }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Compra indisponível. Nenhum saldo foi alterado.");
+      purchaseInFlight.current = false;
       setBuying(null);
       setTimeout(() => setMessage(null), 2500);
       return;
     }
 
+    purchaseInFlight.current = false;
     setBuying(null);
     setTimeout(() => setMessage(null), 3000);
   }

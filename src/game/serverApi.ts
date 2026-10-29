@@ -3,9 +3,11 @@ import { requireVerifiedEconomy } from './economyAvailability';
 import { runDemoAction } from './demoEngine';
 
 const demoSessions = new Map<string, any>();
+// Staging opt-in only. Production stays in the existing quarantine by default.
+const TRUSTED_ECONOMY_ENABLED = import.meta.env.VITE_BEAST_TRUSTED_ECONOMY === 'true';
+function assertEconomyCutover(){ if(!TRUSTED_ECONOMY_ENABLED) requireVerifiedEconomy(); }
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const FN_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/game-engine`;
+const FN_URL = `${import.meta.env.VITE_SUPABASE_URL || `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || "ftlwkkjjpkocklaajavh"}.supabase.co`}/functions/v1/game-engine`;
 
 async function callEngine(action: string, sessionId: string | null, payload: any): Promise<any> {
   if (sessionId?.startsWith('demo:')) {
@@ -49,6 +51,10 @@ export async function initGame(
   playerDeck?: any[]
 ) {
   if (!sessionId && modo === 'ai') {
+    if (TRUSTED_ECONOMY_ENABLED) {
+      const {data:{session}}=await supabase.auth.getSession();
+      if (session?.access_token) return callEngine('init_game',null,{modo,players,dificuldade,aiMonstroId});
+    }
     const demoId = `demo:${crypto.randomUUID()}`;
     const result = runDemoAction('init_game', {}, {
       modo: 'ai', dificuldade, aiMonstroId,
@@ -57,14 +63,18 @@ export async function initGame(
     demoSessions.set(demoId, result.state);
     return { ...result, sessionId: demoId, rewardEligible: false };
   }
-  // Existing remote init has no verified owner provenance; do not create more unsafe sessions.
-  requireVerifiedEconomy();
+  // Current production is quarantined; staging can validate only the trusted server contract.
+  assertEconomyCutover();
+  return callEngine('init_game',sessionId,{modo,players,dificuldade,aiMonstroId});
 }
 
 /** Save a card earned in battle to user collection */
-export async function saveCardDrop(userId: string, card: any): Promise<void> {
+// Card drops are granted only by verified session settlement. No client method.
+/** Legacy compatibility: an untrusted caller can NEVER mint a card. */
+export async function saveCardDrop(_userId: string, _card: unknown): Promise<void> {
   requireVerifiedEconomy();
 }
+
 
 /** Load player deck for a monster */
 export async function loadPlayerDeck(userId: string, monstroId: string): Promise<any[] | null> {
@@ -81,6 +91,7 @@ export async function loadPlayerDeck(userId: string, monstroId: string): Promise
 /** Save player deck */
 export async function savePlayerDeck(userId: string, monstroId: string, cards: any[]): Promise<void> {
   const { supabase } = await import("@/integrations/supabase/client");
+  if(!Array.isArray(cards)||cards.length!==10)throw new Error("O deck deve conter 10 cartas.");
   const { error } = await supabase.from("player_decks").upsert({
     user_id: userId,
     monster_id: monstroId,
@@ -106,27 +117,28 @@ export async function comboCards(sessionId: string, slot: number, cardId1: numbe
 }
 
 export interface SettlementReceipt {
-  coins: number; xp: number; streak: number; streakBonus: number;
-  profile: { coins: number; xp: number; level: number };
-  configVersion: string; eventKey: string;
+  coins:number;xp:number;streak:number;bonus?:number;alreadyProcessed:boolean;
+  profile?:{coins:number;xp:number;level:number};
 }
-export async function recordBattleResult(payload: { sessionId: string }): Promise<{ data: SettlementReceipt }> {
-  requireVerifiedEconomy();
+export async function recordBattleResult(payload:{sessionId:string}):Promise<{data:SettlementReceipt}>{
+  assertEconomyCutover();
+  return callEngine("record_battle_result",null,{sessionId:payload.sessionId});
 }
-
-export async function purchaseShopItem(payload: {
-  itemId: string;
-  eventKey: string;
-}): Promise<{ data: { coins: number; eventKey: string } }> {
-  requireVerifiedEconomy();
+export async function purchaseShopItem(payload:{itemId:string;requestId:string}):Promise<{data:{coins:number;itemId:string}}>{
+  assertEconomyCutover();
+  return callEngine("purchase_item",null,payload);
 }
-
-export async function claimDailyReward(payload: Record<string, never> = {}): Promise<{ data: { alreadyClaimed: boolean; coins: number; streak: number } }> {
-  requireVerifiedEconomy();
+export async function claimDailyReward():Promise<{data:{alreadyClaimed:boolean;coins:number;streak:number}}>{
+  assertEconomyCutover();
+  return callEngine("claim_daily_reward",null,{});
 }
-
-export async function claimMissionReward(payload: { userMissionId: string }): Promise<{ data: { coins: number; xp: number } }> {
-  requireVerifiedEconomy();
+export async function claimMissionReward(payload:{userMissionId:string}):Promise<{data:{coins:number;xp:number}}>{
+  assertEconomyCutover();
+  return callEngine("claim_mission_reward",null,payload);
+}
+export async function getEconomyConfig():Promise<{data:{version:number;rules:{daily_coins:number[]}}}>{
+  assertEconomyCutover();
+  return callEngine("get_economy_config",null,{});
 }
 
 /** Accept a friend request: insert friendship + mark request accepted */

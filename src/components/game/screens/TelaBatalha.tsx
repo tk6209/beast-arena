@@ -46,7 +46,7 @@ export interface BattleStats {
 interface TelaBatalhaProps {
   modo: string; monstroP1: string; nomeJogador?: string;
   salaId?: string | null; slotLocal?: number;
-  onFim: (vencedor: Jogador | null, stats: BattleStats) => void;
+  onFim: (vencedor: Jogador | null, stats: BattleStats, sessionId?: string | null) => void;
   dificuldade?: string; aiMonstroId?: string;
   skipPowerSelect?: boolean; lastPowerId?: string;
   onPowerChosen?: (powerId: string) => void; userId?: string;
@@ -371,7 +371,7 @@ export default function TelaBatalha({
           } else { sfxDerrota(); hapticError(); screenShake("md"); }
         }), 1400);
         stopBattleMusic();
-        setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats), 2000);
+        setTimeout(() => onFim(winner === slotLocal ? { id: "p1" } as any : null, bStats, sessionIdRef.current), 2000);
       }
     }
   }
@@ -826,7 +826,7 @@ export default function TelaBatalha({
             }}>
               {serverState.vencedor===slotLocal ? "🏆  VITÓRIA!" : "💀  DERROTA!"}
             </div>
-            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor===slotLocal?p1Display:null,bStats)} style={{ marginTop:10 }}>
+            <BtnMain variant="gold" onClick={() => onFim(serverState.vencedor===slotLocal?p1Display:null,bStats,sessionIdRef.current)} style={{ marginTop:10 }}>
               CONTINUAR →
             </BtnMain>
           </div>
