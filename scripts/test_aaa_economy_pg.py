@@ -6,7 +6,7 @@ import os
 import subprocess
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[2]
+ROOT=Path(__file__).resolve().parents[1]
 DB=os.environ.get("AAA_PG_DATABASE","aaa_economy_ci")
 HOST=os.environ.get("AAA_PG_HOST","127.0.0.1")
 PORT=os.environ.get("AAA_PG_PORT","55439")
