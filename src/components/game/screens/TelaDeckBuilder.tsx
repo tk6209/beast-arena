@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase, SUPABASE_PUBLIC_URL } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { pageBg, DS } from "@/game/styles";
 import ChromeNoise from "@/components/game/ChromeNoise";
 import BtnMain from "@/components/game/BtnMain";
@@ -65,7 +65,7 @@ export default function TelaDeckBuilder({ user, onVoltar }: Props) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Faça login para receber recomendações.');
-      const baseUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_PUBLIC_URL;
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || "ftlwkkjjpkocklaajavh"}.supabase.co`;
       const res=await fetch(baseUrl+'/functions/v1/ai-deck-advisor',{
         method:'POST',
         headers:{'Content-Type':'application/json','apikey':import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
