@@ -63,6 +63,8 @@ REVOKE INSERT, UPDATE, DELETE ON public.user_cards, public.battle_history,
   public.user_inventory, public.user_missions, public.user_stats,
   public.daily_rewards, public.user_monsters, public.season_pass,
   public.player_leagues, public.gem_transactions FROM PUBLIC, anon, authenticated;
+-- Pre-migration completion flags were client-editable and cannot establish trusted mission completion.
+ALTER TABLE public.user_missions ADD COLUMN IF NOT EXISTS trusted_progress_at timestamptz;
 -- Prevent coins, gems, XP and levels being changed through profiles.update() or forged inserts.
 -- Account creation already occurs via the handle_new_user SECURITY DEFINER trigger.
 REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM PUBLIC, anon, authenticated;
@@ -109,6 +111,10 @@ BEGIN
   END IF;
   SELECT last_claim_date, streak INTO v_prev,v_streak FROM public.daily_rewards
     WHERE user_id=p_uid FOR UPDATE;
+  -- A legacy daily claim must not earn a second payment simply because the ledger is new.
+  IF v_prev IS NOT NULL AND v_prev >= v_today THEN
+    RETURN jsonb_build_object('alreadyClaimed',true,'coins',0,'streak',coalesce(v_streak,1));
+  END IF;
   v_streak:=CASE WHEN v_prev=v_today-1 THEN least(coalesce(v_streak,0)+1,7) ELSE 1 END;
   SELECT rules INTO STRICT v_rules FROM public.game_economy_config WHERE active;
   v_amount:=(v_rules->'daily_coins'->>(v_streak-1))::int;
@@ -138,6 +144,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'mission_not_found'; END IF;
   SELECT * INTO STRICT v_m FROM public.daily_missions WHERE id=v_um.mission_id;
   IF v_um.claimed THEN RAISE EXCEPTION 'already_claimed'; END IF;
+  IF v_um.trusted_progress_at IS NULL THEN RAISE EXCEPTION 'untrusted_mission_progress'; END IF;
   IF NOT v_um.completed OR v_um.progress < v_m.target_value
   THEN RAISE EXCEPTION 'mission_incomplete'; END IF;
   IF v_m.reward_coins<0 OR v_m.reward_xp<0 OR v_m.reward_coins>100000 OR v_m.reward_xp>100000
@@ -165,6 +172,8 @@ BEGIN
   END IF;
   SELECT * INTO v_item FROM public.shop_items WHERE id=p_item AND active FOR SHARE;
   IF NOT FOUND THEN RAISE EXCEPTION 'item_unavailable'; END IF;
+  -- Pack opening and XP-boost activation are not yet atomic; NEVER debit for undelivered goods.
+  IF v_item.item_type <> 'monster_unlock' THEN RAISE EXCEPTION 'purchase_fulfillment_not_supported'; END IF;
   IF v_item.price_coins < 0 OR v_item.price_coins>100000
   THEN RAISE EXCEPTION 'invalid_price'; END IF;
   IF v_level<v_item.level_required THEN RAISE EXCEPTION 'level_required'; END IF;
@@ -269,6 +278,7 @@ BEGIN
   END IF;
   -- Update only battle-count missions; event-level stats must come from verified game events.
   UPDATE public.user_missions um SET
+    trusted_progress_at=now(),
     progress=least(dm.target_value,um.progress+CASE WHEN dm.mission_type='play_battles' THEN 1
       WHEN dm.mission_type='win_battles' AND v_won THEN 1 ELSE 0 END),
     completed=um.completed OR um.progress+CASE WHEN dm.mission_type='play_battles' THEN 1
