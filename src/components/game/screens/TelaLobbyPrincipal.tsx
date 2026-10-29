@@ -110,7 +110,7 @@ export default function TelaLobbyPrincipal({
           style={{borderColor:leagueInfo.color+"70",background:leagueInfo.color+"16"}}>
           <Trophy size={18} style={{color:leagueInfo.color}}/>
           <span className="text-left"><span className="block text-xs font-black uppercase">{leagueInfo.label}</span>
-            <span className="block text-[10px] text-white/60">{Number(league?.trophies||0).toLocaleString()} troféus</span></span>
+            <span className="block text-[10px] text-white/60">{Number(league?.rating||0).toLocaleString()} pontos de liga</span></span>
         </button>
         <div className="flex items-center gap-2">
           <button onClick={onLoja} className="flex min-h-11 items-center gap-2 rounded-xl border border-yellow-300/30 bg-yellow-300/10 px-3">
